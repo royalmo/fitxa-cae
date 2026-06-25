@@ -26,4 +26,27 @@ module ApplicationHelper
   def source_text(source)
     t("sources.#{source}")
   end
+
+  def icon(name, options = {})
+    title = options.delete(:title).presence
+    attributes = options.merge(class: class_names("icon", options[:class]), focusable: "false")
+
+    if title
+      attributes[:role] = "img"
+      attributes[:"aria-label"] = title
+    else
+      attributes[:"aria-hidden"] = "true"
+    end
+
+    lucide_icon(name, **attributes)
+  end
+
+  def clocking_icon_name(kind)
+    {
+      in: "log-in",
+      out: "log-out",
+      pause_start: "pause",
+      pause_end: "play"
+    }.fetch(kind.to_sym, "clock")
+  end
 end

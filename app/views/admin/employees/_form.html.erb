@@ -20,15 +20,9 @@
     <%= form.email_field :email, value: employee[:email] %>
   </div>
 
-  <div class="field-row">
-    <div class="field">
-      <%= form.label :team, t("admin.employees.form.team") %>
-      <%= form.text_field :team, value: employee[:team] %>
-    </div>
-    <div class="field">
-      <%= form.label :schedule, t("admin.employees.form.schedule") %>
-      <%= form.text_field :schedule, value: employee[:schedule] %>
-    </div>
+  <div class="field">
+    <%= form.label :team, t("admin.employees.form.team") %>
+    <%= form.text_field :team, value: employee[:team] %>
   </div>
 
   <div class="form-actions">

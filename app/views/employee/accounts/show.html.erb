@@ -2,7 +2,7 @@
 
 <section class="page-intro">
   <div>
-    <h1><%= t(".heading") %></h1>
+    <h1 class="page-title"><%= icon "user", class: "icon-large" %><span><%= t(".heading") %></span></h1>
     <p><%= t(".intro") %></p>
   </div>
 </section>
@@ -10,20 +10,20 @@
 <div class="employee-grid">
   <section class="panel">
     <div class="panel-heading">
-      <h2><%= t(".personal_data") %></h2>
+      <h2 class="panel-title"><%= icon "user" %><span><%= t(".personal_data") %></span></h2>
     </div>
 
     <dl class="detail-list">
       <div>
-        <dt><%= t(".name") %></dt>
+        <dt><%= icon "user", class: "icon-muted" %><span><%= t(".name") %></span></dt>
         <dd><%= @employee[:name] %></dd>
       </div>
       <div>
-        <dt><%= t(".email") %></dt>
+        <dt><%= icon "mail", class: "icon-muted" %><span><%= t(".email") %></span></dt>
         <dd><%= @employee[:email] %></dd>
       </div>
       <div>
-        <dt><%= t(".work_center") %></dt>
+        <dt><%= icon "map-pin", class: "icon-muted" %><span><%= t(".work_center") %></span></dt>
         <dd><%= @employee[:work_center] %></dd>
       </div>
     </dl>
@@ -31,7 +31,7 @@
 
   <section class="panel">
     <div class="panel-heading">
-      <h2><%= t(".access") %></h2>
+      <h2 class="panel-title"><%= icon "lock" %><span><%= t(".access") %></span></h2>
     </div>
 
     <%= form_with url: account_path, method: :patch, class: "stacked-form compact-form" do |form| %>
@@ -43,7 +43,10 @@
         <%= form.label :password, t(".new_password") %>
         <%= form.password_field :password, autocomplete: "new-password" %>
       </div>
-      <%= form.submit t(".save_password"), class: "button button-primary" %>
+      <%= button_tag type: :submit, class: "button button-primary" do %>
+        <%= icon "lock" %>
+        <span><%= t(".save_password") %></span>
+      <% end %>
     <% end %>
   </section>
 </div>

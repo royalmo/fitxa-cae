@@ -2,7 +2,7 @@
 
 <section class="page-intro">
   <div>
-    <h1><%= t(".heading") %></h1>
+    <h1 class="page-title"><%= icon "square-pen", class: "icon-large" %><span><%= t(".heading") %></span></h1>
     <p><%= t(".intro") %></p>
   </div>
 </section>
@@ -32,8 +32,14 @@
     </div>
 
     <div class="form-actions">
-      <%= link_to t("shared.cancel"), corrections_path, class: "button button-secondary" %>
-      <%= form.submit t(".submit"), class: "button button-primary" %>
+      <%= link_to corrections_path, class: "button button-secondary" do %>
+        <%= icon "x" %>
+        <span><%= t("shared.cancel") %></span>
+      <% end %>
+      <%= button_tag type: :submit, class: "button button-primary" do %>
+        <%= icon "send" %>
+        <span><%= t(".submit") %></span>
+      <% end %>
     </div>
   <% end %>
 </section>

@@ -2,7 +2,7 @@ ca:
   app:
     name: "Fitxa CAE"
     short_name: "Fitxa"
-    description: "Control horari simple per a equips operatius."
+    description: "Registre de temps simple per a equips operatius."
 
   date:
     formats:
@@ -72,16 +72,16 @@ ca:
         title: "Avui"
         hello: "Hola, %{name}"
         date: "Avui"
-        offline_ready: "Llest sense connexió"
-        last_sync: "Darrera sincronització %{time}"
         clocked_in_since: "Treballant des de"
         clock_in: "Entrar"
         clock_out: "Sortir"
-        clock_hint: "El registre es guardarà i es sincronitzarà quan hi hagi connexió."
         week_title: "Setmana"
         worked: "Treballat"
-        expected: "Previst"
-        balance: "Balanç"
+        days: "Dies amb activitat"
+        days_count:
+          one: "1 dia"
+          other: "%{count} dies"
+        corrections: "Correccions"
         today_clockings: "Moviments d'avui"
         correction_title: "Correcció pendent"
         correction_empty: "No tens cap correcció pendent."
@@ -113,7 +113,7 @@ ca:
       new:
         title: "Nova correcció"
         heading: "Nova correcció"
-        intro: "Indica que ha passat i quin horari hauria de constar."
+        intro: "Indica què ha passat i quina hora hauria de constar."
         date: "Dia"
         kind: "Tipus"
         kind_missing_in: "He oblidat entrar"
@@ -157,7 +157,7 @@ ca:
       index:
         title: "Resum"
         heading: "Resum operatiu"
-        subtitle: "Vista ràpida de presència, incidències i activitat del mes."
+        subtitle: "Vista ràpida de presència, correccions i activitat del mes."
         live_title: "Fitxatges recents"
         corrections_title: "Correccions pendents"
         employee: "Treballador"
@@ -178,14 +178,12 @@ ca:
         all_statuses: "Tots"
         code: "Codi"
         name: "Nom"
-        schedule: "Horari"
         last_clocking: "Últim fitxatge"
         month_hours: "Hores del mes"
       form:
         code: "Codi"
         email: "Correu"
         name: "Nom complet"
-        schedule: "Horari"
         status: "Estat"
         team: "Equip"
       new:
@@ -200,23 +198,22 @@ ca:
       new:
         title: "Importació"
         heading: "Importació massiva"
-        subtitle: "Carrega un CSV amb treballadors, horaris i estat inicial."
+        subtitle: "Carrega un CSV amb treballadors, equips i estat inicial."
         file: "Fitxer CSV"
         template: "Descarregar plantilla"
         submit: "Iniciar importació"
-        expected_columns: "Columnes esperades: codi, nom, correu, equip, horari, estat."
+        columns: "Columnes: codi, nom, correu, equip, estat."
     reports:
       index:
         title: "Informes"
-        heading: "Informes horaris"
+        heading: "Informes de fitxatges"
         subtitle: "Prepara exports mensuals per persona, equip o estat."
         month: "Mes"
         employee: "Treballador"
         all_employees: "Tots els treballadors"
-        regular: "Hores"
+        hours: "Hores registrades"
+        days: "Dies"
         corrections: "Correccions"
-        incidents: "Incidències"
-        balance: "Balanç"
         export: "Exportar"
     corrections:
       index:
@@ -230,8 +227,8 @@ ca:
         age: "Antiguitat"
 
   pwa:
-    offline:
-      title: "Sense connexió"
-      heading: "Sense connexió"
-      body: "Pots obrir la pantalla principal i consultar les dades guardades. Els canvis es sincronitzaran quan torni la connexió."
+    unavailable:
+      title: "No s'ha pogut carregar"
+      heading: "No s'ha pogut carregar"
+      body: "Torna-ho a provar d'aquí uns instants."
       retry: "Tornar a provar"

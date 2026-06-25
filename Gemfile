@@ -66,3 +66,6 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+
+# Rails view helper for Lucide icons without app-local SVG source files.
+gem "lucide-rails", "~> 0.7.4"

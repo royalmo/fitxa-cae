@@ -29,15 +29,19 @@
 
     <nav class="employee-nav" aria-label="<%= t("employee.nav.label") %>">
       <%= link_to root_path, class: nav_item_class(root_path) do %>
+        <%= icon "home" %>
         <span><%= t("employee.nav.today") %></span>
       <% end %>
       <%= link_to clockings_path, class: nav_item_class(clockings_path) do %>
+        <%= icon "history" %>
         <span><%= t("employee.nav.clockings") %></span>
       <% end %>
       <%= link_to corrections_path, class: nav_item_class(corrections_path) do %>
+        <%= icon "square-pen" %>
         <span><%= t("employee.nav.corrections") %></span>
       <% end %>
       <%= link_to account_path, class: nav_item_class(account_path) do %>
+        <%= icon "user" %>
         <span><%= t("employee.nav.account") %></span>
       <% end %>
     </nav>

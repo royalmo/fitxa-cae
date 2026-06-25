@@ -8,7 +8,13 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 0
     assert_select "script[src*='admin']", 0
+    assert_select ".employee-nav svg.icon", 4
+    assert_select ".clock-card svg.icon"
     assert_no_match %("admin":), response.body
+    assert_no_match "Previst", response.body
+    assert_no_match "Balanç", response.body
+    assert_no_match "connexió", response.body
+    assert_no_match "sincron", response.body
 
     get clockings_path
     assert_response :success
@@ -38,14 +44,18 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get admin_employees_path
     assert_response :success
     assert_select "table"
+    assert_no_match "Horari", response.body
 
     get new_admin_employee_path
     assert_response :success
     assert_select "form"
+    assert_no_match "Horari", response.body
 
     get admin_reports_path
     assert_response :success
-    assert_select "h1", text: "Informes horaris"
+    assert_select "h1", text: "Informes de fitxatges"
+    assert_no_match "Balanç", response.body
+    assert_no_match "Incidències", response.body
 
     get admin_corrections_path
     assert_response :success
@@ -76,10 +86,14 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_match "startsWith(\"/admin\")", response.body
     assert_no_match "<%=", response.body
     assert_no_match "&quot;", response.body
-    assert_match "\"#{offline_path}\"", response.body
+    assert_match "\"#{unavailable_path}\"", response.body
+    assert_no_match "offline", response.body
 
-    get offline_path
+    get unavailable_path
     assert_response :success
-    assert_select "h1", text: "Sense connexió"
+    assert_select "h1", text: "No s'ha pogut carregar"
+    assert_select ".employee-nav", 0
+    assert_no_match "connexió", response.body
+    assert_no_match "sincron", response.body
   end
 end

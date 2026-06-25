@@ -13,7 +13,6 @@ class Admin::EmployeesController < ApplicationController
       name: "",
       email: "",
       team: "",
-      schedule: "09:00-17:00",
       status: :active
     }
   end

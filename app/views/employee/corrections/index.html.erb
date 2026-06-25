@@ -2,20 +2,26 @@
 
 <section class="page-intro split-intro">
   <div>
-    <h1><%= t(".heading") %></h1>
+    <h1 class="page-title"><%= icon "square-pen", class: "icon-large" %><span><%= t(".heading") %></span></h1>
     <p><%= t(".intro") %></p>
   </div>
-  <%= link_to t(".new_request"), new_correction_path, class: "button button-primary" %>
+  <%= link_to new_correction_path, class: "button button-primary" do %>
+    <%= icon "square-pen" %>
+    <span><%= t(".new_request") %></span>
+  <% end %>
 </section>
 
 <section class="panel">
   <div class="request-list">
     <% @corrections.each do |correction| %>
       <article class="request-row">
-        <div>
-          <span class="muted"><%= l(correction[:date], format: :long) %></span>
-          <strong><%= correction[:title] %></strong>
-          <span><%= correction[:requested] %></span>
+        <div class="request-content">
+          <%= icon "square-pen", class: "icon-muted" %>
+          <div>
+            <span class="muted"><%= l(correction[:date], format: :long) %></span>
+            <strong><%= correction[:title] %></strong>
+            <span><%= correction[:requested] %></span>
+          </div>
         </div>
         <div class="request-meta">
           <span class="<%= badge_class(correction[:status]) %>">

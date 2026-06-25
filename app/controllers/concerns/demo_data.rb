@@ -10,12 +10,11 @@ module DemoData
       first_name: "Laia",
       name: "Laia Ferrer",
       role: "Producció",
-      team: "Torn matí",
+      team: "Producció",
       email: "laia.ferrer@example.test",
       clocked_in: true,
       clocked_in_at: Time.zone.local(2026, 6, 25, 8, 4),
-      work_center: "Nau 2",
-      last_sync_at: Time.zone.local(2026, 6, 25, 10, 48)
+      work_center: "Nau 2"
     }
   end
 
@@ -79,11 +78,11 @@ module DemoData
 
   def demo_employees
     [
-      { id: 12, code: "EMP-012", name: "Laia Ferrer", team: "Producció", schedule: "08:00-16:00", status: :active, last_clocking: "08:04", month_hours: "142 h", email: "laia.ferrer@example.test" },
-      { id: 18, code: "EMP-018", name: "Nil Serra", team: "Magatzem", schedule: "07:00-15:00", status: :active, last_clocking: "07:02", month_hours: "151 h", email: "nil.serra@example.test" },
-      { id: 21, code: "EMP-021", name: "Jana Soler", team: "Administració", schedule: "09:00-17:00", status: :active, last_clocking: "09:01", month_hours: "133 h", email: "jana.soler@example.test" },
-      { id: 27, code: "EMP-027", name: "Pau Roca", team: "Manteniment", schedule: "06:00-14:00", status: :disabled, last_clocking: "Dilluns", month_hours: "88 h", email: "pau.roca@example.test" },
-      { id: 31, code: "EMP-031", name: "Marta Puig", team: "RRHH", schedule: "09:00-17:30", status: :active, last_clocking: "09:08", month_hours: "136 h", email: "marta.puig@example.test" }
+      { id: 12, code: "EMP-012", name: "Laia Ferrer", team: "Producció", status: :active, last_clocking: "08:04", month_hours: "142 h", email: "laia.ferrer@example.test" },
+      { id: 18, code: "EMP-018", name: "Nil Serra", team: "Magatzem", status: :active, last_clocking: "07:02", month_hours: "151 h", email: "nil.serra@example.test" },
+      { id: 21, code: "EMP-021", name: "Jana Soler", team: "Administració", status: :active, last_clocking: "09:01", month_hours: "133 h", email: "jana.soler@example.test" },
+      { id: 27, code: "EMP-027", name: "Pau Roca", team: "Manteniment", status: :disabled, last_clocking: "Dilluns", month_hours: "88 h", email: "pau.roca@example.test" },
+      { id: 31, code: "EMP-031", name: "Marta Puig", team: "RRHH", status: :active, last_clocking: "09:08", month_hours: "136 h", email: "marta.puig@example.test" }
     ]
   end
 
@@ -98,10 +97,10 @@ module DemoData
 
   def demo_report_rows
     [
-      { employee: "Laia Ferrer", regular: "142 h", corrections: 1, incidents: 0, balance: "+2 h 10 min" },
-      { employee: "Nil Serra", regular: "151 h", corrections: 2, incidents: 1, balance: "+5 h 35 min" },
-      { employee: "Jana Soler", regular: "133 h", corrections: 1, incidents: 0, balance: "-1 h 20 min" },
-      { employee: "Pau Roca", regular: "88 h", corrections: 0, incidents: 2, balance: "-8 h 00 min" }
+      { employee: "Laia Ferrer", hours: "142 h", days: 19, corrections: 1 },
+      { employee: "Nil Serra", hours: "151 h", days: 20, corrections: 2 },
+      { employee: "Jana Soler", hours: "133 h", days: 18, corrections: 1 },
+      { employee: "Pau Roca", hours: "88 h", days: 12, corrections: 0 }
     ]
   end
 end

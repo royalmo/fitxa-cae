@@ -4,35 +4,36 @@
   <div>
     <p class="eyebrow"><%= t(".date") %> · <%= l(Date.current, format: :weekday_day_month) %></p>
     <h1><%= t(".hello", name: @employee[:first_name]) %></h1>
-    <p><%= t(".last_sync", time: l(@employee[:last_sync_at], format: :hour_minute)) %></p>
   </div>
-  <span class="sync-chip"><span></span><%= t(".offline_ready") %></span>
 </section>
 
 <section class="clock-card">
-  <p class="clock-label"><%= t(".clocked_in_since") %></p>
+  <p class="clock-label">
+    <%= icon "clock", class: "icon-inverse" %>
+    <span><%= t(".clocked_in_since") %></span>
+  </p>
   <time class="clock-time" datetime="<%= @employee[:clocked_in_at].iso8601 %>">
     <%= l(@employee[:clocked_in_at], format: :hour_minute) %>
   </time>
 
   <% if @employee[:clocked_in] %>
-    <%= button_to t(".clock_out"), clock_out_path, method: :post, form_class: "clock-action-form", class: "primary-clock danger" %>
+    <%= button_to clock_out_path, method: :post, form_class: "clock-action-form", class: "primary-clock danger" do %>
+      <%= icon "log-out", class: "icon-large" %>
+      <span><%= t(".clock_out") %></span>
+    <% end %>
   <% else %>
-    <%= button_to t(".clock_in"), clock_in_path, method: :post, form_class: "clock-action-form", class: "primary-clock" %>
+    <%= button_to clock_in_path, method: :post, form_class: "clock-action-form", class: "primary-clock" do %>
+      <%= icon "log-in", class: "icon-large" %>
+      <span><%= t(".clock_in") %></span>
+    <% end %>
   <% end %>
 
-  <p class="clock-hint"><%= t(".clock_hint") %></p>
 </section>
 
 <div class="employee-grid">
   <section class="panel">
     <div class="panel-heading">
-      <h2><%= t(".week_title") %></h2>
-      <span class="badge badge-open"><%= @week_summary[:progress] %>%</span>
-    </div>
-
-    <div class="progress">
-      <span style="width: <%= @week_summary[:progress] %>%"></span>
+      <h2 class="panel-title"><%= icon "calendar-days" %><span><%= t(".week_title") %></span></h2>
     </div>
 
     <dl class="metric-list">
@@ -41,24 +42,25 @@
         <dd><%= @week_summary[:worked] %></dd>
       </div>
       <div>
-        <dt><%= t(".expected") %></dt>
-        <dd><%= @week_summary[:expected] %></dd>
+        <dt><%= t(".days") %></dt>
+        <dd><%= t(".days_count", count: @week_summary[:days]) %></dd>
       </div>
       <div>
-        <dt><%= t(".balance") %></dt>
-        <dd><%= @week_summary[:balance] %></dd>
+        <dt><%= t(".corrections") %></dt>
+        <dd><%= @week_summary[:corrections] %></dd>
       </div>
     </dl>
   </section>
 
   <section class="panel">
     <div class="panel-heading">
-      <h2><%= t(".today_clockings") %></h2>
+      <h2 class="panel-title"><%= icon "list-checks" %><span><%= t(".today_clockings") %></span></h2>
     </div>
 
     <ol class="timeline">
       <% @today_clockings.each do |clocking| %>
         <li>
+          <span class="timeline-icon"><%= icon clocking_icon_name(clocking[:kind]) %></span>
           <time><%= clocking[:time] %></time>
           <div>
             <strong><%= clocking_kind_text(clocking[:kind]) %></strong>
@@ -72,15 +74,21 @@
 
 <section class="panel">
   <div class="panel-heading">
-    <h2><%= t(".correction_title") %></h2>
-    <%= link_to t(".request_correction"), new_correction_path, class: "text-button" %>
+    <h2 class="panel-title"><%= icon "square-pen" %><span><%= t(".correction_title") %></span></h2>
+    <%= link_to new_correction_path, class: "text-button" do %>
+      <%= icon "square-pen" %>
+      <span><%= t(".request_correction") %></span>
+    <% end %>
   </div>
 
   <% if @pending_correction %>
     <div class="request-row">
-      <div>
-        <strong><%= @pending_correction[:title] %></strong>
-        <span><%= @pending_correction[:requested] %></span>
+      <div class="request-content">
+        <%= icon "square-pen", class: "icon-muted" %>
+        <div>
+          <strong><%= @pending_correction[:title] %></strong>
+          <span><%= @pending_correction[:requested] %></span>
+        </div>
       </div>
       <span class="<%= badge_class(@pending_correction[:status]) %>">
         <%= status_text(@pending_correction[:status]) %>

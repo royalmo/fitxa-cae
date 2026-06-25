@@ -1,6 +1,6 @@
 class PwaController < ApplicationController
-  layout "employee"
+  layout "pwa"
 
-  def offline
+  def unavailable
   end
 end

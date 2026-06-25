@@ -30,20 +30,18 @@
     <thead>
       <tr>
         <th><%= t(".employee") %></th>
-        <th><%= t(".regular") %></th>
+        <th><%= t(".hours") %></th>
+        <th><%= t(".days") %></th>
         <th><%= t(".corrections") %></th>
-        <th><%= t(".incidents") %></th>
-        <th><%= t(".balance") %></th>
       </tr>
     </thead>
     <tbody>
       <% @report_rows.each do |row| %>
         <tr>
           <td><strong><%= row[:employee] %></strong></td>
-          <td><%= row[:regular] %></td>
+          <td><%= row[:hours] %></td>
+          <td><%= row[:days] %></td>
           <td><%= row[:corrections] %></td>
-          <td><%= row[:incidents] %></td>
-          <td><%= row[:balance] %></td>
         </tr>
       <% end %>
     </tbody>

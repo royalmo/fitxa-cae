@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>" data-pwa="fallback">
+  <head>
+    <%= render "layouts/head", manifest: true, theme_color: "#f6f7f2" %>
+  </head>
+
+  <body class="fallback-shell">
+    <main class="fallback-main">
+      <%= yield %>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+<% content_for :title, t(".title") %>
+
+<section class="fallback-card">
+  <p class="eyebrow"><%= t("app.name") %></p>
+  <h1><%= t(".heading") %></h1>
+  <p><%= t(".body") %></p>
+  <%= link_to t(".retry"), root_path, class: "primary-clock" %>
+</section>

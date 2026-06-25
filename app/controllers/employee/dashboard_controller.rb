@@ -6,9 +6,8 @@ class Employee::DashboardController < ApplicationController
     @today_clockings = demo_today_clockings
     @week_summary = {
       worked: "30 h 15 min",
-      expected: "37 h 30 min",
-      balance: "-7 h 15 min",
-      progress: 81
+      days: 4,
+      corrections: 1
     }
     @pending_correction = demo_employee_corrections.find { |correction| correction[:status] == :pending }
   end
