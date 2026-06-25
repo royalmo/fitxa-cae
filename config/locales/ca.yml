@@ -1,0 +1,237 @@
+ca:
+  app:
+    name: "Fitxa CAE"
+    short_name: "Fitxa"
+    description: "Control horari simple per a equips operatius."
+
+  date:
+    formats:
+      weekday_day_month: "%A, %-d %B"
+
+  time:
+    formats:
+      hour_minute: "%H:%M"
+
+  shared:
+    actions: "Accions"
+    approve: "Aprovar"
+    back: "Tornar"
+    cancel: "Cancel·lar"
+    download_csv: "CSV"
+    download_pdf: "PDF"
+    edit: "Editar"
+    filter: "Filtrar"
+    reject: "Rebutjar"
+    save: "Desar"
+    search: "Cercar"
+    view: "Veure"
+
+  statuses:
+    active: "Actiu"
+    approved: "Aprovat"
+    complete: "Complet"
+    corrected: "Corregit"
+    disabled: "Inactiu"
+    open: "Obert"
+    pending: "Pendent"
+    rejected: "Rebutjat"
+
+  clocking_kinds:
+    in: "Entrada"
+    out: "Sortida"
+    pause_start: "Inici pausa"
+    pause_end: "Fi pausa"
+
+  sources:
+    pwa: "PWA"
+    kiosk: "Quiosc"
+    manual: "Manual"
+
+  demo:
+    stats:
+      inactive: "Inactius"
+      month_hours: "Hores del mes"
+      pending_corrections: "Correccions pendents"
+      present: "Ara presents"
+
+  employee:
+    guest: "Treballador"
+    nav:
+      label: "Navegació de treballador"
+      account: "Compte"
+      clockings: "Fitxatges"
+      corrections: "Correccions"
+      today: "Avui"
+    flash:
+      account_updated: "Canvis del compte desats."
+      clocked_in: "Entrada registrada."
+      clocked_out: "Sortida registrada."
+      correction_requested: "Sol·licitud enviada a RRHH."
+    dashboard:
+      show:
+        title: "Avui"
+        hello: "Hola, %{name}"
+        date: "Avui"
+        offline_ready: "Llest sense connexió"
+        last_sync: "Darrera sincronització %{time}"
+        clocked_in_since: "Treballant des de"
+        clock_in: "Entrar"
+        clock_out: "Sortir"
+        clock_hint: "El registre es guardarà i es sincronitzarà quan hi hagi connexió."
+        week_title: "Setmana"
+        worked: "Treballat"
+        expected: "Previst"
+        balance: "Balanç"
+        today_clockings: "Moviments d'avui"
+        correction_title: "Correcció pendent"
+        correction_empty: "No tens cap correcció pendent."
+        request_correction: "Demanar correcció"
+    clockings:
+      index:
+        title: "Fitxatges"
+        heading: "Historial"
+        intro: "Revisa els darrers dies registrats."
+        period: "Període"
+        this_month: "Juny 2026"
+        date: "Data"
+        entry: "Entrada"
+        exit: "Sortida"
+        break: "Pausa"
+        hours: "Hores"
+        status: "Estat"
+    corrections:
+      index:
+        title: "Correccions"
+        heading: "Correccions"
+        intro: "Consulta l'estat de les peticions enviades."
+        new_request: "Nova correcció"
+        date: "Data"
+        request: "Petició"
+        status: "Estat"
+        answered: "Resposta"
+        unanswered: "Pendent de revisió"
+      new:
+        title: "Nova correcció"
+        heading: "Nova correcció"
+        intro: "Indica que ha passat i quin horari hauria de constar."
+        date: "Dia"
+        kind: "Tipus"
+        kind_missing_in: "He oblidat entrar"
+        kind_missing_out: "He oblidat sortir"
+        kind_wrong_time: "Hora incorrecta"
+        time: "Hora correcta"
+        note: "Comentari"
+        note_placeholder: "Ex.: vaig entrar a les 08:05 però el fitxatge no es va guardar."
+        submit: "Enviar a RRHH"
+    accounts:
+      show:
+        title: "Compte"
+        heading: "Compte"
+        intro: "Dades d'accés i preferències bàsiques."
+        personal_data: "Dades"
+        access: "Accés"
+        name: "Nom"
+        email: "Correu"
+        work_center: "Centre"
+        current_password: "Contrasenya actual"
+        new_password: "Nova contrasenya"
+        save_password: "Canviar contrasenya"
+
+  admin:
+    area: "Gestió"
+    guest: "Gestor"
+    role: "Manager"
+    flash:
+      correction_approved: "Correcció aprovada."
+      correction_rejected: "Correcció rebutjada."
+      employee_created: "Treballador creat."
+      employee_updated: "Treballador actualitzat."
+      import_started: "Importació iniciada."
+    nav:
+      label: "Navegació de gestió"
+      corrections: "Correccions"
+      dashboard: "Resum"
+      employees: "Treballadors"
+      reports: "Informes"
+    dashboard:
+      index:
+        title: "Resum"
+        heading: "Resum operatiu"
+        subtitle: "Vista ràpida de presència, incidències i activitat del mes."
+        live_title: "Fitxatges recents"
+        corrections_title: "Correccions pendents"
+        employee: "Treballador"
+        team: "Equip"
+        last_clocking: "Últim fitxatge"
+        request: "Petició"
+    employees:
+      index:
+        title: "Treballadors"
+        heading: "Treballadors"
+        subtitle: "Consulta, filtra i prepara canvis de la plantilla."
+        new_employee: "Nou treballador"
+        import: "Importació massiva"
+        search_placeholder: "Nom, codi o correu"
+        team: "Equip"
+        all_teams: "Tots els equips"
+        status: "Estat"
+        all_statuses: "Tots"
+        code: "Codi"
+        name: "Nom"
+        schedule: "Horari"
+        last_clocking: "Últim fitxatge"
+        month_hours: "Hores del mes"
+      form:
+        code: "Codi"
+        email: "Correu"
+        name: "Nom complet"
+        schedule: "Horari"
+        status: "Estat"
+        team: "Equip"
+      new:
+        title: "Nou treballador"
+        heading: "Nou treballador"
+        subtitle: "Alta preparada per connectar amb el model d'empleat."
+      edit:
+        title: "Editar treballador"
+        heading: "Editar treballador"
+        subtitle: "Canvis operatius sense persistència en aquest prototip."
+    imports:
+      new:
+        title: "Importació"
+        heading: "Importació massiva"
+        subtitle: "Carrega un CSV amb treballadors, horaris i estat inicial."
+        file: "Fitxer CSV"
+        template: "Descarregar plantilla"
+        submit: "Iniciar importació"
+        expected_columns: "Columnes esperades: codi, nom, correu, equip, horari, estat."
+    reports:
+      index:
+        title: "Informes"
+        heading: "Informes horaris"
+        subtitle: "Prepara exports mensuals per persona, equip o estat."
+        month: "Mes"
+        employee: "Treballador"
+        all_employees: "Tots els treballadors"
+        regular: "Hores"
+        corrections: "Correccions"
+        incidents: "Incidències"
+        balance: "Balanç"
+        export: "Exportar"
+    corrections:
+      index:
+        title: "Correccions"
+        heading: "Correccions"
+        subtitle: "Revisa, aprova o rebutja les peticions de fitxatge."
+        employee: "Treballador"
+        date: "Data"
+        request: "Petició"
+        status: "Estat"
+        age: "Antiguitat"
+
+  pwa:
+    offline:
+      title: "Sense connexió"
+      heading: "Sense connexió"
+      body: "Pots obrir la pantalla principal i consultar les dades guardades. Els canvis es sincronitzaran quan torni la connexió."
+      retry: "Tornar a provar"

@@ -1,0 +1,40 @@
+<% content_for :title, t(".title") %>
+
+<section class="page-intro">
+  <div>
+    <p class="eyebrow"><%= t(".period") %> · <%= t(".this_month") %></p>
+    <h1><%= t(".heading") %></h1>
+    <p><%= t(".intro") %></p>
+  </div>
+</section>
+
+<section class="panel flush-panel">
+  <div class="mobile-table">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".date") %></th>
+          <th><%= t(".entry") %></th>
+          <th><%= t(".exit") %></th>
+          <th><%= t(".break") %></th>
+          <th><%= t(".hours") %></th>
+          <th><%= t(".status") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @clocking_days.each do |day| %>
+          <tr>
+            <td><%= l(day[:date], format: :weekday_day_month) %></td>
+            <td><%= day[:in] %></td>
+            <td><%= day[:out] || "—" %></td>
+            <td><%= day[:break] %></td>
+            <td><strong><%= day[:hours] %></strong></td>
+            <td>
+              <span class="<%= badge_class(day[:status]) %>"><%= status_text(day[:status]) %></span>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

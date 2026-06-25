@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>" data-pwa="employee">
+  <head>
+    <%= render "layouts/head", manifest: true, theme_color: "#f6f7f2" %>
+  </head>
+
+  <body class="employee-shell">
+    <% employee = @employee || { name: t("employee.guest"), clocked_in: false } %>
+
+    <header class="employee-topbar">
+      <%= link_to root_path, class: "brand-mark", aria: { label: t("app.name") } do %>
+        <span class="brand-dot"></span>
+        <span><%= t("app.name") %></span>
+      <% end %>
+
+      <div class="employee-chip">
+        <span class="avatar avatar-small"><%= initials(employee[:name]) %></span>
+        <span><%= employee[:name] %></span>
+      </div>
+    </header>
+
+    <% flash.each do |type, message| %>
+      <div class="flash flash-<%= type %>"><%= message %></div>
+    <% end %>
+
+    <main class="employee-main">
+      <%= yield %>
+    </main>
+
+    <nav class="employee-nav" aria-label="<%= t("employee.nav.label") %>">
+      <%= link_to root_path, class: nav_item_class(root_path) do %>
+        <span><%= t("employee.nav.today") %></span>
+      <% end %>
+      <%= link_to clockings_path, class: nav_item_class(clockings_path) do %>
+        <span><%= t("employee.nav.clockings") %></span>
+      <% end %>
+      <%= link_to corrections_path, class: nav_item_class(corrections_path) do %>
+        <span><%= t("employee.nav.corrections") %></span>
+      <% end %>
+      <%= link_to account_path, class: nav_item_class(account_path) do %>
+        <span><%= t("employee.nav.account") %></span>
+      <% end %>
+    </nav>
+  </body>
+</html>

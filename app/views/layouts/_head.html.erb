@@ -1,0 +1,26 @@
+<title><%= content_for(:title) || t("app.name") %></title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="application-name" content="<%= t("app.name") %>">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="<%= local_assigns.fetch(:theme_color, "#f7f7f2") %>">
+<%= csrf_meta_tags %>
+<%= csp_meta_tag %>
+
+<%= yield :head %>
+
+<% if local_assigns[:manifest] %>
+  <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+<% end %>
+
+<link rel="icon" href="/icon.png" type="image/png">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.png">
+
+<% Array(local_assigns.fetch(:stylesheets, :application)).each do |stylesheet| %>
+  <%= stylesheet_link_tag stylesheet, "data-turbo-track": "reload" %>
+<% end %>
+<%= javascript_importmap_tags local_assigns.fetch(:javascript, "application") %>
+<% Array(local_assigns.fetch(:javascript_assets, [])).each do |javascript_asset| %>
+  <%= javascript_include_tag javascript_asset, type: "module", "data-turbo-track": "reload" %>
+<% end %>

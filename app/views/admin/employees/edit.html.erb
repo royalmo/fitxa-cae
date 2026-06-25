@@ -1,0 +1,12 @@
+<% content_for :title, t(".title") %>
+
+<section class="admin-page-heading">
+  <div>
+    <h1><%= t(".heading") %></h1>
+    <p><%= t(".subtitle") %></p>
+  </div>
+</section>
+
+<section class="panel">
+  <%= render "form", employee: @employee, url: admin_employee_path(@employee[:id]), method: :patch %>
+</section>

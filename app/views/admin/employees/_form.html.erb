@@ -1,0 +1,38 @@
+<%= form_with url: url, method: method, class: "stacked-form admin-form" do |form| %>
+  <div class="field-row">
+    <div class="field">
+      <%= form.label :code, t("admin.employees.form.code") %>
+      <%= form.text_field :code, value: employee[:code] %>
+    </div>
+    <div class="field">
+      <%= form.label :status, t("admin.employees.form.status") %>
+      <%= form.select :status, [[status_text(:active), "active"], [status_text(:disabled), "disabled"]], selected: employee[:status] %>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= form.label :name, t("admin.employees.form.name") %>
+    <%= form.text_field :name, value: employee[:name] %>
+  </div>
+
+  <div class="field">
+    <%= form.label :email, t("admin.employees.form.email") %>
+    <%= form.email_field :email, value: employee[:email] %>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <%= form.label :team, t("admin.employees.form.team") %>
+      <%= form.text_field :team, value: employee[:team] %>
+    </div>
+    <div class="field">
+      <%= form.label :schedule, t("admin.employees.form.schedule") %>
+      <%= form.text_field :schedule, value: employee[:schedule] %>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= link_to t("shared.cancel"), admin_employees_path, class: "button button-secondary" %>
+    <%= form.submit t("shared.save"), class: "button button-primary" %>
+  </div>
+<% end %>

@@ -1,0 +1,75 @@
+<% content_for :title, t(".title") %>
+
+<section class="admin-page-heading split-intro">
+  <div>
+    <h1><%= t(".heading") %></h1>
+    <p><%= t(".subtitle") %></p>
+  </div>
+  <div class="action-row">
+    <%= link_to t(".import"), new_admin_import_path, class: "button button-secondary" %>
+    <%= link_to t(".new_employee"), new_admin_employee_path, class: "button button-primary" %>
+  </div>
+</section>
+
+<section class="panel">
+  <%= form_with url: admin_employees_path, method: :get, class: "filter-bar" do |form| %>
+    <div class="field">
+      <%= form.label :q, t("shared.search"), class: "sr-only" %>
+      <%= form.search_field :q, placeholder: t(".search_placeholder") %>
+    </div>
+    <div class="field">
+      <%= form.label :team, t(".team"), class: "sr-only" %>
+      <%= form.select :team, [[t(".all_teams"), ""], ["Producció", "produccio"], ["Magatzem", "magatzem"], ["Administració", "administracio"]] %>
+    </div>
+    <div class="field">
+      <%= form.label :status, t(".status"), class: "sr-only" %>
+      <%= form.select :status, [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]] %>
+    </div>
+    <%= form.submit t("shared.filter"), class: "button button-secondary" %>
+  <% end %>
+</section>
+
+<section class="panel flush-panel">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".code") %></th>
+          <th><%= t(".name") %></th>
+          <th><%= t(".team") %></th>
+          <th><%= t(".schedule") %></th>
+          <th><%= t(".last_clocking") %></th>
+          <th><%= t(".month_hours") %></th>
+          <th><%= t(".status") %></th>
+          <th><%= t("shared.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @employees.each do |employee| %>
+          <tr>
+            <td><%= employee[:code] %></td>
+            <td>
+              <div class="person-cell">
+                <span class="avatar avatar-small"><%= initials(employee[:name]) %></span>
+                <div>
+                  <strong><%= employee[:name] %></strong>
+                  <small><%= employee[:email] %></small>
+                </div>
+              </div>
+            </td>
+            <td><%= employee[:team] %></td>
+            <td><%= employee[:schedule] %></td>
+            <td><%= employee[:last_clocking] %></td>
+            <td><%= employee[:month_hours] %></td>
+            <td>
+              <span class="<%= badge_class(employee[:status]) %>"><%= status_text(employee[:status]) %></span>
+            </td>
+            <td>
+              <%= link_to t("shared.edit"), edit_admin_employee_path(employee[:id]), class: "text-button" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

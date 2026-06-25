@@ -1,0 +1,70 @@
+<% content_for :title, t(".title") %>
+
+<section class="admin-page-heading">
+  <div>
+    <h1><%= t(".heading") %></h1>
+    <p><%= t(".subtitle") %></p>
+  </div>
+</section>
+
+<section class="stat-grid">
+  <% @stats.each do |stat| %>
+    <article class="stat-card">
+      <span><%= stat[:label] %></span>
+      <strong><%= stat[:value] %></strong>
+      <small><%= stat[:trend] %></small>
+    </article>
+  <% end %>
+</section>
+
+<div class="admin-grid">
+  <section class="panel flush-panel">
+    <div class="panel-heading padded-heading">
+      <h2><%= t(".live_title") %></h2>
+      <%= link_to t("shared.view"), admin_employees_path, class: "text-button" %>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".employee") %></th>
+          <th><%= t(".team") %></th>
+          <th><%= t(".last_clocking") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @employees.first(4).each do |employee| %>
+          <tr>
+            <td>
+              <div class="person-cell">
+                <span class="avatar avatar-small"><%= initials(employee[:name]) %></span>
+                <span><%= employee[:name] %></span>
+              </div>
+            </td>
+            <td><%= employee[:team] %></td>
+            <td><%= employee[:last_clocking] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <div class="panel-heading">
+      <h2><%= t(".corrections_title") %></h2>
+      <%= link_to t("shared.view"), admin_corrections_path, class: "text-button" %>
+    </div>
+
+    <div class="request-list compact-list">
+      <% @corrections.select { |correction| correction[:status] == :pending }.each do |correction| %>
+        <article class="request-row">
+          <div>
+            <strong><%= correction[:employee] %></strong>
+            <span><%= correction[:request] %></span>
+          </div>
+          <small><%= correction[:age] %></small>
+        </article>
+      <% end %>
+    </div>
+  </section>
+</div>

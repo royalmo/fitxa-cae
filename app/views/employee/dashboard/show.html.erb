@@ -1,0 +1,92 @@
+<% content_for :title, t(".title") %>
+
+<section class="employee-hero">
+  <div>
+    <p class="eyebrow"><%= t(".date") %> · <%= l(Date.current, format: :weekday_day_month) %></p>
+    <h1><%= t(".hello", name: @employee[:first_name]) %></h1>
+    <p><%= t(".last_sync", time: l(@employee[:last_sync_at], format: :hour_minute)) %></p>
+  </div>
+  <span class="sync-chip"><span></span><%= t(".offline_ready") %></span>
+</section>
+
+<section class="clock-card">
+  <p class="clock-label"><%= t(".clocked_in_since") %></p>
+  <time class="clock-time" datetime="<%= @employee[:clocked_in_at].iso8601 %>">
+    <%= l(@employee[:clocked_in_at], format: :hour_minute) %>
+  </time>
+
+  <% if @employee[:clocked_in] %>
+    <%= button_to t(".clock_out"), clock_out_path, method: :post, form_class: "clock-action-form", class: "primary-clock danger" %>
+  <% else %>
+    <%= button_to t(".clock_in"), clock_in_path, method: :post, form_class: "clock-action-form", class: "primary-clock" %>
+  <% end %>
+
+  <p class="clock-hint"><%= t(".clock_hint") %></p>
+</section>
+
+<div class="employee-grid">
+  <section class="panel">
+    <div class="panel-heading">
+      <h2><%= t(".week_title") %></h2>
+      <span class="badge badge-open"><%= @week_summary[:progress] %>%</span>
+    </div>
+
+    <div class="progress">
+      <span style="width: <%= @week_summary[:progress] %>%"></span>
+    </div>
+
+    <dl class="metric-list">
+      <div>
+        <dt><%= t(".worked") %></dt>
+        <dd><%= @week_summary[:worked] %></dd>
+      </div>
+      <div>
+        <dt><%= t(".expected") %></dt>
+        <dd><%= @week_summary[:expected] %></dd>
+      </div>
+      <div>
+        <dt><%= t(".balance") %></dt>
+        <dd><%= @week_summary[:balance] %></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="panel">
+    <div class="panel-heading">
+      <h2><%= t(".today_clockings") %></h2>
+    </div>
+
+    <ol class="timeline">
+      <% @today_clockings.each do |clocking| %>
+        <li>
+          <time><%= clocking[:time] %></time>
+          <div>
+            <strong><%= clocking_kind_text(clocking[:kind]) %></strong>
+            <span><%= clocking[:place] %> · <%= source_text(clocking[:source]) %></span>
+          </div>
+        </li>
+      <% end %>
+    </ol>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel-heading">
+    <h2><%= t(".correction_title") %></h2>
+    <%= link_to t(".request_correction"), new_correction_path, class: "text-button" %>
+  </div>
+
+  <% if @pending_correction %>
+    <div class="request-row">
+      <div>
+        <strong><%= @pending_correction[:title] %></strong>
+        <span><%= @pending_correction[:requested] %></span>
+      </div>
+      <span class="<%= badge_class(@pending_correction[:status]) %>">
+        <%= status_text(@pending_correction[:status]) %>
+      </span>
+    </div>
+  <% else %>
+    <p class="muted"><%= t(".correction_empty") %></p>
+  <% end %>
+</section>

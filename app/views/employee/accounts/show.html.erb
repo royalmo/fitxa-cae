@@ -1,0 +1,49 @@
+<% content_for :title, t(".title") %>
+
+<section class="page-intro">
+  <div>
+    <h1><%= t(".heading") %></h1>
+    <p><%= t(".intro") %></p>
+  </div>
+</section>
+
+<div class="employee-grid">
+  <section class="panel">
+    <div class="panel-heading">
+      <h2><%= t(".personal_data") %></h2>
+    </div>
+
+    <dl class="detail-list">
+      <div>
+        <dt><%= t(".name") %></dt>
+        <dd><%= @employee[:name] %></dd>
+      </div>
+      <div>
+        <dt><%= t(".email") %></dt>
+        <dd><%= @employee[:email] %></dd>
+      </div>
+      <div>
+        <dt><%= t(".work_center") %></dt>
+        <dd><%= @employee[:work_center] %></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="panel">
+    <div class="panel-heading">
+      <h2><%= t(".access") %></h2>
+    </div>
+
+    <%= form_with url: account_path, method: :patch, class: "stacked-form compact-form" do |form| %>
+      <div class="field">
+        <%= form.label :current_password, t(".current_password") %>
+        <%= form.password_field :current_password, autocomplete: "current-password" %>
+      </div>
+      <div class="field">
+        <%= form.label :password, t(".new_password") %>
+        <%= form.password_field :password, autocomplete: "new-password" %>
+      </div>
+      <%= form.submit t(".save_password"), class: "button button-primary" %>
+    <% end %>
+  </section>
+</div>

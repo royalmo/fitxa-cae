@@ -1,0 +1,39 @@
+<% content_for :title, t(".title") %>
+
+<section class="page-intro">
+  <div>
+    <h1><%= t(".heading") %></h1>
+    <p><%= t(".intro") %></p>
+  </div>
+</section>
+
+<section class="panel">
+  <%= form_with url: corrections_path, class: "stacked-form" do |form| %>
+    <div class="field-row">
+      <div class="field">
+        <%= form.label :date, t(".date") %>
+        <%= form.date_field :date, value: Date.current %>
+      </div>
+
+      <div class="field">
+        <%= form.label :kind, t(".kind") %>
+        <%= form.select :kind, [[t(".kind_missing_in"), "missing_in"], [t(".kind_missing_out"), "missing_out"], [t(".kind_wrong_time"), "wrong_time"]] %>
+      </div>
+    </div>
+
+    <div class="field">
+      <%= form.label :time, t(".time") %>
+      <%= form.time_field :time, value: "08:00" %>
+    </div>
+
+    <div class="field">
+      <%= form.label :note, t(".note") %>
+      <%= form.text_area :note, rows: 5, placeholder: t(".note_placeholder") %>
+    </div>
+
+    <div class="form-actions">
+      <%= link_to t("shared.cancel"), corrections_path, class: "button button-secondary" %>
+      <%= form.submit t(".submit"), class: "button button-primary" %>
+    </div>
+  <% end %>
+</section>

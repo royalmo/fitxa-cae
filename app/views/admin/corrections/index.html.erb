@@ -1,0 +1,46 @@
+<% content_for :title, t(".title") %>
+
+<section class="admin-page-heading">
+  <div>
+    <h1><%= t(".heading") %></h1>
+    <p><%= t(".subtitle") %></p>
+  </div>
+</section>
+
+<section class="panel flush-panel">
+  <table>
+    <thead>
+      <tr>
+        <th><%= t(".employee") %></th>
+        <th><%= t(".date") %></th>
+        <th><%= t(".request") %></th>
+        <th><%= t(".status") %></th>
+        <th><%= t(".age") %></th>
+        <th><%= t("shared.actions") %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @corrections.each do |correction| %>
+        <tr>
+          <td><strong><%= correction[:employee] %></strong></td>
+          <td><%= l(correction[:date], format: :short) %></td>
+          <td><%= correction[:request] %></td>
+          <td>
+            <span class="<%= badge_class(correction[:status]) %>"><%= status_text(correction[:status]) %></span>
+          </td>
+          <td><%= correction[:age] %></td>
+          <td>
+            <% if correction[:status] == :pending %>
+              <div class="inline-actions">
+                <%= button_to t("shared.approve"), approve_admin_correction_path(correction[:id]), method: :post, class: "mini-button" %>
+                <%= button_to t("shared.reject"), reject_admin_correction_path(correction[:id]), method: :post, class: "mini-button muted-button" %>
+              </div>
+            <% else %>
+              <span class="muted"><%= t("shared.view") %></span>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

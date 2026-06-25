@@ -1,5 +1,6 @@
 {
-  "name": "FitxaCae",
+  "name": <%= t("app.name").to_json %>,
+  "short_name": <%= t("app.short_name").to_json %>,
   "icons": [
     {
       "src": "/icon.png",
@@ -16,7 +17,19 @@
   "start_url": "/",
   "display": "standalone",
   "scope": "/",
-  "description": "FitxaCae.",
-  "theme_color": "red",
-  "background_color": "red"
+  "description": <%= t("app.description").to_json %>,
+  "theme_color": "#f6f7f2",
+  "background_color": "#f6f7f2",
+  "shortcuts": [
+    {
+      "name": <%= t("employee.nav.today").to_json %>,
+      "url": "/",
+      "description": <%= t("employee.dashboard.show.title").to_json %>
+    },
+    {
+      "name": <%= t("employee.nav.clockings").to_json %>,
+      "url": "/clockings",
+      "description": <%= t("employee.clockings.index.title").to_json %>
+    }
+  ]
 }

@@ -1,0 +1,24 @@
+<% content_for :title, t(".title") %>
+
+<section class="admin-page-heading split-intro">
+  <div>
+    <h1><%= t(".heading") %></h1>
+    <p><%= t(".subtitle") %></p>
+  </div>
+  <%= link_to t(".template"), "#", class: "button button-secondary" %>
+</section>
+
+<section class="panel">
+  <%= form_with url: admin_import_path, class: "stacked-form admin-form" do |form| %>
+    <div class="drop-zone">
+      <%= form.label :file, t(".file") %>
+      <%= form.file_field :file, accept: ".csv" %>
+      <p><%= t(".expected_columns") %></p>
+    </div>
+
+    <div class="form-actions">
+      <%= link_to t("shared.cancel"), admin_employees_path, class: "button button-secondary" %>
+      <%= form.submit t(".submit"), class: "button button-primary" %>
+    </div>
+  <% end %>
+</section>
