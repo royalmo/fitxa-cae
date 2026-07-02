@@ -6,6 +6,9 @@ ca:
 
   date:
     formats:
+      short: "%-d/%-m/%Y"
+      long: "%-d %B %Y"
+      month_year: "%B %Y"
       weekday_day_month: "%A, %-d %B"
 
   time:
@@ -32,11 +35,14 @@ ca:
     complete: "Complet"
     corrected: "Corregit"
     disabled: "Inactiu"
+    empty: "Sense dades"
     open: "Obert"
     pending: "Pendent"
     rejected: "Rebutjat"
 
   clocking_kinds:
+    entry: "Entrada"
+    exit: "Sortida"
     in: "Entrada"
     out: "Sortida"
     pause_start: "Inici pausa"
@@ -46,6 +52,7 @@ ca:
     pwa: "PWA"
     kiosk: "Quiosc"
     manual: "Manual"
+    employee_portal: "Portal"
 
   demo:
     stats:
@@ -99,18 +106,29 @@ ca:
       account: "Compte"
       clockings: "Fitxatges"
       corrections: "Correccions"
+      logout: "Tancar sessió"
       today: "Avui"
     flash:
       account_updated: "Canvis del compte desats."
+      already_clocked_in: "Ja tens una entrada oberta."
+      already_clocked_out: "No tens cap entrada oberta."
       clocked_in: "Entrada registrada."
       clocked_out: "Sortida registrada."
       correction_requested: "Sol·licitud enviada a RRHH."
+    correction_kinds:
+      generic: "Correcció de fitxatge"
+      missing_entry: "Entrada oblidada"
+      missing_exit: "Sortida oblidada"
+      wrong_entry: "Entrada incorrecta"
+      wrong_exit: "Sortida incorrecta"
     dashboard:
       show:
         title: "Avui"
         hello: "Hola, %{name}"
         date: "Avui"
         clocked_in_since: "Treballant des de"
+        not_clocked_in: "Sense entrada oberta"
+        latest_swipe: "Últim fitxatge: %{kind} a les %{time}"
         clock_in: "Entrar"
         clock_out: "Sortir"
         week_title: "Setmana"
@@ -121,6 +139,7 @@ ca:
           other: "%{count} dies"
         corrections: "Correccions"
         today_clockings: "Moviments d'avui"
+        today_clockings_empty: "Encara no hi ha fitxatges avui."
         correction_title: "Correcció pendent"
         correction_empty: "No tens cap correcció pendent."
         request_correction: "Demanar correcció"
@@ -130,14 +149,20 @@ ca:
         heading: "Historial"
         intro: "Revisa els darrers dies registrats."
         period: "Període"
-        this_month: "Juny 2026"
         date: "Data"
         entry: "Entrada"
         exit: "Sortida"
-        break: "Pausa"
         hours: "Hores"
+        swipes: "Fitxatges"
         status: "Estat"
+        empty: "Encara no hi ha fitxatges aquest mes."
     corrections:
+      summary:
+        requested_swipes: "Hora sol·licitada: %{swipes}"
+        invalidated_swipes:
+          one: "1 fitxatge a invalidar"
+          other: "%{count} fitxatges a invalidar"
+        no_details: "Sense detall addicional."
       index:
         title: "Correccions"
         heading: "Correccions"
@@ -148,19 +173,28 @@ ca:
         status: "Estat"
         answered: "Resposta"
         unanswered: "Pendent de revisió"
+        empty: "Encara no has enviat cap correcció."
       new:
         title: "Nova correcció"
         heading: "Nova correcció"
         intro: "Indica què ha passat i quina hora hauria de constar."
+        error_title: "Revisa la sol·licitud"
         date: "Dia"
         kind: "Tipus"
-        kind_missing_in: "He oblidat entrar"
-        kind_missing_out: "He oblidat sortir"
-        kind_wrong_time: "Hora incorrecta"
+        kind_missing_entry: "He oblidat entrar"
+        kind_missing_exit: "He oblidat sortir"
+        kind_wrong_entry: "L'entrada és incorrecta"
+        kind_wrong_exit: "La sortida és incorrecta"
         time: "Hora correcta"
         note: "Comentari"
         note_placeholder: "Ex.: vaig entrar a les 08:05 però el fitxatge no es va guardar."
+        invalidated_swipes: "Fitxatges recents a invalidar"
+        invalidated_swipes_empty: "No hi ha fitxatges recents."
         submit: "Enviar a RRHH"
+      create:
+        missing_date: "Indica un dia vàlid."
+        missing_kind: "Indica el tipus de correcció."
+        missing_time: "Indica una hora vàlida."
     accounts:
       show:
         title: "Compte"
@@ -168,12 +202,20 @@ ca:
         intro: "Dades d'accés i preferències bàsiques."
         personal_data: "Dades"
         access: "Accés"
+        error_title: "Revisa els canvis"
+        empty_value: "No informat"
         name: "Nom"
+        national_id: "DNI/NIE"
         email: "Correu"
-        work_center: "Centre"
+        phone: "Telèfon"
+        tags: "Etiquetes"
         current_password: "Contrasenya actual"
         new_password: "Nova contrasenya"
-        save_password: "Canviar contrasenya"
+        password_confirmation: "Repeteix la contrasenya"
+        save: "Desar canvis"
+      update:
+        current_password_invalid: "La contrasenya actual no és correcta."
+        password_confirmation_invalid: "La confirmació de la contrasenya no coincideix."
 
   admin:
     area: "Gestió"

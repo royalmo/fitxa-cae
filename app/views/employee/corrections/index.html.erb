@@ -12,26 +12,33 @@
 </section>
 
 <section class="panel">
-  <div class="request-list">
-    <% @corrections.each do |correction| %>
-      <article class="request-row">
-        <div class="request-content">
-          <%= icon "square-pen", class: "icon-muted" %>
-          <div>
-            <span class="muted"><%= l(correction[:date], format: :long) %></span>
-            <strong><%= correction[:title] %></strong>
-            <span><%= correction[:requested] %></span>
+  <% if @corrections.any? %>
+    <div class="request-list">
+      <% @corrections.each do |correction| %>
+        <article class="request-row">
+          <div class="request-content">
+            <%= icon "square-pen", class: "icon-muted" %>
+            <div>
+              <span class="muted"><%= l(correction.day, format: :long) %></span>
+              <strong><%= correction_title(correction) %></strong>
+              <span><%= correction_requested_text(correction) %></span>
+            </div>
           </div>
-        </div>
-        <div class="request-meta">
-          <span class="<%= badge_class(correction[:status]) %>">
-            <%= status_text(correction[:status]) %>
-          </span>
-          <small>
-            <%= correction[:answered_at] ? l(correction[:answered_at], format: :short) : t(".unanswered") %>
-          </small>
-        </div>
-      </article>
-    <% end %>
-  </div>
+          <div class="request-meta">
+            <span class="<%= badge_class(correction.status) %>">
+              <%= status_text(correction.status) %>
+            </span>
+            <small>
+              <%= correction_answered_at(correction) ? l(correction_answered_at(correction), format: :short) : t(".unanswered") %>
+            </small>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <%= icon "square-pen", class: "icon-muted" %>
+      <p><%= t(".empty") %></p>
+    </div>
+  <% end %>
 </section>

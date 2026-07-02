@@ -3,20 +3,31 @@
 <section class="employee-hero">
   <div>
     <p class="eyebrow"><%= t(".date") %> · <%= l(Date.current, format: :weekday_day_month) %></p>
-    <h1><%= t(".hello", name: @employee[:first_name]) %></h1>
+    <h1><%= t(".hello", name: @employee.first_name) %></h1>
   </div>
 </section>
 
 <section class="clock-card">
   <p class="clock-label">
     <%= icon "clock", class: "icon-inverse" %>
-    <span><%= t(".clocked_in_since") %></span>
+    <span><%= @clock_state[:clocked_in] ? t(".clocked_in_since") : t(".not_clocked_in") %></span>
   </p>
-  <time class="clock-time" datetime="<%= @employee[:clocked_in_at].iso8601 %>">
-    <%= l(@employee[:clocked_in_at], format: :hour_minute) %>
-  </time>
 
-  <% if @employee[:clocked_in] %>
+  <% if @clock_state[:clocked_in_at] %>
+    <time class="clock-time" datetime="<%= @clock_state[:clocked_in_at].iso8601 %>">
+      <%= l(@clock_state[:clocked_in_at], format: :hour_minute) %>
+    </time>
+  <% else %>
+    <span class="clock-time">--:--</span>
+  <% end %>
+
+  <% if @clock_state[:latest_swipe] %>
+    <p class="clock-note">
+      <%= t(".latest_swipe", kind: clocking_kind_text(@clock_state[:latest_swipe].kind), time: l(@clock_state[:latest_swipe].swipe_at, format: :hour_minute)) %>
+    </p>
+  <% end %>
+
+  <% if @clock_state[:clocked_in] %>
     <%= button_to clock_out_path, method: :post, form_class: "clock-action-form", class: "primary-clock danger" do %>
       <%= icon "log-out", class: "icon-large" %>
       <span><%= t(".clock_out") %></span>
@@ -39,7 +50,7 @@
     <dl class="metric-list">
       <div>
         <dt><%= t(".worked") %></dt>
-        <dd><%= @week_summary[:worked] %></dd>
+        <dd><%= duration_text(@week_summary[:worked_seconds]) %></dd>
       </div>
       <div>
         <dt><%= t(".days") %></dt>
@@ -58,17 +69,21 @@
     </div>
 
     <ol class="timeline">
-      <% @today_clockings.each do |clocking| %>
+      <% @today_swipes.each do |swipe| %>
         <li>
-          <span class="timeline-icon"><%= icon clocking_icon_name(clocking[:kind]) %></span>
-          <time><%= clocking[:time] %></time>
+          <span class="timeline-icon"><%= icon clocking_icon_name(swipe.kind) %></span>
+          <time><%= l(swipe.swipe_at, format: :hour_minute) %></time>
           <div>
-            <strong><%= clocking_kind_text(clocking[:kind]) %></strong>
-            <span><%= clocking[:place] %> · <%= source_text(clocking[:source]) %></span>
+            <strong><%= clocking_kind_text(swipe.kind) %></strong>
+            <span><%= source_text(swipe.metadata.presence || "employee_portal") %></span>
           </div>
         </li>
       <% end %>
     </ol>
+
+    <% if @today_swipes.empty? %>
+      <p class="muted"><%= t(".today_clockings_empty") %></p>
+    <% end %>
   </section>
 </div>
 
@@ -86,12 +101,12 @@
       <div class="request-content">
         <%= icon "square-pen", class: "icon-muted" %>
         <div>
-          <strong><%= @pending_correction[:title] %></strong>
-          <span><%= @pending_correction[:requested] %></span>
+          <strong><%= correction_title(@pending_correction) %></strong>
+          <span><%= correction_requested_text(@pending_correction) %></span>
         </div>
       </div>
-      <span class="<%= badge_class(@pending_correction[:status]) %>">
-        <%= status_text(@pending_correction[:status]) %>
+      <span class="<%= badge_class(@pending_correction.status) %>">
+        <%= status_text(@pending_correction.status) %>
       </span>
     </div>
   <% else %>

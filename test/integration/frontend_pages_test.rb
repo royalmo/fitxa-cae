@@ -70,7 +70,14 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     post clock_out_path
     assert_redirected_to root_path
 
-    post corrections_path
+    assert_difference "SwipeCorrection.count", 1 do
+      post corrections_path, params: {
+        date: Date.current.iso8601,
+        kind: "missing_exit",
+        time: "17:00",
+        note: "Sortida oblidada"
+      }
+    end
     assert_redirected_to corrections_path
 
     post admin_employees_path

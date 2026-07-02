@@ -16,15 +16,23 @@
     <dl class="detail-list">
       <div>
         <dt><%= icon "user", class: "icon-muted" %><span><%= t(".name") %></span></dt>
-        <dd><%= @employee[:name] %></dd>
+        <dd><%= employee_display_name(@employee) %></dd>
+      </div>
+      <div>
+        <dt><%= icon "badge-check", class: "icon-muted" %><span><%= t(".national_id") %></span></dt>
+        <dd><%= @employee.national_id %></dd>
       </div>
       <div>
         <dt><%= icon "mail", class: "icon-muted" %><span><%= t(".email") %></span></dt>
-        <dd><%= @employee[:email] %></dd>
+        <dd><%= @employee.email.presence || t(".empty_value") %></dd>
       </div>
       <div>
-        <dt><%= icon "map-pin", class: "icon-muted" %><span><%= t(".work_center") %></span></dt>
-        <dd><%= @employee[:work_center] %></dd>
+        <dt><%= icon "phone", class: "icon-muted" %><span><%= t(".phone") %></span></dt>
+        <dd><%= @employee.phone.presence || t(".empty_value") %></dd>
+      </div>
+      <div>
+        <dt><%= icon "tag", class: "icon-muted" %><span><%= t(".tags") %></span></dt>
+        <dd><%= @employee.tags.any? ? @employee.tags.map(&:name).join(", ") : t(".empty_value") %></dd>
       </div>
     </dl>
   </section>
@@ -34,7 +42,26 @@
       <h2 class="panel-title"><%= icon "lock" %><span><%= t(".access") %></span></h2>
     </div>
 
+    <% if @employee.errors.any? %>
+      <div class="error-summary">
+        <strong><%= t(".error_title") %></strong>
+        <ul>
+          <% @employee.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
     <%= form_with url: account_path, method: :patch, class: "stacked-form compact-form" do |form| %>
+      <div class="field">
+        <%= form.label :email, t(".email") %>
+        <%= form.email_field :email, value: @employee.email, autocomplete: "email" %>
+      </div>
+      <div class="field">
+        <%= form.label :phone, t(".phone") %>
+        <%= form.telephone_field :phone, value: @employee.phone, autocomplete: "tel" %>
+      </div>
       <div class="field">
         <%= form.label :current_password, t(".current_password") %>
         <%= form.password_field :current_password, autocomplete: "current-password" %>
@@ -43,9 +70,13 @@
         <%= form.label :password, t(".new_password") %>
         <%= form.password_field :password, autocomplete: "new-password" %>
       </div>
+      <div class="field">
+        <%= form.label :password_confirmation, t(".password_confirmation") %>
+        <%= form.password_field :password_confirmation, autocomplete: "new-password" %>
+      </div>
       <%= button_tag type: :submit, class: "button button-primary" do %>
-        <%= icon "lock" %>
-        <span><%= t(".save_password") %></span>
+        <%= icon "save" %>
+        <span><%= t(".save") %></span>
       <% end %>
     <% end %>
   </section>

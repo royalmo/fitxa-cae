@@ -585,6 +585,34 @@ input[type="submit"]:hover {
   white-space: nowrap;
 }
 
+.employee-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.topbar-form {
+  margin: 0;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
 .employee-main {
   width: min(100%, 40rem);
   margin: 0 auto;
@@ -636,6 +664,11 @@ input[type="submit"]:hover {
   font-size: clamp(3.2rem, 16vw, 5.25rem);
   line-height: 1;
   font-weight: 900;
+}
+
+.clock-note {
+  margin: -0.25rem 0 0;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .clock-action-form {
@@ -772,6 +805,36 @@ input[type="submit"]:hover {
 .employee-nav .icon {
   width: 1.15rem;
   height: 1.15rem;
+}
+
+.empty-state,
+.error-summary {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+}
+
+.empty-state {
+  place-items: center;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.error-summary {
+  margin-bottom: 1rem;
+  border: 1px solid #f2b8b5;
+  border-radius: 8px;
+  color: var(--danger);
+  background: #fff0ef;
+}
+
+.error-summary ul {
+  margin: 0;
+  padding-left: 1.25rem;
 }
 
 .fallback-shell {

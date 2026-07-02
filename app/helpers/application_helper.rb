@@ -12,7 +12,7 @@ module ApplicationHelper
   end
 
   def initials(name)
-    name.split.map(&:first).join.first(2).upcase
+    name.to_s.split.map(&:first).join.first(2).to_s.upcase.presence || "?"
   end
 
   def status_text(status)
@@ -20,11 +20,22 @@ module ApplicationHelper
   end
 
   def clocking_kind_text(kind)
-    t("clocking_kinds.#{kind}")
+    t("clocking_kinds.#{kind}", default: kind.to_s.humanize)
   end
 
   def source_text(source)
-    t("sources.#{source}")
+    t("sources.#{source}", default: source.to_s.humanize)
+  end
+
+  def employee_display_name(employee)
+    employee&.full_name.presence || employee&.first_name.presence || t("employee.guest")
+  end
+
+  def duration_text(total_seconds)
+    minutes = [ total_seconds.to_i / 60, 0 ].max
+    hours, remaining_minutes = minutes.divmod(60)
+
+    "#{hours} h #{remaining_minutes.to_s.rjust(2, "0")} min"
   end
 
   def icon(name, options = {})
@@ -43,6 +54,8 @@ module ApplicationHelper
 
   def clocking_icon_name(kind)
     {
+      entry: "log-in",
+      exit: "log-out",
       in: "log-in",
       out: "log-out",
       pause_start: "pause",

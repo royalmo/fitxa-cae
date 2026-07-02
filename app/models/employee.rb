@@ -31,8 +31,25 @@ class Employee < ApplicationRecord
     where(active: true).find_by(national_id: normalize_national_id(national_id))
   end
 
+  def full_name
+    [ first_name, last_name ].compact_blank.join(" ")
+  end
+
   def password_login_enabled?
     password_digest.present?
+  end
+
+  def latest_swipe(at: Time.current)
+    swipes.kept.where(swipe_at: ..at).order(swipe_at: :desc, id: :desc).first
+  end
+
+  def open_entry_swipe(at: Time.current)
+    swipe = latest_swipe(at: at)
+    swipe if swipe&.entry?
+  end
+
+  def clocked_in?(at: Time.current)
+    open_entry_swipe(at: at).present?
   end
 
   def can_receive_login_code?(delivery_method)

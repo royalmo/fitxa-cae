@@ -2,39 +2,46 @@
 
 <section class="page-intro">
   <div>
-    <p class="eyebrow"><%= t(".period") %> · <%= t(".this_month") %></p>
+    <p class="eyebrow"><%= t(".period") %> · <%= l(@month, format: :month_year) %></p>
     <h1 class="page-title"><%= icon "history", class: "icon-large" %><span><%= t(".heading") %></span></h1>
     <p><%= t(".intro") %></p>
   </div>
 </section>
 
 <section class="panel flush-panel">
-  <div class="mobile-table">
-    <table>
-      <thead>
-        <tr>
-          <th><%= t(".date") %></th>
-          <th><%= t(".entry") %></th>
-          <th><%= t(".exit") %></th>
-          <th><%= t(".break") %></th>
-          <th><%= t(".hours") %></th>
-          <th><%= t(".status") %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @clocking_days.each do |day| %>
+  <% if @clocking_days.any? %>
+    <div class="mobile-table">
+      <table>
+        <thead>
           <tr>
-            <td><%= l(day[:date], format: :weekday_day_month) %></td>
-            <td><%= day[:in] %></td>
-            <td><%= day[:out] || "—" %></td>
-            <td><%= day[:break] %></td>
-            <td><strong><%= day[:hours] %></strong></td>
-            <td>
-              <span class="<%= badge_class(day[:status]) %>"><%= status_text(day[:status]) %></span>
-            </td>
+            <th><%= t(".date") %></th>
+            <th><%= t(".entry") %></th>
+            <th><%= t(".exit") %></th>
+            <th><%= t(".hours") %></th>
+            <th><%= t(".swipes") %></th>
+            <th><%= t(".status") %></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          <% @clocking_days.each do |day| %>
+            <tr>
+              <td><%= l(day[:date], format: :weekday_day_month) %></td>
+              <td><%= day[:entry_at] ? l(day[:entry_at], format: :hour_minute) : "—" %></td>
+              <td><%= day[:exit_at] ? l(day[:exit_at], format: :hour_minute) : "—" %></td>
+              <td><strong><%= duration_text(day[:worked_seconds]) %></strong></td>
+              <td><%= day[:swipes_count] %></td>
+              <td>
+                <span class="<%= badge_class(day[:status]) %>"><%= status_text(day[:status]) %></span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <%= icon "history", class: "icon-muted" %>
+      <p><%= t(".empty") %></p>
+    </div>
+  <% end %>
 </section>
