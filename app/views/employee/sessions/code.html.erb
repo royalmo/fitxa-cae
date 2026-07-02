@@ -1,0 +1,27 @@
+<% content_for :title, t(".title") %>
+
+<section class="auth-card auth-card-narrow">
+  <header class="auth-header">
+    <%= link_to login_path, class: "brand-mark", aria: { label: t("app.name") } do %>
+      <span class="brand-dot"></span>
+      <span><%= t("app.name") %></span>
+    <% end %>
+    <h1><%= t(".heading") %></h1>
+    <% if @masked_destination.present? %>
+      <p><%= t(".sent_to", destination: @masked_destination) %></p>
+    <% end %>
+  </header>
+
+  <section class="auth-panel">
+    <%= form_with url: verify_login_code_path, method: :post, class: "auth-form" do |form| %>
+      <div class="field">
+        <%= form.label :code, t(".code") %>
+        <%= form.text_field :code, inputmode: "numeric", autocomplete: "one-time-code", required: true, maxlength: 6 %>
+      </div>
+
+      <%= form.submit t(".submit") %>
+    <% end %>
+
+    <%= link_to t(".restart"), login_path, class: "button button-secondary auth-secondary-action" %>
+  </section>
+</section>

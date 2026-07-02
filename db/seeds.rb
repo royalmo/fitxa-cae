@@ -119,7 +119,8 @@ ActiveRecord::Base.transaction do
       phone: has_phone ? phone_number(index) : nil,
       email: has_email ? email_address(first_name, last_name, index) : nil,
       active: active,
-      settings: has_password ? password_settings("1234") : {}
+      password: has_password ? "1234" : nil,
+      settings: {}
     )
 
     employee.tags = [

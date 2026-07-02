@@ -14,6 +14,8 @@ require "rails/test_help"
 
 module ActiveSupport
   class TestCase
+    include ActiveSupport::Testing::TimeHelpers
+
     # Run tests in parallel with specified workers
     parallelize(workers: :number_of_processors)
 
@@ -54,10 +56,29 @@ module ActiveSupport
       }.merge(attributes))
     end
 
+    def log_in_employee(employee = create_employee(password: "1234"))
+      post login_path, params: {
+        national_id: employee.national_id,
+        password: "1234"
+      }
+    end
+
     def assert_model_error(record, attribute, error)
       error_codes = record.errors.details.fetch(attribute).map { |detail| detail.fetch(:error) }
 
       assert_includes error_codes, error
+    end
+
+    def with_secure_random_number(value)
+      singleton = class << SecureRandom
+        self
+      end
+      original_method = SecureRandom.method(:random_number)
+
+      singleton.define_method(:random_number) { |_limit = nil| value }
+      yield
+    ensure
+      singleton.define_method(:random_number, original_method) if original_method
     end
   end
 end

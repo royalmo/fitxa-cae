@@ -151,6 +151,123 @@ td small,
   background: #e8f6ef;
 }
 
+.flash-alert {
+  border-color: #f2b8b5;
+  color: var(--danger);
+  background: #fff0ef;
+}
+
+.auth-shell {
+  min-height: 100vh;
+}
+
+.auth-main {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1.25rem;
+}
+
+.auth-card {
+  width: min(100%, 48rem);
+}
+
+.auth-card-narrow {
+  width: min(100%, 28rem);
+}
+
+.auth-header {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.auth-header h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  line-height: 1.08;
+}
+
+.auth-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.auth-methods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.auth-panel {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.auth-panel h2 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field label,
+.choice-list legend {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--text);
+  background: #ffffff;
+}
+
+.choice-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice-list label,
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.choice-list input,
+.check-row input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--primary);
+}
+
+.auth-secondary-action {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
 .panel {
   padding: 1rem;
   border: 1px solid var(--line);
@@ -694,6 +811,10 @@ input[type="submit"]:hover {
 @media (max-width: 680px) {
   body {
     font-size: 15px;
+  }
+
+  .auth-methods {
+    grid-template-columns: 1fr;
   }
 
   .employee-hero,

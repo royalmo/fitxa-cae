@@ -1,0 +1,70 @@
+<% content_for :title, t(".title") %>
+
+<section class="auth-card" data-controller="pwa-session">
+  <header class="auth-header">
+    <%= link_to login_path, class: "brand-mark", aria: { label: t("app.name") } do %>
+      <span class="brand-dot"></span>
+      <span><%= t("app.name") %></span>
+    <% end %>
+    <h1><%= t(".heading") %></h1>
+  </header>
+
+  <div class="auth-methods">
+    <section class="auth-panel">
+      <h2><%= t(".password_heading") %></h2>
+
+      <%= form_with url: login_path, method: :post, class: "auth-form" do |form| %>
+        <%= hidden_field_tag :installed_pwa, "0", data: { pwa_session_target: "installedField" } %>
+
+        <div class="field">
+          <%= form.label :national_id, t(".national_id") %>
+          <%= form.text_field :national_id, value: params[:national_id], autocomplete: "username", required: true %>
+        </div>
+
+        <div class="field">
+          <%= form.label :password, t(".password") %>
+          <%= form.password_field :password, autocomplete: "current-password", required: true %>
+        </div>
+
+        <label class="check-row">
+          <%= check_box_tag :remember_me, "1", params[:remember_me].present? %>
+          <span><%= t(".remember_me") %></span>
+        </label>
+
+        <%= form.submit t(".password_submit") %>
+      <% end %>
+    </section>
+
+    <section class="auth-panel">
+      <h2><%= t(".code_heading") %></h2>
+
+      <%= form_with url: request_login_code_path, method: :post, class: "auth-form" do |form| %>
+        <%= hidden_field_tag :installed_pwa, "0", data: { pwa_session_target: "installedField" } %>
+
+        <div class="field">
+          <%= form.label :national_id, t(".national_id") %>
+          <%= form.text_field :national_id, value: params[:national_id], autocomplete: "username", required: true %>
+        </div>
+
+        <fieldset class="choice-list">
+          <legend><%= t(".delivery_method") %></legend>
+          <label>
+            <%= radio_button_tag :delivery_method, "sms", true %>
+            <span><%= t(".sms") %></span>
+          </label>
+          <label>
+            <%= radio_button_tag :delivery_method, "email", false %>
+            <span><%= t(".email") %></span>
+          </label>
+        </fieldset>
+
+        <label class="check-row">
+          <%= check_box_tag :remember_me, "1", params[:remember_me].present? %>
+          <span><%= t(".remember_me") %></span>
+        </label>
+
+        <%= form.submit t(".code_submit") %>
+      <% end %>
+    </section>
+  </div>
+</section>

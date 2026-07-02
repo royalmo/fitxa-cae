@@ -8,6 +8,16 @@ class EmployeeTest < ActiveSupport::TestCase
     assert_equal({}, employee.settings)
   end
 
+  test "supports optional secure password login" do
+    passwordless = create_employee
+    employee = create_employee(national_id: valid_dni(12_345_679), password: "1234")
+
+    assert_not_predicate passwordless, :password_login_enabled?
+    assert_predicate employee, :password_login_enabled?
+    assert employee.authenticate("1234")
+    assert_not employee.authenticate("bad")
+  end
+
   test "requires first name and national id" do
     employee = Employee.new
 
@@ -51,5 +61,27 @@ class EmployeeTest < ActiveSupport::TestCase
     assert_includes employee.swipe_corrections, correction
     assert_includes employee.requested_swipe_corrections, correction
     assert_includes employee.authored_audit_actions, audit_action
+  end
+
+  test "generates hashes and validates login codes without storing plaintext code" do
+    employee = create_employee
+
+    with_secure_random_number(12_345) do
+      code = employee.generate_login_code!(delivery_method: "sms")
+
+      assert_equal "012345", code
+      employee.reload
+      assert_equal "sms", employee.settings.dig("login_code", "delivery_method")
+      assert_not_includes employee.settings.to_s, "012345"
+      assert employee.authenticate_login_code("012345")
+      assert_not employee.authenticate_login_code("999999")
+    end
+  end
+
+  test "rejects expired login codes" do
+    employee = create_employee
+    employee.generate_login_code!(delivery_method: "email", expires_at: 1.minute.ago)
+
+    assert_not employee.authenticate_login_code("000000")
   end
 end

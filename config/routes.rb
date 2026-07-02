@@ -8,6 +8,13 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "unavailable" => "pwa#unavailable", as: :unavailable
 
+  get "login" => "employee/sessions#new", as: :login
+  post "login" => "employee/sessions#create"
+  post "login/code" => "employee/sessions#request_code", as: :request_login_code
+  get "login/code" => "employee/sessions#code", as: :login_code
+  post "login/code/verify" => "employee/sessions#verify_code", as: :verify_login_code
+  delete "logout" => "employee/sessions#destroy", as: :logout
+
   root "employee/dashboard#show"
 
   get "clockings" => "employee/clockings#index", as: :clockings

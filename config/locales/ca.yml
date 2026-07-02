@@ -56,6 +56,44 @@ ca:
 
   employee:
     guest: "Treballador"
+    sessions:
+      flash:
+        require_login: "Inicia sessió per continuar."
+        signed_in: "Sessió iniciada."
+        code_required: "Demana un codi nou per continuar."
+      sms:
+        body: "El teu codi de Fitxa CAE és %{code}. Caduca en %{minutes} minuts."
+      new:
+        title: "Iniciar sessió"
+        heading: "Inicia sessió"
+        password_heading: "Amb contrasenya"
+        code_heading: "Amb codi"
+        national_id: "DNI o NIE"
+        password: "Contrasenya"
+        remember_me: "Mantenir la sessió iniciada"
+        password_submit: "Entrar"
+        delivery_method: "Rebre codi per"
+        sms: "SMS"
+        email: "Correu"
+        code_submit: "Enviar codi"
+      create:
+        invalid: "DNI/NIE o contrasenya incorrectes."
+      request_code:
+        delivery_failed: "No s'ha pogut enviar el codi. Torna-ho a provar d'aquí uns instants."
+        unavailable: "No s'ha pogut enviar cap codi amb aquestes dades."
+        rate_limited: "Has demanat massa codis. Espera un moment i torna-ho a provar."
+        sent: "Codi enviat."
+      code:
+        title: "Codi d'accés"
+        heading: "Introdueix el codi"
+        sent_to: "L'hem enviat a %{destination}."
+        code: "Codi"
+        submit: "Entrar"
+        restart: "Tornar a començar"
+      verify_code:
+        invalid: "El codi no és correcte o ha caducat."
+      destroy:
+        signed_out: "Sessió tancada."
     nav:
       label: "Navegació de treballador"
       account: "Compte"
@@ -232,3 +270,8 @@ ca:
       heading: "No s'ha pogut carregar"
       body: "Torna-ho a provar d'aquí uns instants."
       retry: "Tornar a provar"
+
+  employee_login_mailer:
+    code:
+      subject: "Codi d'accés a Fitxa CAE"
+      body: "Hola %{name}, el teu codi d'accés és %{code}. Caduca en %{minutes} minuts."

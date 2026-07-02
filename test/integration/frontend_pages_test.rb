@@ -2,6 +2,8 @@ require "test_helper"
 
 class FrontendPagesTest < ActionDispatch::IntegrationTest
   test "employee pages render" do
+    log_in_employee
+
     get root_path
     assert_response :success
     assert_select "h1", text: /Hola/
@@ -63,6 +65,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
   end
 
   test "no-op actions redirect to their list screens" do
+    log_in_employee
+
     post clock_out_path
     assert_redirected_to root_path
 
