@@ -1,29 +1,62 @@
-<%= form_with url: url, method: method, class: "stacked-form admin-form" do |form| %>
+<% if employee.errors.any? %>
+  <div class="error-summary">
+    <strong><%= t("admin.employees.form.error_title") %></strong>
+    <ul>
+      <% employee.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%= form_with model: [:admin, employee], class: "stacked-form admin-form" do |form| %>
   <div class="field-row">
     <div class="field">
-      <%= form.label :code, t("admin.employees.form.code") %>
-      <%= form.text_field :code, value: employee[:code] %>
+      <%= form.label :first_name, t("admin.employees.form.first_name") %>
+      <%= form.text_field :first_name, autocomplete: "given-name" %>
     </div>
     <div class="field">
-      <%= form.label :status, t("admin.employees.form.status") %>
-      <%= form.select :status, [[status_text(:active), "active"], [status_text(:disabled), "disabled"]], selected: employee[:status] %>
+      <%= form.label :last_name, t("admin.employees.form.last_name") %>
+      <%= form.text_field :last_name, autocomplete: "family-name" %>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <%= form.label :national_id, t("admin.employees.form.national_id") %>
+      <%= form.text_field :national_id %>
+    </div>
+    <div class="field">
+      <%= form.label :active, t("admin.employees.form.status") %>
+      <%= form.select :active, [[status_text(:active), true], [status_text(:disabled), false]] %>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <%= form.label :email, t("admin.employees.form.email") %>
+      <%= form.email_field :email, autocomplete: "email" %>
+    </div>
+    <div class="field">
+      <%= form.label :phone, t("admin.employees.form.phone") %>
+      <%= form.telephone_field :phone, autocomplete: "tel" %>
     </div>
   </div>
 
   <div class="field">
-    <%= form.label :name, t("admin.employees.form.name") %>
-    <%= form.text_field :name, value: employee[:name] %>
+    <%= form.label :password, t("admin.employees.form.password") %>
+    <%= form.password_field :password, autocomplete: "new-password" %>
   </div>
 
-  <div class="field">
-    <%= form.label :email, t("admin.employees.form.email") %>
-    <%= form.email_field :email, value: employee[:email] %>
-  </div>
-
-  <div class="field">
-    <%= form.label :team, t("admin.employees.form.team") %>
-    <%= form.text_field :team, value: employee[:team] %>
-  </div>
+  <fieldset class="choice-list">
+    <legend><%= t("admin.employees.form.tags") %></legend>
+    <% @tags.each do |tag| %>
+      <label>
+        <%= check_box_tag "employee[tag_ids][]", tag.id, employee.tag_ids.include?(tag.id) %>
+        <span><%= tag.name %></span>
+      </label>
+    <% end %>
+  </fieldset>
 
   <div class="form-actions">
     <%= link_to t("shared.cancel"), admin_employees_path, class: "button button-secondary" %>

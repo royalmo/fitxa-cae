@@ -15,15 +15,15 @@
   <%= form_with url: admin_employees_path, method: :get, class: "filter-bar" do |form| %>
     <div class="field">
       <%= form.label :q, t("shared.search"), class: "sr-only" %>
-      <%= form.search_field :q, placeholder: t(".search_placeholder") %>
+      <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder") %>
     </div>
     <div class="field">
-      <%= form.label :team, t(".team"), class: "sr-only" %>
-      <%= form.select :team, [[t(".all_teams"), ""], ["Producció", "produccio"], ["Magatzem", "magatzem"], ["Administració", "administracio"]] %>
+      <%= form.label :tag_id, t(".tags"), class: "sr-only" %>
+      <%= form.select :tag_id, [[t(".all_tags"), ""]] + @tags.map { |tag| [tag.name, tag.id] }, selected: params[:tag_id] %>
     </div>
     <div class="field">
       <%= form.label :status, t(".status"), class: "sr-only" %>
-      <%= form.select :status, [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]] %>
+      <%= form.select :status, [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]], selected: params[:status] %>
     </div>
     <%= form.submit t("shared.filter"), class: "button button-secondary" %>
   <% end %>
@@ -34,9 +34,9 @@
     <table>
       <thead>
         <tr>
-          <th><%= t(".code") %></th>
           <th><%= t(".name") %></th>
-          <th><%= t(".team") %></th>
+          <th><%= t(".national_id") %></th>
+          <th><%= t(".tags") %></th>
           <th><%= t(".last_clocking") %></th>
           <th><%= t(".month_hours") %></th>
           <th><%= t(".status") %></th>
@@ -46,28 +46,34 @@
       <tbody>
         <% @employees.each do |employee| %>
           <tr>
-            <td><%= employee[:code] %></td>
             <td>
               <div class="person-cell">
-                <span class="avatar avatar-small"><%= initials(employee[:name]) %></span>
+                <span class="avatar avatar-small"><%= initials(employee_display_name(employee)) %></span>
                 <div>
-                  <strong><%= employee[:name] %></strong>
-                  <small><%= employee[:email] %></small>
+                  <strong><%= employee_display_name(employee) %></strong>
+                  <small><%= [employee.email, employee.phone].compact_blank.join(" · ").presence || t(".no_contact") %></small>
                 </div>
               </div>
             </td>
-            <td><%= employee[:team] %></td>
-            <td><%= employee[:last_clocking] %></td>
-            <td><%= employee[:month_hours] %></td>
+            <td><%= employee.national_id %></td>
+            <td><%= admin_employee_tags(employee) %></td>
+            <td><%= admin_last_clocking_text(employee, @last_swipes_by_employee_id) %></td>
+            <td><%= duration_text(@month_work_seconds_by_employee_id.fetch(employee.id, 0)) %></td>
             <td>
-              <span class="<%= badge_class(employee[:status]) %>"><%= status_text(employee[:status]) %></span>
+              <span class="<%= badge_class(admin_employee_status(employee)) %>"><%= status_text(admin_employee_status(employee)) %></span>
             </td>
             <td>
-              <%= link_to t("shared.edit"), edit_admin_employee_path(employee[:id]), class: "text-button" %>
+              <%= link_to t("shared.edit"), edit_admin_employee_path(employee), class: "text-button" %>
             </td>
           </tr>
         <% end %>
       </tbody>
     </table>
   </div>
+
+  <% if @employees.empty? %>
+    <div class="empty-state">
+      <p><%= t(".empty") %></p>
+    </div>
+  <% end %>
 </section>

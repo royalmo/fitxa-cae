@@ -9,4 +9,20 @@ class Swipe < ApplicationRecord
 
   validates :swipe_at, :kind, presence: true
   validates :removed, :forged, inclusion: { in: [ true, false ] }
+
+  def self.paired_work_seconds(swipes)
+    entry_at = nil
+    total = 0
+
+    swipes.each do |swipe|
+      if swipe.entry?
+        entry_at ||= swipe.swipe_at
+      elsif swipe.exit? && entry_at
+        total += [ swipe.swipe_at - entry_at, 0 ].max
+        entry_at = nil
+      end
+    end
+
+    total
+  end
 end

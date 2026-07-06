@@ -1,4 +1,6 @@
 class Manager < ApplicationRecord
+  scope :active, -> { where(active: true) }
+
   belongs_to :employee, optional: true
 
   has_many :validated_swipe_corrections,
@@ -10,4 +12,8 @@ class Manager < ApplicationRecord
   has_many :received_audit_actions, as: :recipient, class_name: "AuditAction"
 
   validates :active, inclusion: { in: [ true, false ] }
+
+  def full_name
+    [ first_name, last_name ].compact_blank.join(" ")
+  end
 end

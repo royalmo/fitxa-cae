@@ -19,6 +19,9 @@ class Employee < ApplicationRecord
   has_many :received_audit_actions, as: :recipient, class_name: "AuditAction"
   has_and_belongs_to_many :tags
 
+  scope :active, -> { where(active: true) }
+  scope :inactive, -> { where(active: false) }
+
   validates :first_name, :national_id, presence: true
   validate :national_id_has_valid_spanish_check_letter
   validates :active, inclusion: { in: [ true, false ] }

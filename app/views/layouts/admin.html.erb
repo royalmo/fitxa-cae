@@ -5,7 +5,7 @@
   </head>
 
   <body class="admin-shell">
-    <% manager = @manager || { name: t("admin.guest"), role: t("admin.role") } %>
+    <% manager_name = manager_display_name(@manager) %>
 
     <aside class="admin-sidebar">
       <%= link_to admin_root_path, class: "brand-mark admin-brand" do %>
@@ -25,11 +25,11 @@
       <header class="admin-header">
         <div>
           <p class="eyebrow"><%= t("admin.area") %></p>
-          <strong><%= manager[:name] %></strong>
+          <strong><%= manager_name %></strong>
         </div>
         <div class="admin-profile">
-          <span><%= manager[:role] %></span>
-          <span class="avatar avatar-small"><%= initials(manager[:name]) %></span>
+          <span><%= t("admin.role") %></span>
+          <span class="avatar avatar-small"><%= initials(manager_name) %></span>
         </div>
       </header>
 

@@ -80,10 +80,31 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to corrections_path
 
-    post admin_employees_path
+    assert_difference "Employee.count", 1 do
+      post admin_employees_path, params: {
+        employee: {
+          first_name: "Joan",
+          last_name: "Mas",
+          national_id: valid_dni(40_000_001),
+          active: "1"
+        }
+      }
+    end
     assert_redirected_to admin_employees_path
 
-    post approve_admin_correction_path(501)
+    employee = create_employee(national_id: valid_dni(40_000_002), password: "1234")
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.current,
+      details: {
+        "requested_swipes" => [
+          { "kind" => "exit", "swipe_at" => Time.current.iso8601 }
+        ]
+      }
+    )
+
+    post approve_admin_correction_path(correction)
     assert_redirected_to admin_corrections_path
   end
 

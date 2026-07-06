@@ -15,6 +15,7 @@
         <th><%= t(".date") %></th>
         <th><%= t(".request") %></th>
         <th><%= t(".status") %></th>
+        <th><%= t(".validator") %></th>
         <th><%= t(".age") %></th>
         <th><%= t("shared.actions") %></th>
       </tr>
@@ -22,18 +23,22 @@
     <tbody>
       <% @corrections.each do |correction| %>
         <tr>
-          <td><strong><%= correction[:employee] %></strong></td>
-          <td><%= l(correction[:date], format: :short) %></td>
-          <td><%= correction[:request] %></td>
+          <td><strong><%= employee_display_name(correction.employee) %></strong></td>
+          <td><%= l(correction.day, format: :short) %></td>
           <td>
-            <span class="<%= badge_class(correction[:status]) %>"><%= status_text(correction[:status]) %></span>
+            <strong><%= correction_title(correction) %></strong><br>
+            <span class="muted"><%= correction_requested_text(correction) %></span>
           </td>
-          <td><%= correction[:age] %></td>
           <td>
-            <% if correction[:status] == :pending %>
+            <span class="<%= badge_class(correction.status) %>"><%= status_text(correction.status) %></span>
+          </td>
+          <td><%= correction.validator ? manager_display_name(correction.validator) : "—" %></td>
+          <td><%= l(correction.created_at, format: :short) %></td>
+          <td>
+            <% if correction.pending? %>
               <div class="inline-actions">
-                <%= button_to t("shared.approve"), approve_admin_correction_path(correction[:id]), method: :post, class: "mini-button" %>
-                <%= button_to t("shared.reject"), reject_admin_correction_path(correction[:id]), method: :post, class: "mini-button muted-button" %>
+                <%= button_to t("shared.approve"), approve_admin_correction_path(correction), method: :post, class: "mini-button" %>
+                <%= button_to t("shared.reject"), reject_admin_correction_path(correction), method: :post, class: "mini-button muted-button" %>
               </div>
             <% else %>
               <span class="muted"><%= t("shared.view") %></span>
@@ -43,4 +48,10 @@
       <% end %>
     </tbody>
   </table>
+
+  <% if @corrections.empty? %>
+    <div class="empty-state">
+      <p><%= t(".empty") %></p>
+    </div>
+  <% end %>
 </section>

@@ -1,8 +1,5 @@
-class Admin::ImportsController < ApplicationController
-  layout "admin"
-
+class Admin::ImportsController < Admin::BaseController
   def new
-    @manager = demo_current_manager
   end
 
   def create

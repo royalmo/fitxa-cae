@@ -15,11 +15,11 @@
   <%= form_with url: admin_reports_path, method: :get, class: "filter-bar" do |form| %>
     <div class="field">
       <%= form.label :month, t(".month"), class: "sr-only" %>
-      <%= form.month_field :month, value: "2026-06" %>
+      <%= form.month_field :month, value: @month.strftime("%Y-%m") %>
     </div>
     <div class="field">
-      <%= form.label :employee, t(".employee"), class: "sr-only" %>
-      <%= form.select :employee, [[t(".all_employees"), ""], ["Laia Ferrer", "12"], ["Nil Serra", "18"], ["Jana Soler", "21"]] %>
+      <%= form.label :employee_id, t(".employee"), class: "sr-only" %>
+      <%= form.select :employee_id, [[t(".all_employees"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] }, selected: @selected_employee_id %>
     </div>
     <%= form.submit t("shared.filter"), class: "button button-secondary" %>
   <% end %>
@@ -38,12 +38,18 @@
     <tbody>
       <% @report_rows.each do |row| %>
         <tr>
-          <td><strong><%= row[:employee] %></strong></td>
-          <td><%= row[:hours] %></td>
+          <td><strong><%= employee_display_name(row[:employee]) %></strong></td>
+          <td><%= duration_text(row[:worked_seconds]) %></td>
           <td><%= row[:days] %></td>
           <td><%= row[:corrections] %></td>
         </tr>
       <% end %>
     </tbody>
   </table>
+
+  <% if @report_rows.empty? %>
+    <div class="empty-state">
+      <p><%= t(".empty") %></p>
+    </div>
+  <% end %>
 </section>

@@ -19,7 +19,7 @@ module EmployeeClockingSummaries
     swipes = employee.swipes.kept.where(swipe_at: start_date.beginning_of_day..end_date.end_of_day).chronological.to_a
 
     {
-      worked_seconds: swipes.group_by { |swipe| swipe.swipe_at.to_date }.values.sum { |day_swipes| paired_work_seconds(day_swipes) },
+      worked_seconds: swipes.group_by { |swipe| swipe.swipe_at.to_date }.values.sum { |day_swipes| Swipe.paired_work_seconds(day_swipes) },
       days: swipes.map { |swipe| swipe.swipe_at.to_date }.uniq.count,
       corrections: employee.swipe_corrections.where(day: start_date..end_date).count
     }
@@ -39,26 +39,10 @@ module EmployeeClockingSummaries
         entry_at: day_swipes.find(&:entry?)&.swipe_at,
         exit_at: day_swipes.reverse.find(&:exit?)&.swipe_at,
         swipes_count: day_swipes.count,
-        worked_seconds: paired_work_seconds(day_swipes),
+        worked_seconds: Swipe.paired_work_seconds(day_swipes),
         status: clocking_day_status(day_swipes, day_corrections)
       }
     end
-  end
-
-  def paired_work_seconds(swipes)
-    entry_at = nil
-    total = 0
-
-    swipes.each do |swipe|
-      if swipe.entry?
-        entry_at ||= swipe.swipe_at
-      elsif swipe.exit? && entry_at
-        total += [ swipe.swipe_at - entry_at, 0 ].max
-        entry_at = nil
-      end
-    end
-
-    total
   end
 
   def clocking_day_status(swipes, corrections)

@@ -14,6 +14,7 @@ ca:
   time:
     formats:
       hour_minute: "%H:%M"
+      short: "%-d/%-m/%Y %H:%M"
 
   shared:
     actions: "Accions"
@@ -222,6 +223,7 @@ ca:
     guest: "Gestor"
     role: "Manager"
     flash:
+      correction_already_reviewed: "Aquesta correcció ja està revisada."
       correction_approved: "Correcció aprovada."
       correction_rejected: "Correcció rebutjada."
       employee_created: "Treballador creat."
@@ -241,9 +243,20 @@ ca:
         live_title: "Fitxatges recents"
         corrections_title: "Correccions pendents"
         employee: "Treballador"
-        team: "Equip"
+        tags: "Etiquetes"
         last_clocking: "Últim fitxatge"
         request: "Petició"
+        no_pending_corrections: "No hi ha correccions pendents."
+        no_recent_swipes: "Encara no hi ha fitxatges."
+        no_tags: "Sense etiquetes"
+        stats:
+          present: "Ara presents"
+          pending_corrections: "Correccions pendents"
+          month_hours: "Hores del mes"
+          inactive: "Inactius"
+          now: "Ara"
+          open: "Obertes"
+          employees: "Treballadors"
     employees:
       index:
         title: "Treballadors"
@@ -251,21 +264,29 @@ ca:
         subtitle: "Consulta, filtra i prepara canvis de la plantilla."
         new_employee: "Nou treballador"
         import: "Importació massiva"
-        search_placeholder: "Nom, codi o correu"
-        team: "Equip"
-        all_teams: "Tots els equips"
+        search_placeholder: "Nom, DNI/NIE o correu"
+        tags: "Etiquetes"
+        all_tags: "Totes les etiquetes"
+        no_tags: "Sense etiquetes"
+        no_contact: "Sense contacte"
+        no_clockings: "Sense fitxatges"
         status: "Estat"
         all_statuses: "Tots"
-        code: "Codi"
+        national_id: "DNI/NIE"
         name: "Nom"
         last_clocking: "Últim fitxatge"
         month_hours: "Hores del mes"
+        empty: "No hi ha treballadors amb aquests filtres."
       form:
-        code: "Codi"
+        error_title: "Revisa el treballador"
         email: "Correu"
-        name: "Nom complet"
+        first_name: "Nom"
+        last_name: "Cognoms"
+        national_id: "DNI/NIE"
+        password: "Contrasenya"
+        phone: "Telèfon"
         status: "Estat"
-        team: "Equip"
+        tags: "Etiquetes"
       new:
         title: "Nou treballador"
         heading: "Nou treballador"
@@ -273,7 +294,7 @@ ca:
       edit:
         title: "Editar treballador"
         heading: "Editar treballador"
-        subtitle: "Canvis operatius sense persistència en aquest prototip."
+        subtitle: "Actualitza les dades operatives del treballador."
     imports:
       new:
         title: "Importació"
@@ -282,7 +303,7 @@ ca:
         file: "Fitxer CSV"
         template: "Descarregar plantilla"
         submit: "Iniciar importació"
-        columns: "Columnes: codi, nom, correu, equip, estat."
+        columns: "Columnes: nom, cognoms, DNI/NIE, correu, telèfon, estat i etiquetes."
     reports:
       index:
         title: "Informes"
@@ -295,6 +316,7 @@ ca:
         days: "Dies"
         corrections: "Correccions"
         export: "Exportar"
+        empty: "No hi ha treballadors per a aquest filtre."
     corrections:
       index:
         title: "Correccions"
@@ -304,7 +326,12 @@ ca:
         date: "Data"
         request: "Petició"
         status: "Estat"
+        validator: "Validador"
         age: "Antiguitat"
+        empty: "No hi ha correccions registrades."
+      review:
+        approved: "Aprovada des de gestió."
+        rejected: "Rebutjada des de gestió."
 
   pwa:
     unavailable:

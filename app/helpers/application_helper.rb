@@ -31,6 +31,10 @@ module ApplicationHelper
     employee&.full_name.presence || employee&.first_name.presence || t("employee.guest")
   end
 
+  def manager_display_name(manager)
+    manager&.full_name.presence || manager&.email.presence || t("admin.guest")
+  end
+
   def duration_text(total_seconds)
     minutes = [ total_seconds.to_i / 60, 0 ].max
     hours, remaining_minutes = minutes.divmod(60)
