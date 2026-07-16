@@ -65,7 +65,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
-  gem "simplecov", "~> 0.22.0"
+  gem "simplecov", "~> 1.0.1"
 end
 
 # Rails view helper for Lucide icons without app-local SVG source files.
