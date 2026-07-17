@@ -5,6 +5,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
     get admin_login_path
 
     assert_response :success
+    assert_select "title", text: "Accés de gestió | FitxaCAE Admin"
     assert_select "form[action='#{admin_login_path}']"
   end
 

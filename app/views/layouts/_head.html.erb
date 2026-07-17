@@ -1,4 +1,4 @@
-<title><%= content_for(:title) || t("app.name") %></title>
+<title><%= browser_title(content_for(:title), admin: local_assigns.fetch(:admin, false)) %></title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="application-name" content="<%= t("app.name") %>">

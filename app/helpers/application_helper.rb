@@ -19,6 +19,12 @@ module ApplicationHelper
     t("statuses.#{status}")
   end
 
+  def browser_title(title = nil, admin: false)
+    suffix = admin ? "FitxaCAE Admin" : "FitxaCAE"
+
+    [ title.presence, suffix ].compact.join(" | ")
+  end
+
   def clocking_kind_text(kind)
     t("clocking_kinds.#{kind}", default: kind.to_s.humanize)
   end

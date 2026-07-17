@@ -7,6 +7,10 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
   end
 
   test "redirects employee pages to login when signed out" do
+    get login_path
+    assert_response :success
+    assert_select "title", text: "Iniciar sessió | FitxaCAE"
+
     get root_path
 
     assert_redirected_to login_path

@@ -6,6 +6,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get root_path
     assert_response :success
+    assert_select "title", text: "Avui | FitxaCAE"
     assert_select "h1", text: /Hola/
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 0
@@ -20,18 +21,22 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get clockings_path
     assert_response :success
+    assert_select "title", text: "Fitxatges | FitxaCAE"
     assert_select "h1", text: "Historial"
 
     get corrections_path
     assert_response :success
+    assert_select "title", text: "Correccions | FitxaCAE"
     assert_select "h1", text: "Correccions"
 
     get new_correction_path
     assert_response :success
+    assert_select "title", text: "Nova correcció | FitxaCAE"
     assert_select "form"
 
     get account_path
     assert_response :success
+    assert_select "title", text: "Compte | FitxaCAE"
     assert_select "h1", text: "Compte"
   end
 
@@ -40,6 +45,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get admin_root_path
     assert_response :success
+    assert_select "title", text: "Resum | FitxaCAE Admin"
     assert_select "h1", text: "Resum operatiu"
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 1
@@ -47,22 +53,26 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get admin_employees_path
     assert_response :success
+    assert_select "title", text: "Treballadors | FitxaCAE Admin"
     assert_select "table"
     assert_no_match "Horari", response.body
 
     get new_admin_employee_path
     assert_response :success
+    assert_select "title", text: "Nou treballador | FitxaCAE Admin"
     assert_select "form"
     assert_no_match "Horari", response.body
 
     get admin_reports_path
     assert_response :success
+    assert_select "title", text: "Informes | FitxaCAE Admin"
     assert_select "h1", text: "Informes de fitxatges"
     assert_no_match "Balanç", response.body
     assert_no_match "Incidències", response.body
 
     get admin_corrections_path
     assert_response :success
+    assert_select "title", text: "Correccions | FitxaCAE Admin"
     assert_select "table"
   end
 
@@ -127,6 +137,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get unavailable_path
     assert_response :success
+    assert_select "title", text: /No s(&#39;|')ha pogut carregar \| FitxaCAE/
     assert_select "h1", text: "No s'ha pogut carregar"
     assert_select ".employee-nav", 0
     assert_no_match "connexió", response.body
