@@ -234,7 +234,22 @@ ca:
       corrections: "Correccions"
       dashboard: "Resum"
       employees: "Treballadors"
+      logout: "Tancar sessió"
       reports: "Informes"
+    sessions:
+      flash:
+        require_login: "Inicia sessió com a manager per continuar."
+        signed_in: "Sessió de gestió iniciada."
+      new:
+        title: "Accés de gestió"
+        heading: "Accés de gestió"
+        email: "Correu"
+        password: "Contrasenya"
+        submit: "Entrar"
+      create:
+        invalid: "Correu o contrasenya incorrectes."
+      destroy:
+        signed_out: "Sessió de gestió tancada."
     dashboard:
       index:
         title: "Resum"

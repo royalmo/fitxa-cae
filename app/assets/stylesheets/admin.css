@@ -1,3 +1,7 @@
+.admin-auth-shell {
+  background: var(--bg-admin);
+}
+
 .admin-shell {
   display: grid;
   grid-template-columns: 16rem minmax(0, 1fr);

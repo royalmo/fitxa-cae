@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_30_223029) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_17_115555) do
   create_table "audit_actions", force: :cascade do |t|
     t.integer "author_id", null: false
     t.string "author_type", null: false
@@ -51,6 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_223029) do
     t.integer "employee_id"
     t.string "first_name"
     t.string "last_name"
+    t.string "password_digest"
     t.json "settings", default: {}, null: false
     t.datetime "updated_at", null: false
     t.index ["employee_id"], name: "index_managers_on_employee_id", unique: true

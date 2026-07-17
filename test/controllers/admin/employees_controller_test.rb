@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    log_in_manager
+  end
+
   test "lists employees from the database" do
     tag = Tag.create!(name: "office", active: true, color: "#2563eb")
     employee = create_employee(first_name: "Nora", last_name: "Vidal", email: "nora@example.test")

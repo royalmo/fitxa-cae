@@ -21,6 +21,7 @@ No Node/npm install is required for the current frontend.
 - Employee app: `http://localhost:3000/`
 - Employee login: `http://localhost:3000/login`
 - Manager/admin app: `http://localhost:3000/admin`
+- Manager login: `http://localhost:3000/admin/login`
 - Health check: `http://localhost:3000/up`
 - PWA files: `/manifest` and `/service-worker`
 
@@ -155,7 +156,7 @@ Manager records are seeded with these emails:
 | Nuria Costa | `nuria.costa@fitxa-cae.test` | `12345678` |
 | Pau Vidal | `pau.vidal@fitxa-cae.test` | `12345678` |
 
-Important: manager password authentication is not wired to a login route yet. At the moment `/admin` selects the first active manager by default unless `session[:manager_id]` is set by future manager-auth code. The seeded manager password hashes are present in `settings` for that future authentication flow.
+Managers sign in at `/admin/login` with email and password. Admin pages under `/admin` redirect to the manager login page unless `session[:manager_id]` belongs to an active manager.
 
 ## Production Configuration
 

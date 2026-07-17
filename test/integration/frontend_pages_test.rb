@@ -36,6 +36,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
   end
 
   test "admin pages render" do
+    log_in_manager
+
     get admin_root_path
     assert_response :success
     assert_select "h1", text: "Resum operatiu"
@@ -79,6 +81,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
       }
     end
     assert_redirected_to corrections_path
+
+    log_in_manager
 
     assert_difference "Employee.count", 1 do
       post admin_employees_path, params: {

@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    log_in_manager
+  end
+
   test "renders monthly report rows from swipes and corrections" do
     employee = create_employee(first_name: "Oriol", last_name: "Puig")
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 0), metadata: "employee_portal")

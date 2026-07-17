@@ -2,6 +2,7 @@ require "test_helper"
 
 class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
   test "lists persisted corrections" do
+    log_in_manager
     employee = create_employee(first_name: "Laia", last_name: "Font")
     employee.swipe_corrections.create!(
       requester: employee,
@@ -22,6 +23,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
   test "approves a pending correction and applies requested swipes" do
     manager = create_manager
+    log_in_manager(manager)
     employee = create_employee
     old_swipe = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 4, 8, 45), metadata: "employee_portal")
     correction = employee.swipe_corrections.create!(
@@ -51,6 +53,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
   test "rejects a pending correction without changing swipes" do
     manager = create_manager
+    log_in_manager(manager)
     employee = create_employee
     correction = employee.swipe_corrections.create!(
       requester: employee,
@@ -70,6 +73,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "does not review an already reviewed correction twice" do
+    log_in_manager
     employee = create_employee
     correction = employee.swipe_corrections.create!(
       requester: employee,

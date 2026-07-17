@@ -42,4 +42,14 @@ class ManagerTest < ActiveSupport::TestCase
     assert_not manager.valid?
     assert_model_error manager, :active, :inclusion
   end
+
+  test "authenticates with secure password digest" do
+    manager = create_manager(email: "LAIA.RIERA@EXAMPLE.TEST", password: "secret")
+
+    assert_equal "laia.riera@example.test", manager.email
+    assert_predicate manager.password_digest, :present?
+    assert manager.authenticate_password("secret")
+    assert_not manager.authenticate_password("bad")
+    assert_equal manager, Manager.find_active_by_email(" laia.riera@example.test ")
+  end
 end

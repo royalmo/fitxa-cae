@@ -52,7 +52,8 @@ module ActiveSupport
       Manager.create!({
         first_name: "Laia",
         last_name: "Riera",
-        email: "laia.riera@example.test"
+        email: "laia.riera@example.test",
+        password: "12345678"
       }.merge(attributes))
     end
 
@@ -60,6 +61,13 @@ module ActiveSupport
       post login_path, params: {
         national_id: employee.national_id,
         password: "1234"
+      }
+    end
+
+    def log_in_manager(manager = create_manager)
+      post admin_login_path, params: {
+        email: manager.email,
+        password: "12345678"
       }
     end
 

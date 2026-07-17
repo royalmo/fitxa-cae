@@ -1,5 +1,3 @@
-require "digest"
-
 rng = Random.new(20_260_630)
 
 DNI_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
@@ -56,13 +54,6 @@ def nie(prefix, number)
   numeric_value = "#{translated_prefix}#{body}".to_i
 
   "#{prefix}#{body}#{DNI_LETTERS[numeric_value % DNI_LETTERS.length]}"
-end
-
-def password_settings(password)
-  {
-    "password_hash_algorithm" => "sha256",
-    "password_hash" => Digest::SHA256.hexdigest(password)
-  }
 end
 
 def email_address(first_name, last_name, index)
@@ -144,7 +135,8 @@ ActiveRecord::Base.transaction do
       email: email,
       active: true,
       employee: employee,
-      settings: password_settings("12345678")
+      password: "12345678",
+      settings: {}
     )
   end
 

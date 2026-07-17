@@ -2,7 +2,8 @@ require "test_helper"
 
 class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
   test "renders real dashboard metrics and recent activity" do
-    create_manager
+    manager = create_manager
+    log_in_manager(manager)
     employee = create_employee(first_name: "Jana", last_name: "Soler")
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 4, 8, 0), metadata: "employee_portal")
     employee.swipe_corrections.create!(
