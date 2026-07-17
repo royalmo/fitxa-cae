@@ -10,7 +10,7 @@ module EmployeeAuthentication
   def authenticate_employee!
     return if employee_signed_in?
 
-    session[:employee_return_to] = request.fullpath if request.get?
+    session[:employee_return_to] = request.fullpath if request.get? || request.head?
 
     if request.path == root_path # I don't want the alert on the landing /
       redirect_to login_path

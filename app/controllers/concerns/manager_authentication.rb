@@ -10,7 +10,7 @@ module ManagerAuthentication
   def authenticate_manager!
     return if manager_signed_in?
 
-    session[:manager_return_to] = request.fullpath if request.get?
+    session[:manager_return_to] = request.fullpath if request.get? || request.head?
     session.delete(:manager_id)
 
     redirect_to admin_login_path, alert: t("admin.sessions.flash.require_login")

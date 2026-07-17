@@ -25,6 +25,20 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Laia Riera", response.body
   end
 
+  test "head request to admin page stores return path" do
+    manager = create_manager(email: "laia.riera@example.test")
+
+    head admin_employees_path
+    assert_redirected_to admin_login_path
+
+    post admin_login_path, params: {
+      email: manager.email,
+      password: "12345678"
+    }
+
+    assert_redirected_to admin_employees_path
+  end
+
   test "rejects invalid credentials and inactive managers" do
     manager = create_manager(email: "laia.riera@example.test")
     inactive = create_manager(email: "inactive@example.test", active: false)
