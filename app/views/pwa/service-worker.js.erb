@@ -1,4 +1,4 @@
-const VERSION = "fitxa-cae-v5"
+const VERSION = "fitxa-cae-v7"
 const SHELL_CACHE = `${VERSION}-shell`
 const PAGE_CACHE = `${VERSION}-pages`
 const ASSET_CACHE = `${VERSION}-assets`
@@ -7,14 +7,22 @@ const APP_SHELL = [
   "/",
   <%= raw unavailable_path.to_json %>,
   <%= raw asset_path("application.css").to_json %>,
+  <%= raw asset_path("brand.css").to_json %>,
   <%= raw asset_path("application.js").to_json %>,
   <%= raw asset_path("turbo.min.js").to_json %>,
   <%= raw asset_path("stimulus.min.js").to_json %>,
   <%= raw asset_path("stimulus-loading.js").to_json %>,
   <%= raw asset_path("controllers/application.js").to_json %>,
   <%= raw asset_path("controllers/index.js").to_json %>,
-  "/icon.png",
-  "/icon.svg"
+  <%= raw asset_path("cae_logo.png").to_json %>,
+  <%= raw asset_path("cae_logo_trimmed.png").to_json %>,
+  "/fonts/LiberGrotesqueFamily-Regular.woff2",
+  "/fonts/LiberGrotesqueFamily-News.woff2",
+  "/fonts/LiberGrotesqueFamily-SemiBold.woff2",
+  "/fonts/LiberGrotesqueFamily-Bold.woff2",
+  "/fonts/LiberGrotesqueFamily-ExtBd.woff2",
+  "/favicon.ico",
+  "/icon.png"
 ]
 
 self.addEventListener("install", (event) => {
@@ -49,7 +57,7 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/icon.")) {
+  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/fonts/") || url.pathname.startsWith("/icon.") || url.pathname === "/favicon.ico") {
     event.respondWith(cacheFirst(request))
   }
 })

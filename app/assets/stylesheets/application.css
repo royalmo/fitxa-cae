@@ -1,18 +1,18 @@
 :root {
-  --bg: #f6f7f2;
-  --bg-admin: #f8fafc;
+  --bg: #fff7f7;
+  --bg-admin: #f5f5f5;
   --surface: #ffffff;
-  --surface-soft: #eef3ef;
-  --line: #dbe2dc;
-  --line-strong: #c7d1ca;
-  --text: #17201b;
-  --muted: #647067;
-  --primary: #0f6b4f;
-  --primary-strong: #0a4e3a;
-  --danger: #b42318;
-  --warning: #a16207;
-  --info: #1d4ed8;
-  --shadow: 0 18px 40px rgba(23, 32, 27, 0.08);
+  --surface-soft: rgba(227, 6, 19, 0.08);
+  --line: rgba(227, 6, 19, 0.16);
+  --line-strong: #0b0b0b;
+  --text: #0b0b0b;
+  --muted: #686868;
+  --primary: #e30613;
+  --primary-strong: #b90510;
+  --danger: #e30613;
+  --warning: #e30613;
+  --info: #e30613;
+  --shadow: 0 18px 40px rgba(11, 11, 11, 0.08);
 }
 
 * {
@@ -89,13 +89,6 @@ td small,
   font-weight: 800;
 }
 
-.brand-dot {
-  width: 0.85rem;
-  height: 0.85rem;
-  border-radius: 50%;
-  background: var(--primary);
-}
-
 .icon {
   width: 1rem;
   height: 1rem;
@@ -145,10 +138,10 @@ td small,
   max-width: 68rem;
   margin: 1rem auto 0;
   padding: 0.8rem 1rem;
-  border: 1px solid #b8d8c8;
+  border: 1px solid rgba(227, 6, 19, 0.5);
   border-radius: 8px;
-  color: #0a4e3a;
-  background: #e8f6ef;
+  color: var(--text);
+  background: rgba(227, 6, 19, 0.08);
 }
 
 .flash-alert {
@@ -385,19 +378,19 @@ input[type="submit"]:hover {
 .badge-active,
 .badge-approved,
 .badge-complete {
-  color: #0a4e3a;
-  background: #dff3e8;
+  color: var(--text);
+  background: rgba(227, 6, 19, 0.08);
 }
 
 .badge-open,
 .badge-pending {
-  color: #7a4b00;
-  background: #fff1c7;
+  color: var(--text);
+  background: rgba(227, 6, 19, 0.14);
 }
 
 .badge-corrected {
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: var(--text);
+  background: rgba(227, 6, 19, 0.08);
 }
 
 .badge-disabled,
@@ -551,7 +544,7 @@ input[type="submit"]:hover {
 
 .employee-shell {
   background:
-    linear-gradient(180deg, #f6f7f2 0%, #eef3ef 100%);
+    linear-gradient(180deg, rgba(227, 6, 19, 0.08) 0%, #fff7f7 100%);
 }
 
 .employee-topbar {
@@ -759,7 +752,7 @@ input[type="submit"]:hover {
   flex: 0 0 auto;
   border-radius: 50%;
   color: var(--primary);
-  background: #e8f6ef;
+  background: rgba(227, 6, 19, 0.08);
 }
 
 .timeline time {

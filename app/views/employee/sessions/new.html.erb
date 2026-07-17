@@ -2,10 +2,7 @@
 
 <section class="auth-card" data-controller="pwa-session">
   <header class="auth-header">
-    <%= link_to login_path, class: "brand-mark", aria: { label: t("app.name") } do %>
-      <span class="brand-dot"></span>
-      <span><%= t("app.name") %></span>
-    <% end %>
+    <%= render "layouts/brand_mark", path: login_path %>
     <h1><%= t(".heading") %></h1>
   </header>
 

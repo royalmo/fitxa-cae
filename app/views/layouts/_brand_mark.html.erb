@@ -1,0 +1,4 @@
+<%= link_to local_assigns.fetch(:path), class: class_names("brand-mark", local_assigns[:class]), aria: { label: t("app.name") } do %>
+  <span class="brand-fitxa">Fitxa</span>
+  <%= image_tag "cae_logo_trimmed.png", alt: "CAE", class: "brand-logo" %>
+<% end %>
