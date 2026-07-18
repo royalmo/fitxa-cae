@@ -18,6 +18,7 @@ ca:
 
   shared:
     actions: "Accions"
+    dismiss_flash: "Tancar avís"
     auth_footer:
       project: "FitxaCAE"
       version: "v%{version}"
@@ -98,17 +99,23 @@ ca:
       create:
         invalid: "DNI/NIE o contrasenya incorrectes."
       request_code:
-        delivery_failed: "No s'ha pogut enviar el codi. Torna-ho a provar d'aquí uns instants."
-        unavailable: "No s'ha pogut enviar cap codi amb aquestes dades."
+        invalid_national_id: "DNI/NIE invàlid."
+        delivery_unavailable:
+          email: "No s'ha pogut enviar el correu."
+          sms: "No s'ha pogut enviar l'SMS."
         rate_limited: "Has demanat massa codis. Espera un moment i torna-ho a provar."
-        sent: "Codi enviat."
       code:
         title: "Codi d'accés"
         heading: "Introdueix el codi"
-        sent_to: "L'hem enviat a %{destination}."
+        sent_if_found_intro: "Si el DNI/NIE es troba a la base de dades,"
+        sent_if_found:
+          email: "rebràs un codi al teu correu."
+          sms: "rebràs un codi al teu telèfon."
         code: "Codi"
+        digit: "Dígit %{number}"
         submit: "Entrar"
-        restart: "Tornar a començar"
+        submitting: "Entrant..."
+        back: "Enrere"
       verify_code:
         invalid: "El codi no és correcte o ha caducat."
       destroy:

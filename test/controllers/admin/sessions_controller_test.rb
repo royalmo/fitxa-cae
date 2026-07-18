@@ -6,6 +6,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "title", text: "Accés de gestió | FitxaCAE Admin"
+    assert_no_match "&amp;#", response.body
     assert_select ".admin-auth-card .brand-mark"
     assert_select ".admin-auth-card .check-row", text: "Mantenir la sessió iniciada"
     assert_select ".admin-auth-footer a[href='https://github.com/royalmo/fitxa-cae.git'][target='_blank'][rel='noopener']", text: "FitxaCAE"
@@ -31,6 +32,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to admin_employees_path
+    assert_nil flash[:notice]
     follow_redirect!
     assert_response :success
     assert_match "Laia Riera", response.body

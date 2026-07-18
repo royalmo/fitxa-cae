@@ -34,7 +34,7 @@ module EmployeeAuthentication
     request.session_options[:expire_after] = employee_session_duration(remember: remember, installed_pwa: installed_pwa)
     session[:employee_id] = employee.id
 
-    redirect_to(return_to.presence || root_path, notice: t("employee.sessions.flash.signed_in"))
+    redirect_to(return_to.presence || root_path)
   end
 
   def sign_out_employee
@@ -42,9 +42,10 @@ module EmployeeAuthentication
     request.session_options[:expire_after] = nil
   end
 
-  def store_pending_employee_login(employee, delivery_method:, remember:, installed_pwa:)
+  def store_pending_employee_login(employee, national_id:, delivery_method:, remember:, installed_pwa:)
     session[:pending_employee_login] = {
-      "employee_id" => employee.id,
+      "employee_id" => employee&.id,
+      "national_id" => Employee.normalize_national_id(national_id),
       "delivery_method" => delivery_method,
       "remember" => remember,
       "installed_pwa" => installed_pwa
@@ -60,7 +61,7 @@ module EmployeeAuthentication
   end
 
   def pending_employee_login_delivery_method
-    pending_employee_login_state["delivery_method"]
+    pending_employee_login_state["delivery_method"].presence || "email"
   end
 
   def pending_employee_login_remember?
@@ -79,5 +80,9 @@ module EmployeeAuthentication
 
   def pending_employee_login_state
     session[:pending_employee_login] || {}
+  end
+
+  def pending_employee_login_requested?
+    pending_employee_login_state.present?
   end
 end

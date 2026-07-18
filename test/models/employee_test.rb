@@ -69,13 +69,24 @@ class EmployeeTest < ActiveSupport::TestCase
     with_secure_random_number(12_345) do
       code = employee.generate_login_code!(delivery_method: "sms")
 
-      assert_equal "012345", code
+      assert_equal "123456", code
       employee.reload
       assert_equal "sms", employee.settings.dig("login_code", "delivery_method")
-      assert_not_includes employee.settings.to_s, "012345"
-      assert employee.authenticate_login_code("012345")
+      assert_equal Employee::LOGIN_CODE_CHECKSUM, employee.settings.dig("login_code", "checksum")
+      assert_not_includes employee.settings.to_s, "123456"
+      assert employee.authenticate_login_code("123456")
+      assert employee.authenticate_login_code("123 456")
+      assert_not employee.authenticate_login_code("123455")
       assert_not employee.authenticate_login_code("999999")
     end
+  end
+
+  test "validates login code checksum" do
+    assert Employee.valid_login_code_checksum?("123456")
+    assert Employee.valid_login_code_checksum?("000422")
+    assert_not Employee.valid_login_code_checksum?("123455")
+    assert_not Employee.valid_login_code_checksum?("132456")
+    assert_not Employee.valid_login_code_checksum?("12345")
   end
 
   test "rejects expired login codes" do

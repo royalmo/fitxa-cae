@@ -137,7 +137,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get unavailable_path
     assert_response :success
-    assert_select "title", text: /No s(&#39;|')ha pogut carregar \| FitxaCAE/
+    assert_select "title", text: "No s'ha pogut carregar | FitxaCAE"
+    assert_no_match "&amp;#", response.body
     assert_select "h1", text: "No s'ha pogut carregar"
     assert_select ".employee-nav", 0
     assert_no_match "connexió", response.body

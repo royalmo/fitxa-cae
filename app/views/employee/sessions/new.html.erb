@@ -1,5 +1,6 @@
 <% content_for :title, t(".title") %>
 <% active_tab = params[:delivery_method].present? ? "code" : "password" %>
+<% selected_delivery_method = params[:delivery_method].presence_in(LoginCodeDeliveryConfig::DELIVERY_METHODS) || "email" %>
 
 <section class="auth-card auth-card-narrow employee-auth-card" data-controller="pwa-session">
   <header class="auth-header">
@@ -20,11 +21,9 @@
       </label>
     </div>
 
-    <% flash.each do |type, message| %>
-      <div class="flash flash-<%= type %>"><%= message %></div>
-    <% end %>
-
     <div class="auth-tab-panel auth-tab-panel-password">
+      <%= render "flash_messages" if active_tab == "password" %>
+
       <%= form_with url: login_path, method: :post, class: "auth-form" do |form| %>
         <%= hidden_field_tag :installed_pwa, "0", id: "employee_password_installed_pwa", data: { pwa_session_target: "installedField" } %>
 
@@ -48,6 +47,8 @@
     </div>
 
     <div class="auth-tab-panel auth-tab-panel-code">
+      <%= render "flash_messages" if active_tab == "code" %>
+
       <%= form_with url: request_login_code_path, method: :post, class: "auth-form" do |form| %>
         <%= hidden_field_tag :installed_pwa, "0", id: "employee_code_installed_pwa", data: { pwa_session_target: "installedField" } %>
 
@@ -56,16 +57,18 @@
           <%= form.text_field :national_id, id: "employee_code_national_id", value: params[:national_id], autocomplete: "username", required: true %>
         </div>
 
-        <fieldset class="choice-list">
+        <fieldset class="choice-list delivery-method-list">
           <legend><%= t(".delivery_method") %></legend>
-          <label>
-            <%= radio_button_tag :delivery_method, "sms", params[:delivery_method] != "email", id: "employee_delivery_method_sms" %>
-            <span><%= t(".sms") %></span>
-          </label>
-          <label>
-            <%= radio_button_tag :delivery_method, "email", params[:delivery_method] == "email", id: "employee_delivery_method_email" %>
-            <span><%= t(".email") %></span>
-          </label>
+          <div class="delivery-method-options">
+            <label>
+              <%= radio_button_tag :delivery_method, "email", selected_delivery_method == "email", id: "employee_delivery_method_email" %>
+              <span><%= t(".email") %></span>
+            </label>
+            <label>
+              <%= radio_button_tag :delivery_method, "sms", selected_delivery_method == "sms", id: "employee_delivery_method_sms" %>
+              <span><%= t(".sms") %></span>
+            </label>
+          </div>
         </fieldset>
 
         <label class="check-row">

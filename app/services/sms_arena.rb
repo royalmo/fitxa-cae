@@ -26,6 +26,35 @@ module SmsArena
     Client.new.deliver_login_code(phone: phone, code: code)
   end
 
+  def configured?(env: ENV, allow_mock_delivery: Rails.env.test?)
+    enabled = enabled?(env)
+    return true if allow_mock_delivery && !enabled
+    return false unless enabled
+    return false unless configured_api_url?(env["SMSARENA_API_URL"])
+
+    case env.fetch("SMSARENA_AUTH_MODE", "params").to_s
+    when "basic"
+      env["SMSARENA_USERNAME"].present? && env["SMSARENA_PASSWORD"].present?
+    when "bearer"
+      env["SMSARENA_API_KEY"].present?
+    else
+      true
+    end
+  end
+
+  def enabled?(env = ENV)
+    ActiveModel::Type::Boolean.new.cast(env.fetch("SMSARENA_ENABLED", false))
+  end
+
+  def configured_api_url?(endpoint)
+    uri = URI.parse(endpoint.to_s)
+
+    uri.host.present? && %w[http https].include?(uri.scheme)
+  rescue URI::InvalidURIError
+    false
+  end
+  private_class_method :configured_api_url?
+
   class Client
     def initialize(logger: Rails.logger, http_client: HttpClient.new, env: ENV)
       @logger = logger
@@ -75,7 +104,7 @@ module SmsArena
     end
 
     def enabled?
-      ActiveModel::Type::Boolean.new.cast(env.fetch("SMSARENA_ENABLED", false))
+      SmsArena.enabled?(env)
     end
 
     def uri

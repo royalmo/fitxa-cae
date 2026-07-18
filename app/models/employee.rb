@@ -6,6 +6,10 @@ class Employee < ApplicationRecord
   LOGIN_CODE_COOLDOWN = 1.minute
   LOGIN_CODE_LIMIT = 5
   LOGIN_CODE_LIMIT_WINDOW = 1.hour
+  LOGIN_CODE_RANDOM_DIGITS = 5
+  LOGIN_CODE_LENGTH = LOGIN_CODE_RANDOM_DIGITS + 1
+  LOGIN_CODE_CHECKSUM = "weighted_mod10_sum"
+  LOGIN_CODE_CHECKSUM_WEIGHTS = [ 2, 1, 2, 1, 2, 1 ].freeze
 
   before_validation :normalize_national_id_attribute
 
@@ -32,6 +36,32 @@ class Employee < ApplicationRecord
 
   def self.find_active_by_national_id(national_id)
     where(active: true).find_by(national_id: normalize_national_id(national_id))
+  end
+
+  def self.valid_national_id?(national_id)
+    normalized_national_id = normalize_national_id(national_id)
+
+    return false unless normalized_national_id
+
+    expected_national_id_letter(normalized_national_id) == normalized_national_id.last
+  end
+
+  def self.generate_login_code
+    random_digits = SecureRandom.random_number(10**LOGIN_CODE_RANDOM_DIGITS).to_s.rjust(LOGIN_CODE_RANDOM_DIGITS, "0")
+
+    "#{random_digits}#{login_code_check_digit(random_digits)}"
+  end
+
+  def self.valid_login_code_checksum?(code)
+    normalized_code = normalize_login_code(code)
+
+    return false unless normalized_code&.match?(/\A\d{#{LOGIN_CODE_LENGTH}}\z/)
+
+    weighted_login_code_sum(normalized_code) % 10 == 0
+  end
+
+  def self.normalize_login_code(code)
+    code.to_s.gsub(/\D/, "").presence
   end
 
   def full_name
@@ -71,13 +101,14 @@ class Employee < ApplicationRecord
   end
 
   def generate_login_code!(delivery_method:, expires_at: LOGIN_CODE_TTL.from_now, requested_at: Time.current)
-    code = SecureRandom.random_number(1_000_000).to_s.rjust(6, "0")
+    code = self.class.generate_login_code
     request_history = recent_login_code_requests(now: requested_at).append(requested_at.iso8601)
     next_settings = settings.merge(
       "login_code" => {
         "digest" => Digest::SHA256.hexdigest(code),
         "delivery_method" => delivery_method.to_s,
-        "expires_at" => expires_at.iso8601
+        "expires_at" => expires_at.iso8601,
+        "checksum" => LOGIN_CODE_CHECKSUM
       },
       "login_code_request_history" => request_history
     )
@@ -88,11 +119,14 @@ class Employee < ApplicationRecord
 
   def authenticate_login_code(code)
     login_code = settings["login_code"]
-    return false unless login_code.present? && code.present?
+    submitted_code = self.class.normalize_login_code(code)
+
+    return false unless login_code.present? && submitted_code.present?
     return false if login_code_expired?(login_code)
+    return false if login_code["checksum"] == LOGIN_CODE_CHECKSUM && !self.class.valid_login_code_checksum?(submitted_code)
 
     expected_digest = login_code["digest"].to_s
-    actual_digest = Digest::SHA256.hexdigest(code.to_s.strip)
+    actual_digest = Digest::SHA256.hexdigest(submitted_code)
 
     ActiveSupport::SecurityUtils.secure_compare(actual_digest, expected_digest)
   rescue ArgumentError
@@ -111,16 +145,18 @@ class Employee < ApplicationRecord
 
   def national_id_has_valid_spanish_check_letter
     return if national_id.blank?
-
-    number = national_id_number
-    expected_letter = NATIONAL_ID_LETTERS[number % NATIONAL_ID_LETTERS.length] if number
-
-    return if expected_letter == national_id.last
+    return if self.class.valid_national_id?(national_id)
 
     errors.add(:national_id, :invalid)
   end
 
-  def national_id_number
+  def self.expected_national_id_letter(national_id)
+    number = national_id_number(national_id)
+    NATIONAL_ID_LETTERS[number % NATIONAL_ID_LETTERS.length] if number
+  end
+  private_class_method :expected_national_id_letter
+
+  def self.national_id_number(national_id)
     case national_id
     when /\A\d{8}[A-Z]\z/
       national_id.first(8).to_i
@@ -128,6 +164,21 @@ class Employee < ApplicationRecord
       national_id.tr("XYZ", "012").first(8).to_i
     end
   end
+  private_class_method :national_id_number
+
+  def self.login_code_check_digit(code)
+    sum = weighted_login_code_sum(code)
+
+    (10 - (sum % 10)) % 10
+  end
+  private_class_method :login_code_check_digit
+
+  def self.weighted_login_code_sum(code)
+    code.chars.each_with_index.sum do |digit, index|
+      digit.to_i * LOGIN_CODE_CHECKSUM_WEIGHTS[index]
+    end
+  end
+  private_class_method :weighted_login_code_sum
 
   def login_code_expired?(login_code)
     expires_at = Time.zone.parse(login_code["expires_at"].to_s)

@@ -1,3 +1,5 @@
+require "cgi"
+
 module ApplicationHelper
   def nav_item_class(path, exact: nil)
     target = path.to_s
@@ -22,7 +24,7 @@ module ApplicationHelper
   def browser_title(title = nil, admin: false)
     suffix = admin ? "FitxaCAE Admin" : "FitxaCAE"
 
-    [ title.presence, suffix ].compact.join(" | ")
+    [ decoded_title(title).presence, suffix ].compact.join(" | ")
   end
 
   def app_version
@@ -75,5 +77,11 @@ module ApplicationHelper
       pause_start: "pause",
       pause_end: "play"
     }.fetch(kind.to_sym, "clock")
+  end
+
+  private
+
+  def decoded_title(title)
+    CGI.unescapeHTML(title.to_s)
   end
 end

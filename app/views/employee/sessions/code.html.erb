@@ -1,28 +1,59 @@
 <% content_for :title, t(".title") %>
+<% submitted_code = params[:code].presence || Array(params[:code_digits]).join %>
 
 <section class="auth-card auth-card-narrow employee-auth-card">
   <header class="auth-header">
     <%= render "layouts/brand_mark", path: login_path %>
     <h1><%= t(".heading") %></h1>
-    <% if @masked_destination.present? %>
-      <p><%= t(".sent_to", destination: @masked_destination) %></p>
-    <% end %>
+    <p class="auth-code-help">
+      <span><%= t(".sent_if_found_intro") %></span>
+      <span><%= t(".sent_if_found.#{@delivery_method}") %></span>
+    </p>
   </header>
 
   <section class="auth-panel">
-    <% flash.each do |type, message| %>
-      <div class="flash flash-<%= type %>"><%= message %></div>
+    <div class="auth-panel-actions">
+      <%= link_to login_path, class: "auth-back-link" do %>
+        <%= icon "arrow-left", class: "icon" %>
+        <span><%= t(".back") %></span>
+      <% end %>
+    </div>
+
+    <%= render "flash_messages" %>
+
+    <%= form_with url: verify_login_code_path,
+      method: :post,
+      class: "auth-form",
+      html: { autocomplete: "off" },
+      data: {
+        controller: "code-input",
+        code_input_submitting_label_value: t(".submitting")
+      } do |form| %>
+      <fieldset class="code-input-group">
+        <legend class="sr-only"><%= t(".code") %></legend>
+        <%= hidden_field_tag :code, submitted_code, data: { code_input_target: "hidden" } %>
+
+        <div class="code-inputs">
+          <% Employee::LOGIN_CODE_LENGTH.times do |index| %>
+            <%= text_field_tag "code_digits[]",
+              submitted_code[index],
+              id: "login_code_digit_#{index + 1}",
+              class: "code-digit-input",
+              inputmode: "numeric",
+              pattern: "[0-9]*",
+              maxlength: 1,
+              required: true,
+              autocomplete: "off",
+              aria: { label: t(".digit", number: index + 1) },
+              data: {
+                code_input_target: "digit",
+                action: "input->code-input#input keydown->code-input#keydown paste->code-input#paste"
+              } %>
+          <% end %>
+        </div>
+      </fieldset>
+
+      <%= form.submit t(".submit"), data: { code_input_target: "submit" } %>
     <% end %>
-
-    <%= form_with url: verify_login_code_path, method: :post, class: "auth-form" do |form| %>
-      <div class="field">
-        <%= form.label :code, t(".code") %>
-        <%= form.text_field :code, inputmode: "numeric", autocomplete: "one-time-code", required: true, maxlength: 6 %>
-      </div>
-
-      <%= form.submit t(".submit") %>
-    <% end %>
-
-    <%= link_to t(".restart"), login_path, class: "button button-secondary auth-secondary-action" %>
   </section>
 </section>

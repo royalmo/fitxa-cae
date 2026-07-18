@@ -29,6 +29,34 @@ class SmsArenaTest < ActiveSupport::TestCase
     assert_predicate delivery, :mock
     assert_equal "smsarena", delivery.provider
     assert delivery.message_id.present?
+    assert SmsArena.configured?(env: {})
+  end
+
+  test "reports production sms configuration readiness" do
+    assert_not SmsArena.configured?(env: {}, allow_mock_delivery: false)
+    assert_not SmsArena.configured?(env: { "SMSARENA_ENABLED" => "true" }, allow_mock_delivery: false)
+    assert_not SmsArena.configured?(
+      env: {
+        "SMSARENA_ENABLED" => "true",
+        "SMSARENA_API_URL" => "not a url"
+      },
+      allow_mock_delivery: false
+    )
+    assert SmsArena.configured?(
+      env: {
+        "SMSARENA_ENABLED" => "true",
+        "SMSARENA_API_URL" => "https://panel.smsarena.es/api/sms"
+      },
+      allow_mock_delivery: false
+    )
+    assert_not SmsArena.configured?(
+      env: {
+        "SMSARENA_ENABLED" => "true",
+        "SMSARENA_API_URL" => "https://panel.smsarena.es/api/sms",
+        "SMSARENA_AUTH_MODE" => "bearer"
+      },
+      allow_mock_delivery: false
+    )
   end
 
   test "posts sms through configured smsarena endpoint" do

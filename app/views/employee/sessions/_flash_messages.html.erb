@@ -1,0 +1,6 @@
+<% flash.each do |type, message| %>
+  <div class="flash flash-<%= type %> dismissible-flash" data-controller="dismissible" role="<%= type.to_s == "alert" ? "alert" : "status" %>">
+    <span><%= message %></span>
+    <button type="button" class="flash-close" aria-label="<%= t("shared.dismiss_flash") %>" data-action="dismissible#dismiss">&times;</button>
+  </div>
+<% end %>

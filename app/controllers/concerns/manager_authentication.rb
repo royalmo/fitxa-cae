@@ -37,7 +37,7 @@ module ManagerAuthentication
     request.session_options[:expire_after] = manager_session_duration(remember: remember)
     session[:manager_id] = manager.id
 
-    redirect_to(return_to.presence || admin_root_path, notice: t("admin.sessions.flash.signed_in"))
+    redirect_to(return_to.presence || admin_root_path)
   end
 
   def sign_out_manager
