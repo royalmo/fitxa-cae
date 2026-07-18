@@ -1,5 +1,50 @@
 .admin-auth-shell {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 100vh;
   background: var(--bg-admin);
+}
+
+.admin-auth-shell .auth-main {
+  min-height: auto;
+}
+
+.admin-auth-card .auth-header {
+  justify-items: center;
+  text-align: center;
+}
+
+.admin-auth-card .auth-header h1 {
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.admin-auth-card .auth-header .brand-fitxa {
+  font-size: 3.675rem;
+}
+
+.admin-auth-card .auth-header .brand-logo {
+  height: 5.4rem;
+}
+
+.admin-auth-card .auth-panel .flash {
+  width: 100%;
+  max-width: none;
+  margin: 0 0 1rem;
+  box-shadow: none;
+}
+
+.admin-auth-footer {
+  padding: 0 1.25rem 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.admin-auth-footer a {
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .admin-shell {

@@ -245,7 +245,13 @@ ca:
         heading: "Accés de gestió"
         email: "Correu"
         password: "Contrasenya"
+        remember_me: "Mantenir la sessió iniciada"
         submit: "Entrar"
+      footer:
+        project: "FitxaCAE"
+        version: "v%{version}"
+        developed_by: "Desenvolupat per"
+        developer: "Eric Roy"
       create:
         invalid: "Correu o contrasenya incorrectes."
       destroy:

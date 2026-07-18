@@ -5,12 +5,15 @@
   </head>
 
   <body class="admin-auth-shell auth-shell">
-    <% flash.each do |type, message| %>
-      <div class="flash flash-<%= type %>"><%= message %></div>
-    <% end %>
-
     <main class="auth-main">
       <%= yield %>
     </main>
+
+    <footer class="admin-auth-footer">
+      <%= link_to t("admin.sessions.footer.project"), "https://github.com/royalmo/fitxa-cae.git" %>
+      <%= t("admin.sessions.footer.version", version: app_version) %> —
+      <%= t("admin.sessions.footer.developed_by") %>
+      <%= link_to t("admin.sessions.footer.developer"), "https://ericroy.net" %>.
+    </footer>
   </body>
 </html>

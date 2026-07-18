@@ -25,6 +25,10 @@ module ApplicationHelper
     [ title.presence, suffix ].compact.join(" | ")
   end
 
+  def app_version
+    Rails.configuration.x.app_version
+  end
+
   def clocking_kind_text(kind)
     t("clocking_kinds.#{kind}", default: kind.to_s.humanize)
   end

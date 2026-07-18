@@ -6,7 +6,14 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "title", text: "Accés de gestió | FitxaCAE Admin"
+    assert_select ".admin-auth-card .brand-mark"
+    assert_select ".admin-auth-card .check-row", text: "Mantenir la sessió iniciada"
+    assert_select ".admin-auth-footer a[href='https://github.com/royalmo/fitxa-cae.git']", text: "FitxaCAE"
+    assert_select ".admin-auth-footer a[href='https://ericroy.net']", text: "Eric Roy"
+    assert_match(/v#{Regexp.escape(Rails.configuration.x.app_version)}\s+—\s+Desenvolupat per/, response.body)
     assert_select "form[action='#{admin_login_path}']"
+    assert_select ".admin-auth-card .auth-panel .flash", 0
+    assert_select ".admin-auth-shell > .flash", 0
   end
 
   test "signs in an active manager and returns to requested admin page" do
@@ -40,12 +47,28 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_employees_path
   end
 
+  test "remembered manager sessions last thirty days" do
+    manager = create_manager(email: "laia.riera@example.test")
+
+    travel_to Time.zone.local(2026, 7, 1, 9, 0) do
+      post admin_login_path, params: {
+        email: manager.email,
+        password: "12345678",
+        remember_me: "1"
+      }
+    end
+
+    assert_match(/expires=.*31 Jul 2026/i, response.headers["Set-Cookie"])
+  end
+
   test "rejects invalid credentials and inactive managers" do
     manager = create_manager(email: "laia.riera@example.test")
     inactive = create_manager(email: "inactive@example.test", active: false)
 
     post admin_login_path, params: { email: manager.email, password: "bad" }
     assert_response :unprocessable_entity
+    assert_select ".admin-auth-card .auth-panel > .flash-alert + form"
+    assert_select ".admin-auth-shell > .flash", 0
 
     post admin_login_path, params: { email: inactive.email, password: "12345678" }
     assert_response :unprocessable_entity

@@ -13,7 +13,11 @@ module ManagerAuthentication
     session[:manager_return_to] = request.fullpath if request.get? || request.head?
     session.delete(:manager_id)
 
-    redirect_to admin_login_path, alert: t("admin.sessions.flash.require_login")
+    if request.path == admin_root_path
+      redirect_to admin_login_path
+    else
+      redirect_to admin_login_path, alert: t("admin.sessions.flash.require_login")
+    end
   end
 
   def current_manager
@@ -26,10 +30,11 @@ module ManagerAuthentication
     current_manager.present?
   end
 
-  def sign_in_manager(manager)
+  def sign_in_manager(manager, remember: false)
     return_to = session.delete(:manager_return_to)
 
     reset_session
+    request.session_options[:expire_after] = manager_session_duration(remember: remember)
     session[:manager_id] = manager.id
 
     redirect_to(return_to.presence || admin_root_path, notice: t("admin.sessions.flash.signed_in"))
@@ -37,6 +42,11 @@ module ManagerAuthentication
 
   def sign_out_manager
     session.delete(:manager_id)
+    request.session_options[:expire_after] = nil
     @current_manager = nil
+  end
+
+  def manager_session_duration(remember:)
+    30.days if ActiveModel::Type::Boolean.new.cast(remember)
   end
 end

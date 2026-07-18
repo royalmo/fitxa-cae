@@ -1,12 +1,16 @@
 <% content_for :title, t(".title") %>
 
-<section class="auth-card auth-card-narrow">
+<section class="auth-card auth-card-narrow admin-auth-card">
   <header class="auth-header">
     <%= render "layouts/brand_mark", path: admin_login_path %>
     <h1><%= t(".heading") %></h1>
   </header>
 
   <section class="auth-panel">
+    <% flash.each do |type, message| %>
+      <div class="flash flash-<%= type %>"><%= message %></div>
+    <% end %>
+
     <%= form_with url: admin_login_path, method: :post, class: "auth-form" do |form| %>
       <div class="field">
         <%= form.label :email, t(".email") %>
@@ -17,6 +21,11 @@
         <%= form.label :password, t(".password") %>
         <%= form.password_field :password, autocomplete: "current-password", required: true %>
       </div>
+
+      <label class="check-row">
+        <%= check_box_tag :remember_me, "1", params[:remember_me].present? %>
+        <span><%= t(".remember_me") %></span>
+      </label>
 
       <%= form.submit t(".submit") %>
     <% end %>

@@ -10,7 +10,7 @@ class Admin::SessionsController < ApplicationController
     manager = Manager.find_active_by_email(login_params[:email])
 
     if manager&.authenticate_password(login_params[:password])
-      sign_in_manager(manager)
+      sign_in_manager(manager, remember: remember_login?)
     else
       flash.now[:alert] = t(".invalid")
       render :new, status: :unprocessable_entity
@@ -25,7 +25,11 @@ class Admin::SessionsController < ApplicationController
   private
 
   def login_params
-    params.permit(:email, :password)
+    params.permit(:email, :password, :remember_me)
+  end
+
+  def remember_login?
+    ActiveModel::Type::Boolean.new.cast(login_params[:remember_me])
   end
 
   def redirect_signed_in_manager

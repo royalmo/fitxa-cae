@@ -24,6 +24,7 @@ module FitxaCae
     config.time_zone = "Europe/Madrid"
     config.i18n.default_locale = :ca
     config.i18n.available_locales = [ :ca ]
+    config.x.app_version = "1.0"
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end
