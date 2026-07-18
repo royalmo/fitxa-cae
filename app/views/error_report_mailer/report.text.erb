@@ -1,0 +1,23 @@
+FitxaCAE <%= @error_report[:environment] %> error
+
+Class: <%= @error_report[:error_class] %>
+Message: <%= @error_report[:message] %>
+Severity: <%= @error_report[:severity] %>
+Handled: <%= @error_report[:handled] %>
+Source: <%= @error_report[:source] %>
+
+Context:
+<% if @error_report[:context].present? %>
+<% @error_report[:context].each do |key, value| %>
+- <%= key %>: <%= value %>
+<% end %>
+<% else %>
+None
+<% end %>
+
+Backtrace:
+<% if @error_report[:backtrace].present? %>
+<%= @error_report[:backtrace].join("\n") %>
+<% else %>
+None
+<% end %>
