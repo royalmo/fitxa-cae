@@ -34,19 +34,6 @@
   box-shadow: none;
 }
 
-.admin-auth-footer {
-  padding: 0 1.25rem 1.25rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-.admin-auth-footer a {
-  color: var(--muted);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-}
-
 .admin-shell {
   display: grid;
   grid-template-columns: 16rem minmax(0, 1fr);

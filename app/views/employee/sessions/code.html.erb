@@ -1,6 +1,6 @@
 <% content_for :title, t(".title") %>
 
-<section class="auth-card auth-card-narrow">
+<section class="auth-card auth-card-narrow employee-auth-card">
   <header class="auth-header">
     <%= render "layouts/brand_mark", path: login_path %>
     <h1><%= t(".heading") %></h1>
@@ -10,6 +10,10 @@
   </header>
 
   <section class="auth-panel">
+    <% flash.each do |type, message| %>
+      <div class="flash flash-<%= type %>"><%= message %></div>
+    <% end %>
+
     <%= form_with url: verify_login_code_path, method: :post, class: "auth-form" do |form| %>
       <div class="field">
         <%= form.label :code, t(".code") %>

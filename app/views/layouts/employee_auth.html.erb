@@ -4,13 +4,15 @@
     <%= render "layouts/head", manifest: true, theme_color: "#e30613" %>
   </head>
 
-  <body class="employee-shell auth-shell">
-    <% flash.each do |type, message| %>
-      <div class="flash flash-<%= type %>"><%= message %></div>
-    <% end %>
-
+  <body class="employee-shell employee-auth-shell auth-shell">
     <main class="auth-main">
       <%= yield %>
     </main>
+
+    <%= render "layouts/auth_footer",
+      class: "employee-auth-footer",
+      access_label: t("shared.auth_footer.admin_access"),
+      access_path: admin_root_path,
+      show_developer_credit: false %>
   </body>
 </html>

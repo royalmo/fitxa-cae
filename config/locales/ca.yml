@@ -18,6 +18,14 @@ ca:
 
   shared:
     actions: "Accions"
+    auth_footer:
+      project: "FitxaCAE"
+      version: "v%{version}"
+      developed_by: "Desenvolupat per"
+      developer: "Eric Roy"
+      legal_notice: "Avís legal"
+      admin_access: "Accés admin"
+      employee_access: "Accés empleat"
     approve: "Aprovar"
     back: "Tornar"
     cancel: "Cancel·lar"
@@ -76,6 +84,9 @@ ca:
         heading: "Inicia sessió"
         password_heading: "Amb contrasenya"
         code_heading: "Amb codi"
+        tabs_label: "Mètode d'accés"
+        password_tab: "Contrasenya"
+        code_tab: "Rebre codi"
         national_id: "DNI o NIE"
         password: "Contrasenya"
         remember_me: "Mantenir la sessió iniciada"
@@ -247,11 +258,6 @@ ca:
         password: "Contrasenya"
         remember_me: "Mantenir la sessió iniciada"
         submit: "Entrar"
-      footer:
-        project: "FitxaCAE"
-        version: "v%{version}"
-        developed_by: "Desenvolupat per"
-        developer: "Eric Roy"
       create:
         invalid: "Correu o contrasenya incorrectes."
       destroy:

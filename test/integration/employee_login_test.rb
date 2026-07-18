@@ -10,6 +10,22 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     get login_path
     assert_response :success
     assert_select "title", text: "Iniciar sessió | FitxaCAE"
+    assert_select ".employee-auth-card .brand-mark"
+    assert_select ".employee-auth-card .auth-panel", 1
+    assert_select ".auth-methods", 0
+    assert_select ".auth-tab-list", text: /Contrasenya/
+    assert_select ".auth-tab-list", text: /Rebre codi/
+    assert_select "#employee_login_password_tab[checked]"
+    assert_select ".employee-auth-card .auth-panel .flash", 0
+    assert_select ".employee-auth-shell > .flash", 0
+    assert_select ".employee-auth-footer a[href='https://github.com/royalmo/fitxa-cae.git'][target='_blank'][rel='noopener']", text: "FitxaCAE"
+    assert_select ".employee-auth-footer a[href='https://ericroy.net']", 0
+    assert_select ".employee-auth-footer a[href='https://cae.cat/avisos-legals/'][target='_blank'][rel='noopener']", text: "Avís legal"
+    assert_select ".employee-auth-footer a.auth-footer-access[href='/admin']", text: "Accés admin"
+    assert_select ".employee-auth-footer a[href='/admin'][target]", 0
+    assert_no_match "Desenvolupat per", response.body
+    assert_equal "FitxaCAE v#{Rails.configuration.x.app_version} · Avís legal · Accés admin",
+      css_select(".employee-auth-footer").first.text.squish
 
     get root_path
 
@@ -55,6 +71,8 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
 
     post login_path, params: { national_id: employee.national_id, password: "bad" }
     assert_response :unprocessable_entity
+    assert_select ".employee-auth-card .auth-panel > .flash-alert + .auth-tab-panel"
+    assert_select ".employee-auth-shell > .flash", 0
 
     post login_path, params: { national_id: inactive.national_id, password: "1234" }
     assert_response :unprocessable_entity
@@ -103,6 +121,9 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_redirected_to login_code_path
     assert_equal 1, ActionMailer::Base.deliveries.size
     assert_match "000042", ActionMailer::Base.deliveries.last.text_part.body.to_s
+    follow_redirect!
+    assert_select ".employee-auth-card .auth-panel > .flash-notice + form"
+    assert_select ".employee-auth-shell > .flash", 0
 
     post verify_login_code_path, params: { code: "000042" }
 
@@ -159,6 +180,8 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       delivery_method: "email"
     }
     assert_response :unprocessable_entity
+    assert_select "#employee_login_code_tab[checked]"
+    assert_select ".employee-auth-card .auth-panel > .flash-alert + .auth-tab-panel"
 
     with_secure_random_number(555_555) do
       post request_login_code_path, params: {

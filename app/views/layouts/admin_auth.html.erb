@@ -9,11 +9,9 @@
       <%= yield %>
     </main>
 
-    <footer class="admin-auth-footer">
-      <%= link_to t("admin.sessions.footer.project"), "https://github.com/royalmo/fitxa-cae.git" %>
-      <%= t("admin.sessions.footer.version", version: app_version) %> —
-      <%= t("admin.sessions.footer.developed_by") %>
-      <%= link_to t("admin.sessions.footer.developer"), "https://ericroy.net" %>.
-    </footer>
+    <%= render "layouts/auth_footer",
+      class: "admin-auth-footer",
+      access_label: t("shared.auth_footer.employee_access"),
+      access_path: root_path %>
   </body>
 </html>

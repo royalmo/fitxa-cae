@@ -8,6 +8,8 @@ export default class extends Controller {
       window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone === true
 
+    document.documentElement.dataset.standalonePwa = installed ? "true" : "false"
+
     this.installedFieldTargets.forEach((field) => {
       field.value = installed ? "1" : "0"
     })

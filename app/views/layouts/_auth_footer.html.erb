@@ -1,0 +1,22 @@
+<% show_developer_credit = local_assigns.fetch(:show_developer_credit, true) %>
+
+<footer class="<%= class_names("auth-footer", local_assigns[:class]) %>">
+  <%= link_to t("shared.auth_footer.project"), "https://github.com/royalmo/fitxa-cae.git", target: "_blank", rel: "noopener" %>
+  <%= t("shared.auth_footer.version", version: app_version) %>
+
+  <% if show_developer_credit %>
+    ·
+    <%= t("shared.auth_footer.developed_by") %>
+    <%= link_to t("shared.auth_footer.developer"), "https://ericroy.net", target: "_blank", rel: "noopener" %>
+  <% else %>
+    <%# Employee footer developer credit intentionally hidden:
+        · Desenvolupat per Eric Roy
+        https://ericroy.net
+    %>
+  <% end %>
+
+  ·
+  <%= link_to t("shared.auth_footer.legal_notice"), "https://cae.cat/avisos-legals/", target: "_blank", rel: "noopener" %>
+  ·
+  <%= link_to local_assigns.fetch(:access_label), local_assigns.fetch(:access_path), class: "auth-footer-access" %>
+</footer>

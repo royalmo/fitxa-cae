@@ -1,67 +1,80 @@
 <% content_for :title, t(".title") %>
+<% active_tab = params[:delivery_method].present? ? "code" : "password" %>
 
-<section class="auth-card" data-controller="pwa-session">
+<section class="auth-card auth-card-narrow employee-auth-card" data-controller="pwa-session">
   <header class="auth-header">
     <%= render "layouts/brand_mark", path: login_path %>
     <h1><%= t(".heading") %></h1>
   </header>
 
-  <div class="auth-methods">
-    <section class="auth-panel">
-      <h2><%= t(".password_heading") %></h2>
+  <section class="auth-panel auth-tabbed-panel">
+    <%= radio_button_tag :employee_login_tab, "password", active_tab == "password", id: "employee_login_password_tab", class: "auth-tab-radio" %>
+    <%= radio_button_tag :employee_login_tab, "code", active_tab == "code", id: "employee_login_code_tab", class: "auth-tab-radio" %>
 
+    <div class="auth-tab-list" role="tablist" aria-label="<%= t(".tabs_label") %>">
+      <label class="auth-tab auth-tab-password" for="employee_login_password_tab" role="tab">
+        <%= t(".password_tab") %>
+      </label>
+      <label class="auth-tab auth-tab-code" for="employee_login_code_tab" role="tab">
+        <%= t(".code_tab") %>
+      </label>
+    </div>
+
+    <% flash.each do |type, message| %>
+      <div class="flash flash-<%= type %>"><%= message %></div>
+    <% end %>
+
+    <div class="auth-tab-panel auth-tab-panel-password">
       <%= form_with url: login_path, method: :post, class: "auth-form" do |form| %>
-        <%= hidden_field_tag :installed_pwa, "0", data: { pwa_session_target: "installedField" } %>
+        <%= hidden_field_tag :installed_pwa, "0", id: "employee_password_installed_pwa", data: { pwa_session_target: "installedField" } %>
 
         <div class="field">
-          <%= form.label :national_id, t(".national_id") %>
-          <%= form.text_field :national_id, value: params[:national_id], autocomplete: "username", required: true %>
+          <%= form.label :national_id, t(".national_id"), for: "employee_password_national_id" %>
+          <%= form.text_field :national_id, id: "employee_password_national_id", value: params[:national_id], autocomplete: "username", required: true %>
         </div>
 
         <div class="field">
-          <%= form.label :password, t(".password") %>
-          <%= form.password_field :password, autocomplete: "current-password", required: true %>
+          <%= form.label :password, t(".password"), for: "employee_password" %>
+          <%= form.password_field :password, id: "employee_password", autocomplete: "current-password", required: true %>
         </div>
 
         <label class="check-row">
-          <%= check_box_tag :remember_me, "1", params[:remember_me].present? %>
+          <%= check_box_tag :remember_me, "1", params[:remember_me].present?, id: "employee_password_remember_me" %>
           <span><%= t(".remember_me") %></span>
         </label>
 
         <%= form.submit t(".password_submit") %>
       <% end %>
-    </section>
+    </div>
 
-    <section class="auth-panel">
-      <h2><%= t(".code_heading") %></h2>
-
+    <div class="auth-tab-panel auth-tab-panel-code">
       <%= form_with url: request_login_code_path, method: :post, class: "auth-form" do |form| %>
-        <%= hidden_field_tag :installed_pwa, "0", data: { pwa_session_target: "installedField" } %>
+        <%= hidden_field_tag :installed_pwa, "0", id: "employee_code_installed_pwa", data: { pwa_session_target: "installedField" } %>
 
         <div class="field">
-          <%= form.label :national_id, t(".national_id") %>
-          <%= form.text_field :national_id, value: params[:national_id], autocomplete: "username", required: true %>
+          <%= form.label :national_id, t(".national_id"), for: "employee_code_national_id" %>
+          <%= form.text_field :national_id, id: "employee_code_national_id", value: params[:national_id], autocomplete: "username", required: true %>
         </div>
 
         <fieldset class="choice-list">
           <legend><%= t(".delivery_method") %></legend>
           <label>
-            <%= radio_button_tag :delivery_method, "sms", true %>
+            <%= radio_button_tag :delivery_method, "sms", params[:delivery_method] != "email", id: "employee_delivery_method_sms" %>
             <span><%= t(".sms") %></span>
           </label>
           <label>
-            <%= radio_button_tag :delivery_method, "email", false %>
+            <%= radio_button_tag :delivery_method, "email", params[:delivery_method] == "email", id: "employee_delivery_method_email" %>
             <span><%= t(".email") %></span>
           </label>
         </fieldset>
 
         <label class="check-row">
-          <%= check_box_tag :remember_me, "1", params[:remember_me].present? %>
+          <%= check_box_tag :remember_me, "1", params[:remember_me].present?, id: "employee_code_remember_me" %>
           <span><%= t(".remember_me") %></span>
         </label>
 
         <%= form.submit t(".code_submit") %>
       <% end %>
-    </section>
-  </div>
+    </div>
+  </section>
 </section>
