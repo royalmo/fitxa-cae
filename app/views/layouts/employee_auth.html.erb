@@ -4,10 +4,17 @@
     <%= render "layouts/head", manifest: true, theme_color: "#e30613" %>
   </head>
 
-  <body class="employee-shell employee-auth-shell auth-shell">
+  <body class="employee-shell employee-auth-shell auth-shell" data-controller="pwa-session">
     <main class="auth-main">
       <%= yield %>
     </main>
+
+    <div class="employee-install-prompt">
+      <button type="button" class="employee-install-button">
+        <span><%= t("employee.sessions.install_prompt") %></span>
+        <%= icon "download", class: "icon" %>
+      </button>
+    </div>
 
     <%= render "layouts/auth_footer",
       class: "employee-auth-footer",

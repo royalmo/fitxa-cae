@@ -13,6 +13,9 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_select ".employee-auth-card .brand-mark"
     assert_select ".employee-auth-card .auth-panel", 1
     assert_select ".auth-methods", 0
+    assert_select "body[data-controller='pwa-session']"
+    assert_select ".employee-install-prompt .employee-install-button", text: /Instal·la FitxaCAE/
+    assert_select ".employee-install-prompt .employee-install-button .icon"
     assert_select ".auth-tab-list", text: /Contrasenya/
     assert_select ".auth-tab-list", text: /Rebre codi/
     assert_select "#employee_login_password_tab[checked]"

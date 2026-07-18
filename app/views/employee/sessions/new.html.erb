@@ -2,7 +2,7 @@
 <% active_tab = params[:delivery_method].present? ? "code" : "password" %>
 <% selected_delivery_method = params[:delivery_method].presence_in(LoginCodeDeliveryConfig::DELIVERY_METHODS) || "email" %>
 
-<section class="auth-card auth-card-narrow employee-auth-card" data-controller="pwa-session">
+<section class="auth-card auth-card-narrow employee-auth-card">
   <header class="auth-header">
     <%= render "layouts/brand_mark", path: login_path %>
     <h1><%= t(".heading") %></h1>

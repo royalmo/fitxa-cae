@@ -74,6 +74,7 @@ ca:
   employee:
     guest: "Treballador"
     sessions:
+      install_prompt: "Instal·la FitxaCAE"
       flash:
         require_login: "Inicia sessió per continuar."
         signed_in: "Sessió iniciada."
