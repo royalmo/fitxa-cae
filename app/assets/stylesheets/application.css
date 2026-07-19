@@ -113,22 +113,6 @@ td small,
   color: rgba(255, 255, 255, 0.82);
 }
 
-.avatar {
-  display: inline-grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  color: #ffffff;
-  background: #24352c;
-  font-weight: 800;
-}
-
-.avatar-small {
-  width: 2rem;
-  height: 2rem;
-  font-size: 0.72rem;
-}
-
 .eyebrow {
   margin: 0 0 0.35rem;
   color: var(--muted);
@@ -804,15 +788,21 @@ input[type="submit"]:hover {
   position: sticky;
   top: 0;
   z-index: 10;
+  width: 100%;
+  padding: 0.8rem 0;
+  background: rgba(255, 255, 255, 0.86);
+  border-bottom: 1px solid rgba(227, 6, 19, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+.employee-topbar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  max-width: 40rem;
+  width: min(100%, 40rem);
   margin: 0 auto;
-  padding: 1rem;
-  background: rgba(246, 247, 242, 0.94);
-  backdrop-filter: blur(12px);
+  padding: 0 1rem;
 }
 
 .employee-chip {
@@ -823,9 +813,11 @@ input[type="submit"]:hover {
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 700;
+  line-height: 1;
+  transform: translateY(1px);
 }
 
-.employee-chip span:last-child {
+.employee-chip span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -840,6 +832,32 @@ input[type="submit"]:hover {
 
 .topbar-form {
   margin: 0;
+}
+
+.employee-logout-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  min-height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.employee-logout-button .icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.employee-logout-button:hover {
+  color: var(--text);
+  background: rgba(11, 11, 11, 0.06);
 }
 
 .icon-button {
@@ -1181,5 +1199,17 @@ input[type="submit"]:hover {
 
   .nav-item {
     font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .employee-topbar-inner {
+    gap: 0.65rem;
+    padding-inline: 0.75rem;
+  }
+
+  .employee-chip {
+    max-width: 42vw;
+    font-size: 0.84rem;
   }
 }

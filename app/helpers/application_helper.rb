@@ -13,10 +13,6 @@ module ApplicationHelper
     class_names("badge", "badge-#{status}")
   end
 
-  def initials(name)
-    name.to_s.split.map(&:first).join.first(2).to_s.upcase.presence || "?"
-  end
-
   def status_text(status)
     t("statuses.#{status}")
   end

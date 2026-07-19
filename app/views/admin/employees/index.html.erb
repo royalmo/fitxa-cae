@@ -48,7 +48,6 @@
           <tr>
             <td>
               <div class="person-cell">
-                <span class="avatar avatar-small"><%= initials(employee_display_name(employee)) %></span>
                 <div>
                   <strong><%= employee_display_name(employee) %></strong>
                   <small><%= [employee.email, employee.phone].compact_blank.join(" · ").presence || t(".no_contact") %></small>

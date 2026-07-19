@@ -8,19 +8,20 @@
     <% employee_name = employee_display_name(current_employee || @employee) %>
 
     <header class="employee-topbar">
-      <%= render "layouts/brand_mark", path: root_path %>
+      <div class="employee-topbar-inner">
+        <%= render "layouts/brand_mark", path: root_path %>
 
-      <div class="employee-topbar-actions">
-        <div class="employee-chip">
-          <span class="avatar avatar-small"><%= initials(employee_name) %></span>
-          <span><%= employee_name %></span>
-        </div>
+        <div class="employee-topbar-actions">
+          <div class="employee-chip">
+            <span><%= employee_name %></span>
+          </div>
 
-        <% if employee_signed_in? %>
-          <%= button_to logout_path, method: :delete, form_class: "topbar-form", class: "icon-button", title: t("employee.nav.logout"), aria: { label: t("employee.nav.logout") } do %>
-            <%= icon "log-out" %>
+          <% if employee_signed_in? %>
+            <%= button_to logout_path, method: :delete, form_class: "topbar-form", class: "employee-logout-button", title: t("employee.nav.logout"), aria: { label: t("employee.nav.logout") } do %>
+              <%= icon "log-out", title: t("employee.nav.logout") %>
+            <% end %>
           <% end %>
-        <% end %>
+        </div>
       </div>
     </header>
 

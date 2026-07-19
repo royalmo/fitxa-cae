@@ -11,6 +11,11 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 0
     assert_select "script[src*='admin']", 0
+    assert_select ".employee-topbar .employee-topbar-inner"
+    assert_select ".employee-topbar .employee-logout-button[title='Tancar sessió'][aria-label='Tancar sessió']"
+    assert_select ".employee-topbar .employee-logout-button svg.icon[role='img'][aria-label='Tancar sessió']"
+    assert_select ".employee-topbar .employee-logout-button", text: /Sortir/, count: 0
+    assert_select ".employee-topbar .icon-button", 0
     assert_select ".employee-nav svg.icon", 4
     assert_select ".clock-card svg.icon"
     assert_no_match %("admin":), response.body

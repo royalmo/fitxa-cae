@@ -26,7 +26,6 @@
         </div>
         <div class="admin-profile">
           <span><%= t("admin.role") %></span>
-          <span class="avatar avatar-small"><%= initials(manager_name) %></span>
           <%= button_to admin_logout_path, method: :delete, form_class: "topbar-form", class: "icon-button", title: t("admin.nav.logout"), aria: { label: t("admin.nav.logout") } do %>
             <%= icon "log-out" %>
           <% end %>
