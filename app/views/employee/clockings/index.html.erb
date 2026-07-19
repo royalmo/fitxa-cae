@@ -1,48 +1,134 @@
 <% content_for :title, t(".title") %>
+<% month_options = (1..12).map do |month_number|
+  month_date = Date.new(@month.year, month_number, 1)
+  disabled = month_date < @min_clocking_month || month_date > @max_clocking_month
+  [l(Date.new(@month.year, month_number, 1), format: "%B"), month_number, { disabled: disabled }]
+end %>
+<% year_values = ((@min_clocking_month.year..@max_clocking_month.year).to_a + [@month.year]).uniq.sort %>
+<% year_options = year_values.map do |year|
+  [year, year, { disabled: year < @min_clocking_month.year || year > @max_clocking_month.year }]
+end %>
+<% month_select_disabled = @clocking_month_reachable && month_options.count { |_label, _value, options| !options[:disabled] } == 1 %>
+<% year_select_disabled = @month.year.between?(@min_clocking_month.year, @max_clocking_month.year) &&
+  year_options.count { |_label, _value, options| !options[:disabled] } == 1 %>
 
-<section class="page-intro">
+<section class="page-intro split-intro clockings-intro">
   <div>
-    <p class="eyebrow"><%= t(".period") %> · <%= l(@month, format: :month_year) %></p>
     <h1 class="page-title"><%= icon "history", class: "icon-large" %><span><%= t(".heading") %></span></h1>
+  </div>
+
+  <div class="clockings-month-controls" aria-label="<%= t(".period") %>">
+    <% if @previous_month %>
+      <%= link_to clockings_path(month: @previous_month.month, year: @previous_month.year),
+        class: "clockings-month-arrow",
+        aria: { label: t(".previous_month") } do %>
+        <%= icon "chevron-left" %>
+      <% end %>
+    <% else %>
+      <span class="clockings-month-arrow is-disabled" aria-disabled="true" aria-label="<%= t(".previous_month") %>">
+        <%= icon "chevron-left" %>
+      </span>
+    <% end %>
+
+    <%= form_with url: clockings_path,
+      method: :get,
+      class: "clockings-month-form" do %>
+      <%= label_tag "clockings_month", t(".month"), class: "sr-only" %>
+      <%= select_tag :month,
+        options_for_select(month_options, @month.month),
+        id: "clockings_month",
+        disabled: month_select_disabled,
+        onchange: "this.form.requestSubmit()" %>
+      <%= hidden_field_tag :month, @month.month if month_select_disabled %>
+
+      <%= label_tag "clockings_year", t(".year"), class: "sr-only" %>
+      <%= select_tag :year,
+        options_for_select(year_options, @month.year),
+        id: "clockings_year",
+        disabled: year_select_disabled,
+        onchange: "this.form.requestSubmit()" %>
+      <%= hidden_field_tag :year, @month.year if year_select_disabled %>
+    <% end %>
+
+    <% if @next_month %>
+      <%= link_to clockings_path(month: @next_month.month, year: @next_month.year),
+        class: "clockings-month-arrow",
+        aria: { label: t(".next_month") } do %>
+        <%= icon "chevron-right" %>
+      <% end %>
+    <% else %>
+      <span class="clockings-month-arrow is-disabled" aria-disabled="true" aria-label="<%= t(".next_month") %>">
+        <%= icon "chevron-right" %>
+      </span>
+    <% end %>
   </div>
 </section>
 
 <%= render "layouts/flash_messages", class: "employee-page-flash" %>
 
-<section class="panel flush-panel">
-  <% if @clocking_days.any? %>
-    <div class="mobile-table">
+<% if @clocking_month_reachable && @clocking_days.any? %>
+  <section class="panel flush-panel">
+    <div class="mobile-table clockings-table">
       <table>
         <thead>
           <tr>
-            <th><%= t(".date") %></th>
-            <th><%= t(".entry") %></th>
-            <th><%= t(".exit") %></th>
-            <th><%= t(".hours") %></th>
-            <th><%= t(".swipes") %></th>
-            <th><%= t(".status") %></th>
+            <th class="clocking-date-column"><%= t(".date") %></th>
+            <th class="clocking-hours-column"><%= t(".hours") %></th>
+            <th class="clocking-swipes-column"><%= t(".swipes") %></th>
           </tr>
         </thead>
         <tbody>
           <% @clocking_days.each do |day| %>
             <tr>
-              <td><%= l(day[:date], format: :weekday_day_month) %></td>
-              <td><%= day[:entry_at] ? l(day[:entry_at], format: :hour_minute) : "—" %></td>
-              <td><%= day[:exit_at] ? l(day[:exit_at], format: :hour_minute) : "—" %></td>
-              <td><strong><%= duration_text(day[:worked_seconds]) %></strong></td>
-              <td><%= day[:swipes_count] %></td>
-              <td>
-                <span class="<%= badge_class(day[:status]) %>"><%= status_text(day[:status]) %></span>
+              <td class="clocking-date-column"><%= l(day[:date], format: :weekday_day_month) %></td>
+              <td class="clocking-hours-column">
+                <strong class="<%= class_names("clocking-hours", "is-incomplete": day[:swipes_count].odd?) %>">
+                  <%= duration_text(day[:worked_seconds]) %>
+                </strong>
+              </td>
+              <td class="clocking-swipes-column">
+                <div class="clocking-swipe-cell">
+                  <div class="clocking-swipe-grid">
+                    <% clocking_swipe_rows(day[:swipes]).each do |swipe_row| %>
+                      <div class="clocking-swipe-row">
+                        <% [ :entry, :exit ].each do |kind| %>
+                          <div class="clocking-swipe-slot">
+                            <% if (swipe = swipe_row[kind]) %>
+                              <span class="clocking-swipe">
+                                <%= icon clocking_icon_name(swipe.kind), title: clocking_kind_text(swipe.kind), class: "clocking-swipe-icon" %>
+                                <span class="clocking-swipe-time"><%= l(swipe.swipe_at, format: :hour_minute) %></span>
+                              </span>
+                            <% end %>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <% if SwipeCorrection.employee_request_day_allowed?(day[:date]) %>
+                    <%= link_to new_correction_path(date: day[:date].iso8601),
+                      class: class_names("clocking-correction-link", "is-incomplete": day[:swipes_count].odd?),
+                      title: t(".request_correction_for_day", date: l(day[:date], format: :long)),
+                      aria: { label: t(".request_correction_for_day", date: l(day[:date], format: :long)) } do %>
+                      <%= icon "pencil", class: "clocking-correction-icon" %>
+                    <% end %>
+                  <% end %>
+                </div>
               </td>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
-  <% else %>
-    <div class="empty-state">
-      <%= icon "history", class: "icon-muted" %>
-      <p><%= t(".empty") %></p>
-    </div>
-  <% end %>
-</section>
+  </section>
+<% else %>
+  <div class="empty-state clockings-empty-state">
+    <%= icon "history", class: "empty-state-icon" %>
+    <p><%= t(@clocking_month_reachable && @month == @max_clocking_month ? ".current_month_empty" : ".empty") %></p>
+    <% unless @clocking_month_reachable %>
+      <%= link_to t(".current_month"),
+        clockings_path(month: @max_clocking_month.month, year: @max_clocking_month.year),
+        class: "button clockings-current-month-link" %>
+    <% end %>
+  </div>
+<% end %>

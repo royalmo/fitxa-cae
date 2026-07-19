@@ -75,6 +75,36 @@ def weekday?(date)
   date.cwday <= 5
 end
 
+def spread_demo_workdays(days)
+  return days.first(3) if days.length <= 5
+
+  [ days[1], days[days.length / 2], days[-2] ].compact.uniq
+end
+
+def demo_multi_swipe_patterns
+  [
+    [
+      [ "entry", 8, 5 ],
+      [ "exit", 12, 10 ],
+      [ "entry", 13, 0 ]
+    ],
+    [
+      [ "entry", 7, 58 ],
+      [ "exit", 12, 30 ],
+      [ "entry", 14, 0 ],
+      [ "exit", 17, 12 ]
+    ],
+    [
+      [ "entry", 7, 54 ],
+      [ "exit", 10, 15 ],
+      [ "entry", 10, 34 ],
+      [ "exit", 13, 8 ],
+      [ "entry", 14, 2 ],
+      [ "exit", 17, 41 ]
+    ]
+  ]
+end
+
 ActiveRecord::Base.transaction do
   AuditAction.delete_all
   SwipeCorrection.delete_all
@@ -170,6 +200,38 @@ ActiveRecord::Base.transaction do
         swipes_by_employee_and_day[[ employee.id, day ]] << swipe
       end
     end
+  end
+
+  aina = employees.find { |employee| employee.first_name == "Aina" && employee.last_name == "Martinez Vidal" }
+  if aina
+    workdays.group_by { |day| [ day.year, day.month ] }.each_value do |month_workdays|
+      spread_demo_workdays(month_workdays).each_with_index do |day, pattern_index|
+        Swipe.where(employee: aina, swipe_at: day.all_day).delete_all
+
+        day_swipes = demo_multi_swipe_patterns[pattern_index % demo_multi_swipe_patterns.length].map do |kind, hour, minute|
+          Swipe.create!(
+            employee: aina,
+            swipe_at: work_time(day, hour, minute),
+            kind: kind,
+            removed: false,
+            metadata: TERMINALS.sample(random: rng),
+            forged: false
+          )
+        end
+
+        swipes_by_employee_and_day[[ aina.id, day ]] = day_swipes
+      end
+    end
+  end
+
+  employees.each do |employee|
+    first_swipe_at = employee.swipes.kept.minimum(:swipe_at)
+    next unless first_swipe_at
+
+    employee.update_columns(
+      created_at: [ employee.created_at, first_swipe_at ].min,
+      updated_at: Time.current
+    )
   end
 
   employees.each_with_index do |employee, employee_index|

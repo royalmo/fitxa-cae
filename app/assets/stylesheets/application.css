@@ -724,6 +724,143 @@ input[type="submit"].is-submitting {
   min-width: 44rem;
 }
 
+.clockings-table table {
+  table-layout: fixed;
+  min-width: 34rem;
+}
+
+.clocking-date-column {
+  width: 12.5rem;
+  white-space: nowrap;
+}
+
+.clocking-hours-column {
+  width: 8rem;
+  white-space: nowrap;
+}
+
+.clocking-swipes-column {
+  width: auto;
+}
+
+.clocking-swipe-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  max-width: 100%;
+}
+
+.clocking-swipe-grid {
+  display: grid;
+  grid-template-columns: minmax(4.5rem, max-content) minmax(4.5rem, max-content);
+  flex: 1 1 auto;
+  gap: 0.35rem 0.85rem;
+  min-width: 0;
+}
+
+.clocking-swipe-row {
+  display: contents;
+}
+
+.clocking-swipe-slot {
+  display: flex;
+  align-items: center;
+  min-height: 1.25rem;
+  min-width: 0;
+}
+
+.clocking-swipe {
+  display: inline-grid;
+  grid-template-columns: 1rem auto;
+  align-items: end;
+  gap: 0.25rem;
+  min-height: 1.25rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.clocking-swipe-icon {
+  display: block;
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--muted);
+}
+
+.clocking-swipe-time {
+  display: block;
+  align-self: end;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.clocking-hours.is-incomplete {
+  color: var(--primary);
+}
+
+.clocking-correction-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-left: auto;
+  border-radius: 6px;
+  color: #a9adb5;
+}
+
+.clocking-correction-link:hover {
+  color: var(--text);
+  background: #f3f4f6;
+}
+
+.clocking-correction-link.is-incomplete {
+  color: var(--primary);
+  background: var(--surface-soft);
+}
+
+.clocking-correction-link.is-incomplete:hover {
+  background: rgba(227, 6, 19, 0.13);
+}
+
+.clocking-correction-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.clockings-empty-state {
+  gap: 0.8rem;
+  justify-items: center;
+  place-content: center;
+  width: min(100%, 28rem);
+  min-height: calc(100dvh - 17rem);
+  margin: 0 auto;
+  padding: 2.25rem 1rem;
+  text-align: center;
+}
+
+.clockings-empty-state .empty-state-icon {
+  width: 4rem;
+  height: 4rem;
+  color: #a9adb5;
+}
+
+.clockings-empty-state p {
+  max-width: 22rem;
+}
+
+.clockings-current-month-link {
+  min-height: 2.35rem;
+  margin-top: 0.2rem;
+  border-color: #d1d5db;
+  color: var(--text);
+  background: #f3f4f6;
+  font-size: 0.9rem;
+}
+
+.clockings-current-month-link:hover {
+  background: #e5e7eb;
+}
+
 .stacked-form,
 .filter-bar {
   display: grid;
@@ -966,6 +1103,59 @@ input[type="submit"].is-submitting {
 
 .split-intro {
   align-items: center;
+}
+
+.clockings-month-controls,
+.clockings-month-form {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.clockings-month-controls {
+  justify-self: end;
+}
+
+.clockings-month-form select {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--text);
+  background: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.clockings-month-form select:disabled {
+  border-color: var(--line);
+  color: var(--muted);
+  background: #ffffff;
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.clockings-month-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid #111111;
+  border-radius: 8px;
+  color: var(--muted);
+  background: #ffffff;
+}
+
+.clockings-month-arrow:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.clockings-month-arrow.is-disabled {
+  border-color: var(--line);
+  opacity: 0.42;
+  cursor: not-allowed;
 }
 
 .clock-card {
@@ -1427,6 +1617,10 @@ input[type="submit"].is-submitting {
   .employee-grid,
   .field-row {
     grid-template-columns: 1fr;
+  }
+
+  .clockings-month-controls {
+    justify-self: start;
   }
 
   .form-actions {

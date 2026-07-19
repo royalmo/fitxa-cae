@@ -15,7 +15,10 @@
     <div class="field-row">
       <div class="field">
         <%= form.label :date, t(".date") %>
-        <%= form.date_field :date, value: params[:date].presence || @correction.day || Date.current %>
+        <%= form.date_field :date,
+          value: params[:date].presence || @correction.day || Date.current,
+          min: @correction_date_range.begin.iso8601,
+          max: @correction_date_range.end.iso8601 %>
       </div>
 
       <div class="field">

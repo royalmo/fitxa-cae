@@ -28,7 +28,7 @@ module EmployeeClockingSummaries
   def clocking_day_summaries(employee, start_date:, end_date:)
     swipes = employee.swipes.kept.where(swipe_at: start_date.beginning_of_day..end_date.end_of_day).chronological.to_a
     corrections = employee.swipe_corrections.where(day: start_date..end_date).to_a
-    dates = (swipes.map { |swipe| swipe.swipe_at.to_date } + corrections.map(&:day)).uniq.sort.reverse
+    dates = swipes.map { |swipe| swipe.swipe_at.to_date }.uniq.sort
 
     dates.map do |date|
       day_swipes = swipes.select { |swipe| swipe.swipe_at.to_date == date }
@@ -39,6 +39,7 @@ module EmployeeClockingSummaries
         entry_at: day_swipes.find(&:entry?)&.swipe_at,
         exit_at: day_swipes.reverse.find(&:exit?)&.swipe_at,
         swipes_count: day_swipes.count,
+        swipes: day_swipes,
         worked_seconds: Swipe.paired_work_seconds(day_swipes),
         status: clocking_day_status(day_swipes, day_corrections)
       }

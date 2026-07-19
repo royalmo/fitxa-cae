@@ -15,12 +15,14 @@ class Employee::CorrectionsController < ApplicationController
 
   def new
     @employee = current_employee
-    @correction = @employee.swipe_corrections.new(day: Time.zone.today, status: :pending)
+    @correction_date_range = correction_date_range
+    @correction = @employee.swipe_corrections.new(day: correction_form_day, status: :pending)
     load_recent_swipes
   end
 
   def create
     @employee = current_employee
+    @correction_date_range = correction_date_range
     @correction = @employee.swipe_corrections.new(
       requester: @employee,
       status: :pending,
@@ -55,6 +57,10 @@ class Employee::CorrectionsController < ApplicationController
     Date.iso8601(correction_params[:date].to_s)
   rescue ArgumentError
     nil
+  end
+
+  def correction_form_day
+    parsed_correction_day if correction_day_allowed?(parsed_correction_day)
   end
 
   def parsed_correction_time
@@ -93,8 +99,17 @@ class Employee::CorrectionsController < ApplicationController
   def correction_request_errors
     errors = []
     errors << t(".missing_date") unless parsed_correction_day
+    errors << t(".date_out_of_range") if parsed_correction_day && !correction_day_allowed?(parsed_correction_day)
     errors << t(".missing_kind") unless requested_swipe_kind
     errors << t(".missing_time") unless parsed_correction_time
     errors
+  end
+
+  def correction_day_allowed?(day)
+    SwipeCorrection.employee_request_day_allowed?(day)
+  end
+
+  def correction_date_range
+    SwipeCorrection.employee_request_day_range
   end
 end

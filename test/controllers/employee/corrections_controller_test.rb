@@ -27,6 +27,37 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Vaig entrar abans.", correction.requester_comments
   end
 
+  test "new correction form accepts a date param within the correction window" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      get new_correction_path, params: { date: "2026-06-03" }
+    end
+
+    assert_response :success
+    assert_select "input[type='date'][name='date'][value='2026-06-03'][min='2026-06-01'][max='2026-07-19']"
+  end
+
+  test "rejects correction requests outside current and previous month" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      assert_no_difference "SwipeCorrection.count" do
+        post corrections_path, params: {
+          date: "2026-05-31",
+          kind: "wrong_entry",
+          time: "08:05",
+          note: "Massa antic"
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".error-summary", text: I18n.t("employee.corrections.create.date_out_of_range")
+  end
+
   test "rejects incomplete correction requests" do
     employee = create_employee(password: "1234")
     log_in_employee(employee)

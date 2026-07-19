@@ -9,7 +9,7 @@ ca:
       short: "%-d/%-m/%Y"
       long: "%-d %B %Y"
       month_year: "%B %Y"
-      weekday_day_month: "%A, %-d %B"
+      weekday_day_month: "%A, %-d de %B"
 
   time:
     formats:
@@ -178,13 +178,20 @@ ca:
         heading: "Historial"
         intro: "Revisa els darrers dies registrats."
         period: "Període"
+        month: "Mes"
+        year: "Any"
+        previous_month: "Mes anterior"
+        next_month: "Mes següent"
+        request_correction_for_day: "Demanar correcció per %{date}"
         date: "Data"
         entry: "Entrada"
         exit: "Sortida"
         hours: "Hores"
         swipes: "Fitxatges"
         status: "Estat"
-        empty: "Encara no hi ha fitxatges aquest mes."
+        empty: "No hi ha registres per aquest mes"
+        current_month_empty: "Apareixeran aquí els fitxatges d'aquest mes"
+        current_month: "Anar al mes actual"
     corrections:
       summary:
         requested_swipes: "Hora sol·licitada: %{swipes}"
@@ -222,6 +229,7 @@ ca:
         submit: "Enviar a RRHH"
       create:
         missing_date: "Indica un dia vàlid."
+        date_out_of_range: "Només pots demanar correccions del mes actual o del mes anterior."
         missing_kind: "Indica el tipus de correcció."
         missing_time: "Indica una hora vàlida."
     accounts:

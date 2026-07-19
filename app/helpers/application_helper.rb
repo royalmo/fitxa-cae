@@ -75,6 +75,25 @@ module ApplicationHelper
     }.fetch(kind.to_sym, "clock")
   end
 
+  def clocking_swipe_rows(swipes)
+    rows = []
+    current_row = nil
+
+    swipes.each do |swipe|
+      if swipe.entry?
+        current_row = { entry: swipe, exit: nil }
+        rows << current_row
+      elsif current_row && current_row[:exit].blank?
+        current_row[:exit] = swipe
+      else
+        current_row = { entry: nil, exit: swipe }
+        rows << current_row
+      end
+    end
+
+    rows
+  end
+
   private
 
   def decoded_title(title)
