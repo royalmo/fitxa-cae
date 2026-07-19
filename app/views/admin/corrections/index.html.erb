@@ -37,8 +37,8 @@
           <td>
             <% if correction.pending? %>
               <div class="inline-actions">
-                <%= button_to t("shared.approve"), approve_admin_correction_path(correction), method: :post, class: "mini-button" %>
-                <%= button_to t("shared.reject"), reject_admin_correction_path(correction), method: :post, class: "mini-button muted-button" %>
+                <%= button_to t("shared.approve"), approve_admin_correction_path(correction), method: :post, class: "mini-button", data: { submitting_label: t("shared.submitting.approving") } %>
+                <%= button_to t("shared.reject"), reject_admin_correction_path(correction), method: :post, class: "mini-button muted-button", data: { submitting_label: t("shared.submitting.rejecting") } %>
               </div>
             <% else %>
               <span class="muted"><%= t("shared.view") %></span>

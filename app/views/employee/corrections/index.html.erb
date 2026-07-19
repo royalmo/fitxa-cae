@@ -3,13 +3,14 @@
 <section class="page-intro split-intro">
   <div>
     <h1 class="page-title"><%= icon "square-pen", class: "icon-large" %><span><%= t(".heading") %></span></h1>
-    <p><%= t(".intro") %></p>
   </div>
   <%= link_to new_correction_path, class: "button button-primary" do %>
     <%= icon "square-pen" %>
     <span><%= t(".new_request") %></span>
   <% end %>
 </section>
+
+<%= render "layouts/flash_messages", class: "employee-page-flash" %>
 
 <section class="panel">
   <% if @corrections.any? %>

@@ -1,0 +1,20 @@
+<% messages = Array(local_assigns[:messages]).presence || Array(local_assigns[:errors]&.full_messages) %>
+<% messages = messages.compact_blank %>
+
+<% if messages.any? %>
+  <div class="<%= class_names("error-summary", local_assigns[:class], "error-summary-single": messages.one?) %>">
+    <%= icon "triangle-alert", class: "error-summary-icon" %>
+    <div class="error-summary-content">
+      <% if messages.one? %>
+        <p><%= messages.first %></p>
+      <% else %>
+        <strong><%= local_assigns[:title] %></strong>
+        <ul>
+          <% messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  </div>
+<% end %>

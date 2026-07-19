@@ -88,5 +88,20 @@ module ActiveSupport
     ensure
       singleton.define_method(:random_number, original_method) if original_method
     end
+
+    def with_error_notifications
+      singleton = class << ErrorNotifier
+        self
+      end
+      original_method = ErrorNotifier.method(:notify)
+      notifications = []
+
+      singleton.define_method(:notify) do |error, data: {}|
+        notifications << { error: error, data: data }
+      end
+      yield notifications
+    ensure
+      singleton.define_method(:notify, original_method) if original_method
+    end
   end
 end

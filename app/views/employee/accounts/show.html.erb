@@ -1,59 +1,39 @@
 <% content_for :title, t(".title") %>
+<% password_error_messages = @account_error_context.to_s == "password" ? @employee.errors.full_messages : [] %>
+<% contact_error_messages = @account_error_context.to_s == "contact" ? @employee.errors.full_messages : [] %>
+<% password_panel_open = @password_panel_open || password_error_messages.any? || params.values_at(:current_password, :password, :password_confirmation).any?(&:present?) %>
 
 <section class="page-intro">
   <div>
     <h1 class="page-title"><%= icon "user", class: "icon-large" %><span><%= t(".heading") %></span></h1>
-    <p><%= t(".intro") %></p>
   </div>
 </section>
 
-<div class="employee-grid">
-  <section class="panel">
-    <div class="panel-heading">
-      <h2 class="panel-title"><%= icon "user" %><span><%= t(".personal_data") %></span></h2>
-    </div>
+<%= render "layouts/flash_messages",
+  class: "employee-page-flash",
+  except: %i[hr_contact_notice hr_contact_alert] %>
 
-    <dl class="detail-list">
-      <div>
-        <dt><%= icon "user", class: "icon-muted" %><span><%= t(".name") %></span></dt>
-        <dd><%= employee_display_name(@employee) %></dd>
+<div class="account-layout">
+  <section class="account-section">
+    <div class="stacked-form">
+      <div class="field">
+        <%= label_tag :employee_name, t(".name") %>
+        <%= text_field_tag :employee_name, employee_display_name(@employee), readonly: true %>
       </div>
-      <div>
-        <dt><%= icon "badge-check", class: "icon-muted" %><span><%= t(".national_id") %></span></dt>
-        <dd><%= @employee.national_id %></dd>
+      <div class="field">
+        <%= label_tag :employee_national_id, t(".national_id") %>
+        <%= text_field_tag :employee_national_id, @employee.national_id, readonly: true %>
       </div>
-      <div>
-        <dt><%= icon "mail", class: "icon-muted" %><span><%= t(".email") %></span></dt>
-        <dd><%= @employee.email.presence || t(".empty_value") %></dd>
-      </div>
-      <div>
-        <dt><%= icon "phone", class: "icon-muted" %><span><%= t(".phone") %></span></dt>
-        <dd><%= @employee.phone.presence || t(".empty_value") %></dd>
-      </div>
-      <div>
-        <dt><%= icon "tag", class: "icon-muted" %><span><%= t(".tags") %></span></dt>
-        <dd><%= @employee.tags.any? ? @employee.tags.map(&:name).join(", ") : t(".empty_value") %></dd>
-      </div>
-    </dl>
+    </div>
   </section>
 
-  <section class="panel">
-    <div class="panel-heading">
-      <h2 class="panel-title"><%= icon "lock" %><span><%= t(".access") %></span></h2>
-    </div>
+  <section class="account-section">
+    <%= render "layouts/error_summary", messages: contact_error_messages, title: t(".error_title") %>
 
-    <% if @employee.errors.any? %>
-      <div class="error-summary">
-        <strong><%= t(".error_title") %></strong>
-        <ul>
-          <% @employee.errors.full_messages.each do |message| %>
-            <li><%= message %></li>
-          <% end %>
-        </ul>
-      </div>
-    <% end %>
-
-    <%= form_with url: account_path, method: :patch, class: "stacked-form compact-form" do |form| %>
+    <%= form_with url: account_contact_path,
+      method: :patch,
+      class: "stacked-form compact-form account-contact-form",
+      html: { id: "account_contact_form" } do |form| %>
       <div class="field">
         <%= form.label :email, t(".email") %>
         <%= form.email_field :email, value: @employee.email, autocomplete: "email" %>
@@ -62,22 +42,83 @@
         <%= form.label :phone, t(".phone") %>
         <%= form.telephone_field :phone, value: @employee.phone, autocomplete: "tel" %>
       </div>
-      <div class="field">
-        <%= form.label :current_password, t(".current_password") %>
-        <%= form.password_field :current_password, autocomplete: "current-password" %>
-      </div>
-      <div class="field">
-        <%= form.label :password, t(".new_password") %>
-        <%= form.password_field :password, autocomplete: "new-password" %>
-      </div>
-      <div class="field">
-        <%= form.label :password_confirmation, t(".password_confirmation") %>
-        <%= form.password_field :password_confirmation, autocomplete: "new-password" %>
-      </div>
-      <%= button_tag type: :submit, class: "button button-primary" do %>
-        <%= icon "save" %>
+    <% end %>
+
+    <div class="account-actions-row">
+      <details class="account-password-panel" <%= "open" if password_panel_open %>>
+        <summary class="account-action-button account-password-summary">
+          <span><%= t(".change_password") %></span>
+          <%= icon "chevron-down", class: "account-summary-icon account-summary-icon-down" %>
+          <%= icon "chevron-up", class: "account-summary-icon account-summary-icon-up" %>
+        </summary>
+
+        <%= render "layouts/error_summary", messages: password_error_messages, title: t(".error_title") %>
+
+        <%= form_with url: account_password_path, method: :patch, class: "stacked-form compact-form account-password-form" do |form| %>
+          <div class="field">
+            <%= form.label :current_password, t(".current_password") %>
+            <%= form.password_field :current_password, autocomplete: "current-password" %>
+          </div>
+          <div class="field">
+            <%= form.label :password, t(".new_password") %>
+            <%= form.password_field :password, autocomplete: "new-password" %>
+          </div>
+          <div class="field">
+            <%= form.label :password_confirmation, t(".password_confirmation") %>
+            <%= form.password_field :password_confirmation, autocomplete: "new-password" %>
+          </div>
+
+          <div class="account-actions">
+            <%= button_tag type: :submit, class: "button account-action-button account-primary-button", data: { submitting_label: t("shared.submitting.changing") } do %>
+              <span><%= t(".change_password_submit") %></span>
+            <% end %>
+          </div>
+        <% end %>
+      </details>
+
+      <%= button_tag type: :submit, form: "account_contact_form", class: "button account-action-button account-primary-button account-save-button", data: { submitting_label: t("shared.submitting.saving") } do %>
         <span><%= t(".save") %></span>
       <% end %>
-    <% end %>
+    </div>
   </section>
 </div>
+
+<hr class="account-divider">
+
+<section class="account-hr-contact" id="human_resources_contact">
+  <h2><%= t(".human_resources_contact") %></h2>
+
+  <%= render "layouts/flash_messages",
+    class: "employee-page-flash account-hr-flash",
+    only: %i[hr_contact_notice hr_contact_alert] %>
+
+  <%= form_with url: account_human_resources_contact_path,
+    method: :post,
+    class: "stacked-form compact-form account-hr-contact-form",
+    html: { autocomplete: "off" } do |form| %>
+    <div class="field">
+      <%= form.label :subject, t(".human_resources_subject"), class: "sr-only" %>
+      <%= form.text_field :subject,
+        value: @hr_contact_form&.fetch(:subject, nil),
+        placeholder: t(".human_resources_subject"),
+        autocomplete: "off",
+        required: true %>
+    </div>
+
+    <div class="field">
+      <%= form.label :message, t(".human_resources_message"), class: "sr-only" %>
+      <%= form.text_area :message,
+        value: @hr_contact_form&.fetch(:message, nil),
+        placeholder: t(".human_resources_message"),
+        rows: 4,
+        autocomplete: "off",
+        required: true %>
+    </div>
+
+    <div class="account-actions">
+      <%= button_tag type: :submit, class: "button account-action-button account-primary-button", data: { submitting_label: t("shared.submitting.sending") } do %>
+        <span><%= t(".human_resources_submit") %></span>
+      <% end %>
+    </div>
+  <% end %>
+</section>

@@ -119,13 +119,7 @@ class Employee::SessionsController < ApplicationController
   end
 
   def deliver_login_code(employee, code, delivery_method)
-    case delivery_method
-    when "sms"
-      SmsArena.deliver_login_code(phone: employee.phone, code: code)
-    when "email"
-      EmployeeLoginMailer.code(employee, code).deliver_now
-    end
-
+    EmployeeLoginCodeDeliveryJob.perform_later(employee, code, delivery_method)
     true
   rescue StandardError => error
     employee.clear_login_code!

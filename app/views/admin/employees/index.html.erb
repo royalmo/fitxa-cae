@@ -25,7 +25,7 @@
       <%= form.label :status, t(".status"), class: "sr-only" %>
       <%= form.select :status, [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]], selected: params[:status] %>
     </div>
-    <%= form.submit t("shared.filter"), class: "button button-secondary" %>
+    <%= form.submit t("shared.filter"), class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } %>
   <% end %>
 </section>
 

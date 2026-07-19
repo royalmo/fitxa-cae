@@ -55,5 +55,10 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_path
     assert_equal I18n.t("employee.flash.already_clocked_out"), flash[:alert]
+
+    follow_redirect!
+    assert_select ".employee-hero + .employee-page-flash.dismissible-flash"
+    assert_select ".employee-page-flash > span", text: I18n.t("employee.flash.already_clocked_out")
+    assert_select ".employee-page-flash .flash-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
   end
 end

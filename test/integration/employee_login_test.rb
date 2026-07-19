@@ -1,8 +1,12 @@
 require "test_helper"
 
 class EmployeeLoginTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
     ActionMailer::Base.deliveries.clear
+    clear_enqueued_jobs
+    clear_performed_jobs
     Employee::SessionsController::CODE_REQUEST_RATE_LIMIT_STORE.clear
   end
 
@@ -13,7 +17,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_select ".employee-auth-card .brand-mark"
     assert_select ".employee-auth-card .auth-panel", 1
     assert_select ".auth-methods", 0
-    assert_select "body[data-controller='pwa-session']"
+    assert_select "body[data-controller~='pwa-session'][data-controller~='submit-feedback']"
     assert_select ".employee-install-prompt .employee-install-button", text: /Instal·la FitxaCAE/
     assert_select ".employee-install-prompt .employee-install-button .icon"
     assert_select ".auth-tab-list", text: /Contrasenya/
@@ -121,15 +125,19 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
   test "email code login sends and verifies a code" do
     employee = create_employee(email: "ada@example.test")
 
-    with_secure_random_number(42) do
-      post request_login_code_path, params: {
-        national_id: employee.national_id,
-        delivery_method: "email"
-      }
+    assert_enqueued_jobs 1, only: EmployeeLoginCodeDeliveryJob do
+      with_secure_random_number(42) do
+        post request_login_code_path, params: {
+          national_id: employee.national_id,
+          delivery_method: "email"
+        }
+      end
     end
 
     assert_redirected_to login_code_path
     assert_nil flash[:notice]
+    assert_equal 0, ActionMailer::Base.deliveries.size
+    perform_enqueued_jobs(only: EmployeeLoginCodeDeliveryJob)
     assert_equal 1, ActionMailer::Base.deliveries.size
     assert_match "000422", ActionMailer::Base.deliveries.last.text_part.body.to_s
     follow_redirect!
@@ -148,7 +156,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_select ".code-inputs input[autocomplete='off']", 6
     assert_select ".code-input-group input[type='hidden'][name='code']", 1
     assert_select "form.auth-form[autocomplete='off'][data-controller='code-input'][data-code-input-submitting-label-value='Entrant...']"
-    assert_select "form.auth-form input[type='submit'][data-code-input-target='submit']"
+    assert_select "form.auth-form input[type='submit'][data-code-input-target='submit'][data-submitting-label='Entrant...']"
     assert_select ".field label", 0
     assert_select ".employee-auth-shell > .flash", 0
 
@@ -162,11 +170,13 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
   test "sms code login stores hashed code and verifies it" do
     employee = create_employee(phone: "+34 600 111 222")
 
-    with_secure_random_number(12_345) do
-      post request_login_code_path, params: {
-        national_id: employee.national_id,
-        delivery_method: "sms"
-      }
+    assert_enqueued_jobs 1, only: EmployeeLoginCodeDeliveryJob do
+      with_secure_random_number(12_345) do
+        post request_login_code_path, params: {
+          national_id: employee.national_id,
+          delivery_method: "sms"
+        }
+      end
     end
 
     assert_redirected_to login_code_path
@@ -205,12 +215,18 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     end
 
     with_error_notifications do |notifications|
-      post request_login_code_path, params: {
-        national_id: employee.national_id,
-        delivery_method: "sms"
-      }
+      assert_enqueued_jobs 1, only: EmployeeLoginCodeDeliveryJob do
+        post request_login_code_path, params: {
+          national_id: employee.national_id,
+          delivery_method: "sms"
+        }
+      end
 
       assert_redirected_to login_code_path
+      assert employee.reload.settings["login_code"]
+      assert_raises(SmsArena::DeliveryError) do
+        perform_enqueued_jobs(only: EmployeeLoginCodeDeliveryJob)
+      end
       assert_nil employee.reload.settings["login_code"]
       assert_equal 1, notifications.size
       assert_equal "sms", notifications.first[:data][:delivery_method]
@@ -244,6 +260,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to login_code_path
     assert_equal 0, ActionMailer::Base.deliveries.size
+    assert_enqueued_jobs 0, only: EmployeeLoginCodeDeliveryJob
     follow_redirect!
     assert_select ".auth-code-help span", text: I18n.t("employee.sessions.code.sent_if_found_intro")
     assert_select ".auth-code-help span", text: I18n.t("employee.sessions.code.sent_if_found.email")
@@ -257,6 +274,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to login_code_path
     assert_equal 0, ActionMailer::Base.deliveries.size
+    assert_enqueued_jobs 0, only: EmployeeLoginCodeDeliveryJob
   end
 
   test "code login alerts and notifies when selected channel is not configured" do
@@ -332,7 +350,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       delivery_method: "email"
     }
     assert_redirected_to login_code_path
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_enqueued_jobs 1, only: EmployeeLoginCodeDeliveryJob
 
     travel Employee::LOGIN_CODE_COOLDOWN + 1.second
 
@@ -350,7 +368,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       delivery_method: "email"
     }
     assert_redirected_to login_code_path
-    assert_equal Employee::LOGIN_CODE_LIMIT, ActionMailer::Base.deliveries.size
+    assert_enqueued_jobs Employee::LOGIN_CODE_LIMIT, only: EmployeeLoginCodeDeliveryJob
   end
 
   test "code login rate limits repeated requests by ip" do
@@ -380,21 +398,6 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
   end
 
   private
-
-  def with_error_notifications
-    singleton = class << ErrorNotifier
-      self
-    end
-    original_method = ErrorNotifier.method(:notify)
-    notifications = []
-
-    singleton.define_method(:notify) do |error, data: {}|
-      notifications << { error: error, data: data }
-    end
-    yield notifications
-  ensure
-    singleton.define_method(:notify, original_method) if original_method
-  end
 
   def with_login_code_delivery_config(email: true, sms: true)
     singleton = class << LoginCodeDeliveryConfig

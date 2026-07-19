@@ -1,0 +1,10 @@
+<%= t(".heading") %>
+
+<%= t(".employee") %>: <%= @employee.full_name %>
+<%= t(".national_id") %>: <%= @employee.national_id %>
+<%= t(".email") %>: <%= @employee.email.presence || t(".blank") %>
+<%= t(".phone") %>: <%= @employee.phone.presence || t(".blank") %>
+
+<%= t(".subject_label") %>: <%= @subject %>
+
+<%= @body %>

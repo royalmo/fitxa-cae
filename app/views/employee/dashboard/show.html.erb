@@ -7,6 +7,8 @@
   </div>
 </section>
 
+<%= render "layouts/flash_messages", class: "employee-page-flash" %>
+
 <section class="clock-card">
   <p class="clock-label">
     <%= icon "clock", class: "icon-inverse" %>
@@ -28,12 +30,12 @@
   <% end %>
 
   <% if @clock_state[:clocked_in] %>
-    <%= button_to clock_out_path, method: :post, form_class: "clock-action-form", class: "primary-clock danger" do %>
+    <%= button_to clock_out_path, method: :post, form_class: "clock-action-form", class: "primary-clock danger", data: { submitting_label: t("shared.submitting.sending") } do %>
       <%= icon "log-out", class: "icon-large" %>
       <span><%= t(".clock_out") %></span>
     <% end %>
   <% else %>
-    <%= button_to clock_in_path, method: :post, form_class: "clock-action-form", class: "primary-clock" do %>
+    <%= button_to clock_in_path, method: :post, form_class: "clock-action-form", class: "primary-clock", data: { submitting_label: t("shared.submitting.entering") } do %>
       <%= icon "log-in", class: "icon-large" %>
       <span><%= t(".clock_in") %></span>
     <% end %>

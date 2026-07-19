@@ -1,0 +1,20 @@
+<h1><%= t(".heading") %></h1>
+
+<dl>
+  <dt><%= t(".employee") %></dt>
+  <dd><%= @employee.full_name %></dd>
+
+  <dt><%= t(".national_id") %></dt>
+  <dd><%= @employee.national_id %></dd>
+
+  <dt><%= t(".email") %></dt>
+  <dd><%= @employee.email.presence || t(".blank") %></dd>
+
+  <dt><%= t(".phone") %></dt>
+  <dd><%= @employee.phone.presence || t(".blank") %></dd>
+
+  <dt><%= t(".subject_label") %></dt>
+  <dd><%= @subject %></dd>
+</dl>
+
+<%= simple_format(@body) %>

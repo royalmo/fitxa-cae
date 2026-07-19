@@ -8,6 +8,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Avui | FitxaCAE"
     assert_select "h1", text: /Hola/
+    assert_select "body[data-controller~='submit-feedback']"
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 0
     assert_select "script[src*='admin']", 0
@@ -16,8 +17,10 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".employee-topbar .employee-logout-button svg.icon[role='img'][aria-label='Tancar sessió']"
     assert_select ".employee-topbar .employee-logout-button", text: /Sortir/, count: 0
     assert_select ".employee-topbar .icon-button", 0
+    assert_select "body.employee-shell > .flash", 0
     assert_select ".employee-nav svg.icon", 4
     assert_select ".clock-card svg.icon"
+    assert_select ".clock-action-form button[type='submit'][data-submitting-label]"
     assert_no_match %("admin":), response.body
     assert_no_match "Previst", response.body
     assert_no_match "Balanç", response.body
@@ -38,11 +41,19 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Nova correcció | FitxaCAE"
     assert_select "form"
+    assert_select "form button[type='submit'][data-submitting-label='Enviant...']"
 
     get account_path
     assert_response :success
     assert_select "title", text: "Compte | FitxaCAE"
     assert_select "h1", text: "Compte"
+    assert_select ".page-intro p", 0
+    assert_select ".account-layout"
+    assert_select ".account-layout .panel", 0
+    assert_select ".account-layout h2", 0
+    assert_select ".account-hr-contact h2", text: "Contactar amb Recursos Humans"
+    assert_select ".account-save-button[data-submitting-label='Desant...']"
+    assert_select ".account-hr-contact-form button[data-submitting-label='Enviant...']"
   end
 
   test "admin pages render" do
@@ -50,6 +61,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get admin_root_path
     assert_response :success
+    assert_select "body[data-controller~='submit-feedback']"
     assert_select "title", text: "Resum | FitxaCAE Admin"
     assert_select "h1", text: "Resum operatiu"
     assert_select "link[rel='stylesheet'][href*='application']", 1
@@ -60,12 +72,14 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Treballadors | FitxaCAE Admin"
     assert_select "table"
+    assert_select "input[type='submit'][data-submitting-label='Filtrant...']"
     assert_no_match "Horari", response.body
 
     get new_admin_employee_path
     assert_response :success
     assert_select "title", text: "Nou treballador | FitxaCAE Admin"
     assert_select "form"
+    assert_select "input[type='submit'][data-submitting-label='Desant...']"
     assert_no_match "Horari", response.body
 
     get admin_reports_path

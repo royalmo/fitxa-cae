@@ -18,7 +18,7 @@
 
     <div class="form-actions">
       <%= link_to t("shared.cancel"), admin_employees_path, class: "button button-secondary" %>
-      <%= form.submit t(".submit"), class: "button button-primary" %>
+      <%= form.submit t(".submit"), class: "button button-primary", data: { submitting_label: t("shared.submitting.importing") } %>
     </div>
   <% end %>
 </section>

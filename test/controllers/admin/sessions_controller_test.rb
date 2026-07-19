@@ -16,6 +16,8 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-auth-footer a[href='/'][target]", 0
     assert_match(/v#{Regexp.escape(Rails.configuration.x.app_version)}\s+·\s+Desenvolupat per/, response.body)
     assert_select "form[action='#{admin_login_path}']"
+    assert_select "body[data-controller~='submit-feedback']"
+    assert_select "input[type='submit'][data-submitting-label='Entrant...']"
     assert_select ".admin-auth-card .auth-panel .flash", 0
     assert_select ".admin-auth-shell > .flash", 0
   end

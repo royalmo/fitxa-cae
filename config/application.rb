@@ -25,6 +25,7 @@ module FitxaCae
     config.i18n.default_locale = :ca
     config.i18n.available_locales = [ :ca ]
     config.x.app_version = "1.0"
+    config.x.human_resources_email = ENV.fetch("HUMAN_RESOURCES_EMAIL", "rrhh@cae.cat")
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

@@ -22,7 +22,11 @@ Rails.application.routes.draw do
   post "clock-out" => "employee/clockings#clock_out", as: :clock_out
 
   resources :corrections, controller: "employee/corrections", only: %i[index new create]
-  resource :account, controller: "employee/accounts", only: %i[show update]
+  resource :account, controller: "employee/accounts", only: :show
+  patch "account/contact" => "employee/accounts#update_contact", as: :account_contact
+  patch "account/password" => "employee/accounts#update_password", as: :account_password
+  post "account/human-resources-contact" => "employee/accounts#contact_human_resources",
+    as: :account_human_resources_contact
 
   namespace :admin do
     get "login" => "sessions#new", as: :login

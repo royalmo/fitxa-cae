@@ -27,7 +27,7 @@
         <span><%= t(".remember_me") %></span>
       </label>
 
-      <%= form.submit t(".submit") %>
+      <%= form.submit t(".submit"), data: { submitting_label: t("shared.submitting.entering") } %>
     <% end %>
   </section>
 </section>

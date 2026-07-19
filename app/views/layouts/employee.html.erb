@@ -4,7 +4,7 @@
     <%= render "layouts/head", manifest: true, theme_color: "#e30613" %>
   </head>
 
-  <body class="employee-shell">
+  <body class="employee-shell" data-controller="submit-feedback">
     <% employee_name = employee_display_name(current_employee || @employee) %>
 
     <header class="employee-topbar">
@@ -24,10 +24,6 @@
         </div>
       </div>
     </header>
-
-    <% flash.each do |type, message| %>
-      <div class="flash flash-<%= type %>"><%= message %></div>
-    <% end %>
 
     <main class="employee-main">
       <%= yield %>

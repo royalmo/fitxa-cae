@@ -37,6 +37,15 @@ ca:
     reject: "Rebutjar"
     save: "Desar"
     search: "Cercar"
+    submitting:
+      approving: "Aprovant..."
+      changing: "Canviant..."
+      entering: "Entrant..."
+      filtering: "Filtrant..."
+      importing: "Important..."
+      rejecting: "Rebutjant..."
+      saving: "Desant..."
+      sending: "Enviant..."
     view: "Veure"
 
   statuses:
@@ -219,23 +228,41 @@ ca:
       show:
         title: "Compte"
         heading: "Compte"
-        intro: "Dades d'accés i preferències bàsiques."
-        personal_data: "Dades"
-        access: "Accés"
         error_title: "Revisa els canvis"
         empty_value: "No informat"
         name: "Nom"
         national_id: "DNI/NIE"
         email: "Correu"
         phone: "Telèfon"
-        tags: "Etiquetes"
         current_password: "Contrasenya actual"
         new_password: "Nova contrasenya"
         password_confirmation: "Repeteix la contrasenya"
         save: "Desar canvis"
-      update:
+        change_password: "Canviar contrasenya"
+        change_password_submit: "Canviar contrasenya"
+        human_resources_contact: "Contactar amb Recursos Humans"
+        human_resources_subject: "Assumpte"
+        human_resources_message: "Missatge"
+        human_resources_submit: "Envia"
+      update_password:
         current_password_invalid: "La contrasenya actual no és correcta."
         password_confirmation_invalid: "La confirmació de la contrasenya no coincideix."
+        password_blank: "Indica la nova contrasenya."
+      contact_human_resources:
+        blank: "Indica l'assumpte i el missatge."
+        failed: "No s'ha pogut enviar el missatge."
+        sent: "Missatge enviat a Recursos Humans."
+
+  human_resources_contact_mailer:
+    contact_request:
+      subject: "FitxaCAE RRHH: %{subject}"
+      heading: "Nou missatge des de FitxaCAE"
+      employee: "Treballador"
+      national_id: "DNI/NIE"
+      email: "Correu"
+      phone: "Telèfon"
+      subject_label: "Assumpte"
+      blank: "No informat"
 
   admin:
     area: "Gestió"

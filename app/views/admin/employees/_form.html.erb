@@ -1,13 +1,6 @@
-<% if employee.errors.any? %>
-  <div class="error-summary">
-    <strong><%= t("admin.employees.form.error_title") %></strong>
-    <ul>
-      <% employee.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-    </ul>
-  </div>
-<% end %>
+<%= render "layouts/error_summary",
+  errors: employee.errors,
+  title: t("admin.employees.form.error_title") %>
 
 <%= form_with model: [:admin, employee], class: "stacked-form admin-form" do |form| %>
   <div class="field-row">
@@ -60,6 +53,6 @@
 
   <div class="form-actions">
     <%= link_to t("shared.cancel"), admin_employees_path, class: "button button-secondary" %>
-    <%= form.submit t("shared.save"), class: "button button-primary" %>
+    <%= form.submit t("shared.save"), class: "button button-primary", data: { submitting_label: t("shared.submitting.saving") } %>
   </div>
 <% end %>

@@ -21,7 +21,7 @@
       <%= form.label :employee_id, t(".employee"), class: "sr-only" %>
       <%= form.select :employee_id, [[t(".all_employees"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] }, selected: @selected_employee_id %>
     </div>
-    <%= form.submit t("shared.filter"), class: "button button-secondary" %>
+    <%= form.submit t("shared.filter"), class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } %>
   <% end %>
 </section>
 

@@ -1,0 +1,16 @@
+<% only_types = Array(local_assigns[:only]).map(&:to_s) if local_assigns.key?(:only) %>
+<% except_types = Array(local_assigns[:except]).map(&:to_s) %>
+
+<% flash.each do |type, message| %>
+  <% type_name = type.to_s %>
+  <% next if only_types && !only_types.include?(type_name) %>
+  <% next if except_types.include?(type_name) %>
+  <% next if message.blank? %>
+  <% visual_type = type_name.include?("alert") ? "alert" : type_name %>
+
+  <div class="<%= class_names("flash", "flash-#{visual_type}", ("flash-#{type_name}" unless visual_type == type_name), "dismissible-flash", local_assigns[:class]) %>" data-controller="dismissible" role="<%= visual_type == "alert" ? "alert" : "status" %>">
+    <%= icon(visual_type == "alert" ? "circle-alert" : "circle-check", class: "flash-icon") %>
+    <span><%= message %></span>
+    <button type="button" class="flash-close" aria-label="<%= t("shared.dismiss_flash") %>" data-action="dismissible#dismiss">&times;</button>
+  </div>
+<% end %>

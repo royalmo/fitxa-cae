@@ -3,21 +3,13 @@
 <section class="page-intro">
   <div>
     <h1 class="page-title"><%= icon "square-pen", class: "icon-large" %><span><%= t(".heading") %></span></h1>
-    <p><%= t(".intro") %></p>
   </div>
 </section>
 
+<%= render "layouts/flash_messages", class: "employee-page-flash" %>
+
 <section class="panel">
-  <% if @correction.errors.any? %>
-    <div class="error-summary">
-      <strong><%= t(".error_title") %></strong>
-      <ul>
-        <% @correction.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
+  <%= render "layouts/error_summary", errors: @correction.errors, title: t(".error_title") %>
 
   <%= form_with url: corrections_path, class: "stacked-form" do |form| %>
     <div class="field-row">
@@ -71,7 +63,7 @@
         <%= icon "x" %>
         <span><%= t("shared.cancel") %></span>
       <% end %>
-      <%= button_tag type: :submit, class: "button button-primary" do %>
+      <%= button_tag type: :submit, class: "button button-primary", data: { submitting_label: t("shared.submitting.sending") } do %>
         <%= icon "send" %>
         <span><%= t(".submit") %></span>
       <% end %>

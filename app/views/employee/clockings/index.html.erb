@@ -4,9 +4,10 @@
   <div>
     <p class="eyebrow"><%= t(".period") %> · <%= l(@month, format: :month_year) %></p>
     <h1 class="page-title"><%= icon "history", class: "icon-large" %><span><%= t(".heading") %></span></h1>
-    <p><%= t(".intro") %></p>
   </div>
 </section>
+
+<%= render "layouts/flash_messages", class: "employee-page-flash" %>
 
 <section class="panel flush-panel">
   <% if @clocking_days.any? %>

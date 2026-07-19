@@ -4,7 +4,7 @@
     <%= render "layouts/head", admin: true, manifest: false, theme_color: "#f5f5f5", stylesheets: %w[application admin brand], javascript_assets: %w[admin] %>
   </head>
 
-  <body class="admin-shell">
+  <body class="admin-shell" data-controller="submit-feedback">
     <% manager_name = manager_display_name(@manager) %>
 
     <aside class="admin-sidebar">
