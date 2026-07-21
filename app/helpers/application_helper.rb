@@ -57,6 +57,7 @@ module ApplicationHelper
     if title
       attributes[:role] = "img"
       attributes[:"aria-label"] = title
+      attributes[:title] = title
     else
       attributes[:"aria-hidden"] = "true"
     end
@@ -92,6 +93,22 @@ module ApplicationHelper
     end
 
     rows
+  end
+
+  def clocking_swipe_class(swipe)
+    class_names(
+      "clocking-swipe",
+      "is-pending-requested": clocking_swipe_pending_requested?(swipe),
+      "is-pending-invalidated": clocking_swipe_pending_invalidated?(swipe)
+    )
+  end
+
+  def clocking_swipe_pending_requested?(swipe)
+    swipe.respond_to?(:pending_requested?) && swipe.pending_requested?
+  end
+
+  def clocking_swipe_pending_invalidated?(swipe)
+    swipe.respond_to?(:pending_invalidated?) && swipe.pending_invalidated?
   end
 
   private

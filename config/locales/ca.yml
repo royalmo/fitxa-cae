@@ -73,6 +73,10 @@ ca:
     manual: "Manual"
     employee_portal: "Portal"
 
+  errors:
+    messages:
+      pending_taken: "ja té una sol·licitud pendent per aquest dia"
+
   demo:
     stats:
       inactive: "Inactius"
@@ -146,10 +150,6 @@ ca:
       correction_requested: "Sol·licitud enviada a RRHH."
     correction_kinds:
       generic: "Correcció de fitxatge"
-      missing_entry: "Entrada oblidada"
-      missing_exit: "Sortida oblidada"
-      wrong_entry: "Entrada incorrecta"
-      wrong_exit: "Sortida incorrecta"
     dashboard:
       show:
         title: "Avui"
@@ -207,31 +207,38 @@ ca:
         date: "Data"
         request: "Petició"
         status: "Estat"
+        month: "Mes"
+        all_statuses: "Tots els estats"
+        all_months: "Tots els mesos"
         answered: "Resposta"
         unanswered: "Pendent de revisió"
         empty: "Encara no has enviat cap correcció."
+        pagination: "Paginació de correccions"
+        previous_page: "Anterior"
+        next_page: "Següent"
+        page_status: "Pàgina %{page} de %{total_pages}"
       new:
         title: "Nova correcció"
         heading: "Nova correcció"
-        intro: "Indica què ha passat i quina hora hauria de constar."
         error_title: "Revisa la sol·licitud"
         date: "Dia"
-        kind: "Tipus"
-        kind_missing_entry: "He oblidat entrar"
-        kind_missing_exit: "He oblidat sortir"
-        kind_wrong_entry: "L'entrada és incorrecta"
-        kind_wrong_exit: "La sortida és incorrecta"
-        time: "Hora correcta"
+        select_day_empty: "Selecciona un dia per sol·licitar una correcció."
+        loading_day: "Carregant..."
+        pending_loaded: "Ja hi ha una sol·licitud pendent per aquest dia. Pots modificar-la abans d'enviar-la."
+        existing_swipes: "Fitxatges del dia"
+        existing_swipes_empty: "No hi ha fitxatges en aquest dia."
+        remove_swipe: "Invalidar"
+        requested_swipes: "Fitxatges a crear"
+        add_requested_swipe: "Afegir fitxatge"
+        remove_requested_swipe: "Eliminar"
         note: "Comentari"
-        note_placeholder: "Ex.: vaig entrar a les 08:05 però el fitxatge no es va guardar."
-        invalidated_swipes: "Fitxatges recents a invalidar"
-        invalidated_swipes_empty: "No hi ha fitxatges recents."
+        note_placeholder: "Afegeix el context que necessiti RRHH per revisar la correcció."
         submit: "Enviar a RRHH"
       create:
         missing_date: "Indica un dia vàlid."
         date_out_of_range: "Només pots demanar correccions del mes actual o del mes anterior."
-        missing_kind: "Indica el tipus de correcció."
-        missing_time: "Indica una hora vàlida."
+        invalid_requested_swipe: "Revisa els fitxatges a crear: cal indicar entrada o sortida i una hora vàlida."
+        missing_changes: "Indica almenys un fitxatge a invalidar o a crear."
     accounts:
       show:
         title: "Compte"

@@ -53,7 +53,7 @@ class Admin::CorrectionsController < Admin::BaseController
   def create_requested_swipes(correction)
     Array(correction.details&.fetch("requested_swipes", nil)).each do |requested_swipe|
       kind = requested_swipe["kind"].to_s
-      swipe_at = Time.zone.parse(requested_swipe["swipe_at"].to_s)
+      swipe_at = requested_swipe_at(correction, requested_swipe)
       next unless Swipe.kinds.key?(kind) && swipe_at
 
       correction.employee.swipes.create!(
@@ -65,5 +65,11 @@ class Admin::CorrectionsController < Admin::BaseController
     rescue ArgumentError
       next
     end
+  end
+
+  def requested_swipe_at(correction, requested_swipe)
+    return if requested_swipe["hour"].blank?
+
+    Time.zone.parse("#{correction.day.iso8601} #{requested_swipe["hour"]}")
   end
 end

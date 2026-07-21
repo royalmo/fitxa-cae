@@ -104,8 +104,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_difference "SwipeCorrection.count", 1 do
       post corrections_path, params: {
         date: Date.current.iso8601,
-        kind: "missing_exit",
-        time: "17:00",
+        requested_swipes: [ { kind: "exit", time: "17:00" } ],
         note: "Sortida oblidada"
       }
     end
@@ -132,7 +131,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
       day: Date.current,
       details: {
         "requested_swipes" => [
-          { "kind" => "exit", "swipe_at" => Time.current.iso8601 }
+          { "kind" => "exit", "hour" => Time.current.strftime("%H:%M:%S") }
         ]
       }
     )

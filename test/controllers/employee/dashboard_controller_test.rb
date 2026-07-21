@@ -9,8 +9,8 @@ class Employee::DashboardControllerTest < ActionDispatch::IntegrationTest
       status: :pending,
       day: Date.new(2026, 7, 2),
       details: {
-        "request_kind" => "missing_exit",
-        "requested_swipes" => [ { "kind" => "exit", "swipe_at" => Time.zone.local(2026, 7, 2, 17, 0).iso8601 } ]
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "exit", "hour" => "17:00:00" } ]
       }
     )
 
@@ -23,6 +23,6 @@ class Employee::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "Hola, Ada"
     assert_select ".clock-time", text: "08:05"
     assert_select ".timeline strong", text: "Entrada"
-    assert_select ".request-row", text: /Sortida oblidada/
+    assert_select ".request-row", text: /Sortida 17:00/
   end
 end

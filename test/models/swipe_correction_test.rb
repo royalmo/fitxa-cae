@@ -47,10 +47,9 @@ class SwipeCorrectionTest < ActiveSupport::TestCase
     details = {
       "invalidated_swipe_ids" => [ swipe.id ],
       "requested_swipes" => [
-        { "kind" => "entry", "swipe_at" => "2026-06-30T08:05:00+02:00" },
-        { "kind" => "exit", "swipe_at" => "2026-06-30T17:00:00+02:00" }
-      ],
-      "reason" => "Oblit de fitxatge d'entrada"
+        { "kind" => "entry", "hour" => "08:05:00" },
+        { "kind" => "exit", "hour" => "17:00:00" }
+      ]
     }
 
     correction = SwipeCorrection.create!(
@@ -61,5 +60,17 @@ class SwipeCorrectionTest < ActiveSupport::TestCase
     )
 
     assert_equal details, correction.reload.details
+  end
+
+  test "only allows one pending correction per employee and day" do
+    employee = create_employee
+    SwipeCorrection.create!(employee: employee, requester: employee, day: Date.new(2026, 6, 30), status: :pending)
+
+    duplicate = SwipeCorrection.new(employee: employee, requester: employee, day: Date.new(2026, 6, 30), status: :pending)
+    reviewed = SwipeCorrection.new(employee: employee, requester: employee, day: Date.new(2026, 6, 30), status: :approved)
+
+    assert_not duplicate.valid?
+    assert_model_error duplicate, :day, :pending_taken
+    assert_predicate reviewed, :valid?
   end
 end

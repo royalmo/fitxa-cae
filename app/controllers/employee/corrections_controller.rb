@@ -1,35 +1,61 @@
 class Employee::CorrectionsController < ApplicationController
-  REQUESTED_SWIPE_KIND_BY_REQUEST_KIND = {
-    "missing_entry" => "entry",
-    "missing_exit" => "exit",
-    "wrong_entry" => "entry",
-    "wrong_exit" => "exit"
-  }.freeze
+  CORRECTIONS_PER_PAGE = 20
+  FILTERABLE_STATUSES = %w[pending approved rejected].freeze
 
   layout "employee"
 
   def index
     @employee = current_employee
-    @corrections = @employee.swipe_corrections.order(day: :desc, created_at: :desc)
+    @filterable_statuses = FILTERABLE_STATUSES
+    @selected_status = selected_correction_status
+    @selected_month = selected_correction_month
+    @correction_months = correction_filter_months
+
+    filtered_corrections = filtered_correction_scope
+    @corrections_count = filtered_corrections.count
+    @total_pages = [ (@corrections_count.to_f / CORRECTIONS_PER_PAGE).ceil, 1 ].max
+    @page = [ requested_page, @total_pages ].min
+    @previous_page = @page - 1 if @page > 1
+    @next_page = @page + 1 if @page < @total_pages
+    @corrections = filtered_corrections
+      .order(day: :desc, created_at: :desc)
+      .offset((@page - 1) * CORRECTIONS_PER_PAGE)
+      .limit(CORRECTIONS_PER_PAGE)
   end
 
   def new
     @employee = current_employee
     @correction_date_range = correction_date_range
-    @correction = @employee.swipe_corrections.new(day: correction_form_day, status: :pending)
-    load_recent_swipes
+    load_correction_form_context(correction_form_day)
+  end
+
+  def day
+    @employee = current_employee
+    correction_day = parsed_date(params[:date].presence || params[:day])
+
+    unless correction_day_allowed?(correction_day)
+      render json: {
+        day_allowed: false,
+        error: t("employee.corrections.create.date_out_of_range"),
+        swipes: [],
+        pending_correction: nil
+      }
+      return
+    end
+
+    pending_correction = pending_correction_for(correction_day)
+
+    render json: {
+      day_allowed: true,
+      swipes: swipes_for_day(correction_day).map { |swipe| swipe_payload(swipe) },
+      pending_correction: pending_correction_payload(pending_correction)
+    }
   end
 
   def create
     @employee = current_employee
     @correction_date_range = correction_date_range
-    @correction = @employee.swipe_corrections.new(
-      requester: @employee,
-      status: :pending,
-      day: parsed_correction_day,
-      requester_comments: correction_params[:note].presence,
-      details: correction_details
-    )
+    @correction = correction_for_submission
 
     correction_request_errors.each do |message|
       @correction.errors.add(:base, message)
@@ -38,24 +64,66 @@ class Employee::CorrectionsController < ApplicationController
     if @correction.errors.empty? && @correction.save
       redirect_to corrections_path, notice: t("employee.flash.correction_requested")
     else
-      load_recent_swipes
+      load_correction_form_context(parsed_correction_day, correction: @correction)
       render :new, status: :unprocessable_entity
     end
   end
 
   private
 
-  def load_recent_swipes
-    @recent_swipes = @employee.swipes.kept.order(swipe_at: :desc, id: :desc).limit(20)
+  def filtered_correction_scope
+    scope = @employee.swipe_corrections
+    scope = scope.where(status: @selected_status) if @selected_status
+    scope = scope.where(day: @selected_month..@selected_month.end_of_month) if @selected_month
+    scope
+  end
+
+  def selected_correction_status
+    params[:status].to_s if FILTERABLE_STATUSES.include?(params[:status].to_s)
+  end
+
+  def selected_correction_month
+    return if params[:month].blank?
+
+    Date.strptime(params[:month].to_s, "%Y-%m")
+  rescue Date::Error
+    nil
+  end
+
+  def correction_filter_months
+    months = @employee.swipe_corrections.order(day: :desc).pluck(:day).map(&:beginning_of_month)
+    months << @selected_month if @selected_month
+    months.uniq.sort.reverse
+  end
+
+  def requested_page
+    page = Integer(params[:page], exception: false)
+
+    page&.positive? ? page : 1
+  end
+
+  def load_correction_form_context(day, correction: nil)
+    @form_has_day = correction_day_allowed?(day)
+    @form_day = @form_has_day ? day : nil
+    @pending_correction = pending_correction_for(@form_day)
+    @correction = correction || @pending_correction || @employee.swipe_corrections.new(day: @form_day, status: :pending)
+    @day_swipes = @form_has_day ? swipes_for_day(@form_day) : []
+    @invalidated_swipe_ids = form_invalidated_swipe_ids(@correction)
+    @requested_swipes = form_requested_swipes(@correction)
+    @requester_comments = correction_params[:note].presence || @correction.requester_comments
   end
 
   def correction_params
-    params.permit(:date, :kind, :time, :note, invalidated_swipe_ids: [])
+    params.permit(:date, :note, invalidated_swipe_ids: [], requested_swipes: [ :kind, :time ])
   end
 
   def parsed_correction_day
-    Date.iso8601(correction_params[:date].to_s)
-  rescue ArgumentError
+    parsed_date(correction_params[:date].presence || params[:day])
+  end
+
+  def parsed_date(value)
+    Date.iso8601(value.to_s)
+  rescue Date::Error
     nil
   end
 
@@ -63,36 +131,44 @@ class Employee::CorrectionsController < ApplicationController
     parsed_correction_day if correction_day_allowed?(parsed_correction_day)
   end
 
-  def parsed_correction_time
-    Time.zone.parse("#{parsed_correction_day.iso8601} #{correction_params[:time]}") if parsed_correction_day && correction_params[:time].present?
-  rescue ArgumentError
-    nil
-  end
-
-  def requested_swipe_kind
-    REQUESTED_SWIPE_KIND_BY_REQUEST_KIND[correction_params[:kind].to_s]
-  end
-
   def valid_invalidated_swipe_ids
+    return [] unless parsed_correction_day
+
     ids = Array(correction_params[:invalidated_swipe_ids]).compact_blank
 
-    @employee.swipes.kept.where(id: ids).pluck(:id)
+    @employee.swipes.kept.for_day(parsed_correction_day).where(id: ids).pluck(:id)
+  end
+
+  def submitted_requested_swipes
+    Array(correction_params[:requested_swipes]).filter_map do |requested_swipe|
+      kind = (requested_swipe["kind"] || requested_swipe[:kind]).to_s
+      time = (requested_swipe["time"] || requested_swipe[:time]).to_s
+      next if kind.blank? && time.blank?
+
+      { "kind" => kind, "time" => time }
+    end
+  end
+
+  def normalized_requested_swipes
+    submitted_requested_swipes.filter_map do |requested_swipe|
+      kind = requested_swipe["kind"]
+      time = normalized_time(requested_swipe["time"])
+      next unless Swipe.kinds.key?(kind) && time
+
+      { "kind" => kind, "hour" => time }
+    end
+  end
+
+  def invalid_requested_swipes?
+    submitted_requested_swipes.any? do |requested_swipe|
+      !Swipe.kinds.key?(requested_swipe["kind"]) || normalized_time(requested_swipe["time"]).blank?
+    end
   end
 
   def correction_details
-    requested_at = parsed_correction_time
-
     {
-      "source" => "employee_portal",
-      "request_kind" => correction_params[:kind].to_s,
       "invalidated_swipe_ids" => valid_invalidated_swipe_ids,
-      "requested_swipes" => [
-        {
-          "kind" => requested_swipe_kind,
-          "swipe_at" => requested_at&.iso8601
-        }
-      ],
-      "comment" => correction_params[:note].to_s
+      "requested_swipes" => normalized_requested_swipes
     }
   end
 
@@ -100,9 +176,82 @@ class Employee::CorrectionsController < ApplicationController
     errors = []
     errors << t(".missing_date") unless parsed_correction_day
     errors << t(".date_out_of_range") if parsed_correction_day && !correction_day_allowed?(parsed_correction_day)
-    errors << t(".missing_kind") unless requested_swipe_kind
-    errors << t(".missing_time") unless parsed_correction_time
+    errors << t(".invalid_requested_swipe") if invalid_requested_swipes?
+    if valid_invalidated_swipe_ids.empty? && normalized_requested_swipes.empty? && !invalid_requested_swipes?
+      errors << t(".missing_changes")
+    end
     errors
+  end
+
+  def correction_for_submission
+    correction = if correction_day_allowed?(parsed_correction_day)
+      pending_correction_for(parsed_correction_day) || @employee.swipe_corrections.new(day: parsed_correction_day, status: :pending)
+    else
+      @employee.swipe_corrections.new(day: parsed_correction_day, status: :pending)
+    end
+
+    correction.requester = @employee if correction.requester.blank?
+    correction.assign_attributes(
+      requester_comments: correction_params[:note].presence,
+      details: correction_details
+    )
+    correction
+  end
+
+  def swipes_for_day(day)
+    @employee.swipes.kept.for_day(day).chronological
+  end
+
+  def pending_correction_for(day)
+    @employee.swipe_corrections.pending.find_by(day: day) if day
+  end
+
+  def form_invalidated_swipe_ids(correction)
+    return Array(correction.details&.fetch("invalidated_swipe_ids", nil)).map(&:to_s) if correction.details.present?
+
+    Array(correction_params[:invalidated_swipe_ids]).map(&:to_s)
+  end
+
+  def form_requested_swipes(correction)
+    return submitted_requested_swipes if submitted_requested_swipes.any?
+
+    requested_swipes_for_form(correction)
+  end
+
+  def requested_swipes_for_form(correction)
+    Array(correction.details&.fetch("requested_swipes", nil)).filter_map do |requested_swipe|
+      kind = requested_swipe["kind"].to_s
+      time = requested_swipe["hour"].presence
+      next unless kind.present? && time.present?
+
+      { "kind" => kind, "time" => time }
+    end
+  end
+
+  def pending_correction_payload(correction)
+    return unless correction
+
+    {
+      invalidated_swipe_ids: Array(correction.details&.fetch("invalidated_swipe_ids", nil)).map(&:to_s),
+      requested_swipes: requested_swipes_for_form(correction),
+      comment: correction.requester_comments.to_s
+    }
+  end
+
+  def swipe_payload(swipe)
+    {
+      id: swipe.id.to_s,
+      kind: swipe.kind,
+      kind_text: helpers.clocking_kind_text(swipe.kind),
+      time: helpers.l(swipe.swipe_at, format: :hour_minute)
+    }
+  end
+
+  def normalized_time(value)
+    match = value.to_s.match(/\A([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\z/)
+    return unless match
+
+    "#{match[1].to_i.to_s.rjust(2, "0")}:#{match[2]}:#{match[3].presence || "00"}"
   end
 
   def correction_day_allowed?(day)

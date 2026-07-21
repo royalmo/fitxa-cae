@@ -8,68 +8,106 @@
 
 <%= render "layouts/flash_messages", class: "employee-page-flash" %>
 
-<section class="panel">
+<section class="correction-form-section">
   <%= render "layouts/error_summary", errors: @correction.errors, title: t(".error_title") %>
 
-  <%= form_with url: corrections_path, class: "stacked-form" do |form| %>
-    <div class="field-row">
+  <%= form_with url: corrections_path,
+    class: "stacked-form correction-form",
+    data: {
+      controller: "correction-form",
+      correction_form_day_url_value: day_corrections_path,
+      correction_form_entry_label_value: clocking_kind_text(:entry),
+      correction_form_exit_label_value: clocking_kind_text(:exit),
+      correction_form_remove_label_value: t(".remove_requested_swipe"),
+      correction_form_remove_swipe_label_value: t(".remove_swipe"),
+      correction_form_existing_empty_value: t(".existing_swipes_empty")
+    } do |form| %>
+    <div class="field">
+      <%= form.label :date, t(".date") %>
+      <%= form.date_field :date,
+        value: @form_day&.iso8601,
+        min: @correction_date_range.begin.iso8601,
+        max: @correction_date_range.end.iso8601,
+        data: {
+          correction_form_target: "date",
+          action: "change->correction-form#loadDay"
+        } %>
+    </div>
+
+    <div class="correction-select-day-state" data-correction-form-target="emptyPrompt" <%= "hidden" if @form_has_day %>>
+      <%= icon "square-pen", class: "empty-state-icon" %>
+      <p><%= t(".select_day_empty") %></p>
+    </div>
+
+    <div class="correction-select-day-state correction-loading-state" data-correction-form-target="loadingPrompt" hidden>
+      <span class="submit-spinner correction-loading-spinner" aria-hidden="true"></span>
+      <p><%= t(".loading_day") %></p>
+    </div>
+
+    <div class="correction-form-details" data-correction-form-target="formContent" <%= "hidden" unless @form_has_day %>>
+      <p class="correction-pending-note" data-correction-form-target="pendingNotice" <%= "hidden" unless @pending_correction %>>
+        <%= icon "info", class: "correction-pending-note-icon" %>
+        <span><%= t(".pending_loaded") %></span>
+      </p>
+
+      <fieldset class="correction-day-section">
+        <legend><%= t(".existing_swipes") %></legend>
+        <div class="correction-existing-swipes" data-correction-form-target="existingSwipes">
+          <% @day_swipes.each do |swipe| %>
+            <label class="correction-existing-swipe">
+              <%= check_box_tag "invalidated_swipe_ids[]", swipe.id, @invalidated_swipe_ids.include?(swipe.id.to_s) %>
+              <span>
+                <%= icon clocking_icon_name(swipe.kind), title: clocking_kind_text(swipe.kind), class: "correction-existing-swipe-icon" %>
+                <span><%= l(swipe.swipe_at, format: :hour_minute) %></span>
+                <small><%= t(".remove_swipe") %></small>
+              </span>
+            </label>
+          <% end %>
+        </div>
+        <p class="muted correction-empty-swipes" data-correction-form-target="existingEmpty" <%= "hidden" if @day_swipes.any? %>>
+          <%= t(".existing_swipes_empty") %>
+        </p>
+      </fieldset>
+
+      <fieldset class="correction-day-section">
+        <legend><%= t(".requested_swipes") %></legend>
+        <div class="correction-requested-swipes" data-correction-form-target="requestedSwipes">
+          <% @requested_swipes.each do |requested_swipe| %>
+            <div class="correction-requested-row">
+              <%= select_tag "requested_swipes[][kind]",
+                options_for_select([[clocking_kind_text(:entry), "entry"], [clocking_kind_text(:exit), "exit"]], requested_swipe["kind"]) %>
+              <%= time_field_tag "requested_swipes[][time]", requested_swipe["time"].to_s.first(5) %>
+              <button type="button" class="correction-row-remove" data-action="correction-form#removeRequestedSwipe">
+                <%= t(".remove_requested_swipe") %>
+              </button>
+            </div>
+          <% end %>
+        </div>
+        <button type="button" class="button correction-add-swipe-button" data-action="correction-form#addRequestedSwipe">
+          <%= icon "plus" %>
+          <span><%= t(".add_requested_swipe") %></span>
+        </button>
+      </fieldset>
+
       <div class="field">
-        <%= form.label :date, t(".date") %>
-        <%= form.date_field :date,
-          value: params[:date].presence || @correction.day || Date.current,
-          min: @correction_date_range.begin.iso8601,
-          max: @correction_date_range.end.iso8601 %>
+        <%= form.label :note, t(".note") %>
+        <%= form.text_area :note,
+          rows: 5,
+          value: @requester_comments,
+          placeholder: t(".note_placeholder"),
+          data: { correction_form_target: "comment" } %>
       </div>
 
-      <div class="field">
-        <%= form.label :kind, t(".kind") %>
-        <%= form.select :kind, [
-          [t(".kind_missing_entry"), "missing_entry"],
-          [t(".kind_missing_exit"), "missing_exit"],
-          [t(".kind_wrong_entry"), "wrong_entry"],
-          [t(".kind_wrong_exit"), "wrong_exit"]
-        ], selected: params[:kind] %>
-      </div>
-    </div>
-
-    <div class="field">
-      <%= form.label :time, t(".time") %>
-      <%= form.time_field :time, value: params[:time].presence || "08:00" %>
-    </div>
-
-    <div class="field">
-      <%= form.label :note, t(".note") %>
-      <%= form.text_area :note, rows: 5, value: params[:note].presence || @correction.requester_comments, placeholder: t(".note_placeholder") %>
-    </div>
-
-    <fieldset class="choice-list">
-      <legend><%= t(".invalidated_swipes") %></legend>
-      <% if @recent_swipes.any? %>
-        <% selected_swipe_ids = Array(params[:invalidated_swipe_ids]).map(&:to_s) %>
-        <% @recent_swipes.each do |swipe| %>
-          <label>
-            <%= check_box_tag "invalidated_swipe_ids[]", swipe.id, selected_swipe_ids.include?(swipe.id.to_s) %>
-            <span>
-              <%= l(swipe.swipe_at.to_date, format: :short) %> ·
-              <%= l(swipe.swipe_at, format: :hour_minute) %> ·
-              <%= clocking_kind_text(swipe.kind) %>
-            </span>
-          </label>
+      <div class="form-actions">
+        <%= link_to corrections_path, class: "button button-secondary" do %>
+          <%= icon "x" %>
+          <span><%= t("shared.cancel") %></span>
         <% end %>
-      <% else %>
-        <p class="muted"><%= t(".invalidated_swipes_empty") %></p>
-      <% end %>
-    </fieldset>
-
-    <div class="form-actions">
-      <%= link_to corrections_path, class: "button button-secondary" do %>
-        <%= icon "x" %>
-        <span><%= t("shared.cancel") %></span>
-      <% end %>
-      <%= button_tag type: :submit, class: "button button-primary", data: { submitting_label: t("shared.submitting.sending") } do %>
-        <%= icon "send" %>
-        <span><%= t(".submit") %></span>
-      <% end %>
+        <%= button_tag type: :submit, class: "button button-primary", data: { submitting_label: t("shared.submitting.sending") } do %>
+          <%= icon "send" %>
+          <span><%= t(".submit") %></span>
+        <% end %>
+      </div>
     </div>
   <% end %>
 </section>

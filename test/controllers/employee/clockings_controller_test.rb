@@ -19,7 +19,7 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".clocking-swipe .clocking-swipe-icon[aria-label='Sortida']"
     assert_select ".clocking-swipe", text: "08:00"
     assert_select ".clocking-swipe", text: "16:30"
-    assert_select "a.clocking-correction-link[href='#{new_correction_path(date: "2026-07-02")}']"
+    assert_select "a.clocking-correction-link[href='#{new_correction_path(day: "2026-07-02")}']"
     assert_select ".clocking-correction-link .clocking-correction-icon"
     assert_select ".clocking-hours", text: "8 h 30 min"
     assert_select ".clocking-hours.is-incomplete", 0
@@ -39,6 +39,34 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".clocking-swipe", 3
     assert_select ".clocking-hours.is-incomplete", text: "5 h 42 min"
+  end
+
+  test "clocking history previews pending correction swipes in yellow" do
+    employee = create_employee(password: "1234")
+    employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 0), metadata: "employee_portal")
+    exit_swipe = employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 2, 13, 0), metadata: "employee_portal")
+    employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [ exit_swipe.id ],
+        "requested_swipes" => [ { "kind" => "exit", "hour" => "17:00:00" } ]
+      }
+    )
+
+    log_in_employee(employee)
+    travel_to Time.zone.local(2026, 7, 2, 18, 0) do
+      get clockings_path
+    end
+
+    assert_response :success
+    assert_select ".clocking-swipe", 3
+    assert_select ".clocking-swipe:not(.is-pending-invalidated):not(.is-pending-requested)", text: "08:00"
+    assert_select ".clocking-swipe.is-pending-invalidated", text: "13:00"
+    assert_select ".clocking-swipe.is-pending-requested", text: "17:00"
+    assert_select ".clocking-hours", text: "9 h 00 min"
+    assert_select ".clocking-hours.is-incomplete", 0
   end
 
   test "clocking history month selector uses url params" do
@@ -177,10 +205,10 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    assert_select "a.clocking-correction-link[href='#{new_correction_path(date: "2026-06-03")}']"
+    assert_select "a.clocking-correction-link[href='#{new_correction_path(day: "2026-06-03")}']"
   end
 
-  test "clocking history shows kept swipe days from earliest to latest" do
+  test "clocking history shows kept swipe days and pending correction days from earliest to latest" do
     employee = create_employee(password: "1234")
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 10, 9, 0), metadata: "employee_portal")
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 0), metadata: "employee_portal")
@@ -189,6 +217,13 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
       day: Date.new(2026, 7, 6),
       status: :pending,
       requester: employee,
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [
+          { "kind" => "entry", "hour" => "08:00:00" },
+          { "kind" => "exit", "hour" => "16:00:00" }
+        ]
+      },
       requester_comments: "Sense fitxatges"
     )
 
@@ -200,11 +235,13 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     dates = css_select("tbody tr td:first-child").map { |cell| cell.text.squish }
 
-    assert_equal 2, dates.length
+    assert_equal 3, dates.length
     assert_match(/2 de juliol/i, dates.first)
-    assert_match(/10 de juliol/i, dates.second)
+    assert_match(/6 de juliol/i, dates.second)
+    assert_match(/10 de juliol/i, dates.third)
     assert_no_match(/5 de juliol/i, response.body)
-    assert_no_match(/6 de juliol/i, response.body)
+    assert_select ".clocking-swipe.is-pending-requested", text: "08:00"
+    assert_select ".clocking-swipe.is-pending-requested", text: "16:00"
   end
 
   test "clock in and clock out create persisted swipes" do

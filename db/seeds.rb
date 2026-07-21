@@ -249,14 +249,15 @@ ActiveRecord::Base.transaction do
       end
       day_swipes = swipes_by_employee_and_day[[ employee.id, day ]]
       invalidated_swipes = day_swipes.sample([ day_swipes.length, rng.rand(0..2) ].min, random: rng)
+      invalidated_swipes = [ day_swipes.sample(random: rng) ] if status == "pending" && invalidated_swipes.empty? && day_swipes.any?
       requested_swipes = [
         {
           "kind" => "entry",
-          "swipe_at" => work_time(day, 8, rng.rand(0..20)).iso8601
+          "hour" => work_time(day, 8, rng.rand(0..20)).strftime("%H:%M:%S")
         },
         {
           "kind" => "exit",
-          "swipe_at" => work_time(day, 17, rng.rand(0..30)).iso8601
+          "hour" => work_time(day, 17, rng.rand(0..30)).strftime("%H:%M:%S")
         }
       ]
       requested_swipes.shift if correction_index % 9 == 0
@@ -277,8 +278,7 @@ ActiveRecord::Base.transaction do
         day: day,
         details: {
           "invalidated_swipe_ids" => invalidated_swipes.map(&:id),
-          "requested_swipes" => requested_swipes,
-          "reason" => CORRECTION_REASONS.sample(random: rng)
+          "requested_swipes" => requested_swipes
         },
         requester_comments: CORRECTION_REASONS.sample(random: rng),
         validator_comments: validator ? "#{status}: revisat pel responsable de torn" : nil

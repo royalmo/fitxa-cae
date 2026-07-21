@@ -9,8 +9,8 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       status: :pending,
       day: Date.new(2026, 7, 4),
       details: {
-        "request_kind" => "missing_exit",
-        "requested_swipes" => [ { "kind" => "exit", "swipe_at" => Time.zone.local(2026, 7, 4, 17, 0).iso8601 } ]
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "exit", "hour" => "17:00:00" } ]
       }
     )
 
@@ -18,7 +18,8 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_match "Laia Font", response.body
-    assert_match "Sortida oblidada", response.body
+    assert_match "Correcció de fitxatge", response.body
+    assert_match "Sortida 17:00", response.body
   end
 
   test "approves a pending correction and applies requested swipes" do
@@ -33,8 +34,8 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       details: {
         "invalidated_swipe_ids" => [ old_swipe.id ],
         "requested_swipes" => [
-          { "kind" => "entry", "swipe_at" => Time.zone.local(2026, 7, 4, 8, 5).iso8601 },
-          { "kind" => "exit", "swipe_at" => Time.zone.local(2026, 7, 4, 17, 0).iso8601 }
+          { "kind" => "entry", "hour" => "08:05:00" },
+          { "kind" => "exit", "hour" => "17:00:00" }
         ]
       }
     )
@@ -49,6 +50,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal manager, correction.validator
     assert_predicate old_swipe.reload, :removed?
     assert employee.swipes.where(forged: true, metadata: "admin_correction:#{correction.id}").exists?(kind: "exit")
+    assert employee.swipes.where(swipe_at: Time.zone.local(2026, 7, 4, 17, 0)).exists?
   end
 
   test "rejects a pending correction without changing swipes" do
@@ -59,7 +61,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       requester: employee,
       status: :pending,
       day: Date.new(2026, 7, 4),
-      details: { "request_kind" => "missing_entry" }
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
     )
 
     assert_no_difference "employee.swipes.count" do

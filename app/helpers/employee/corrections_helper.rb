@@ -1,16 +1,16 @@
 module Employee::CorrectionsHelper
-  def correction_title(correction)
-    t("employee.correction_kinds.#{correction_request_kind(correction)}", default: t("employee.correction_kinds.generic"))
+  def correction_title(_correction)
+    t("employee.correction_kinds.generic")
   end
 
   def correction_requested_text(correction)
     requested_swipes = Array(correction.details&.fetch("requested_swipes", nil)).filter_map do |requested_swipe|
       kind = requested_swipe["kind"]
-      swipe_at = Time.zone.parse(requested_swipe["swipe_at"].to_s)
-      next unless kind.present? && swipe_at.present?
+      time = requested_swipe_time_text(requested_swipe)
+      next unless kind.present? && time.present?
 
-      "#{clocking_kind_text(kind)} #{l(swipe_at, format: :hour_minute)}"
-    rescue ArgumentError
+      "#{clocking_kind_text(kind)} #{time}"
+    rescue ArgumentError, TypeError
       nil
     end
 
@@ -27,7 +27,29 @@ module Employee::CorrectionsHelper
     correction.updated_at if correction.approved? || correction.rejected?
   end
 
-  def correction_request_kind(correction)
-    correction.details&.fetch("request_kind", nil).presence || "generic"
+  def correction_status_icon_name(status)
+    {
+      "approved" => "thumbs-up",
+      "rejected" => "thumbs-down",
+      "pending" => "hourglass"
+    }.fetch(status.to_s, "circle-help")
+  end
+
+  def correction_status_filter_label(status)
+    "#{correction_status_filter_symbol(status)} #{status_text(status)}"
+  end
+
+  private
+
+  def correction_status_filter_symbol(status)
+    {
+      "approved" => "👍",
+      "rejected" => "👎",
+      "pending" => "⌛"
+    }.fetch(status.to_s, "•")
+  end
+
+  def requested_swipe_time_text(requested_swipe)
+    requested_swipe["hour"].presence&.first(5)
   end
 end

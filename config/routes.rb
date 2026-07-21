@@ -21,7 +21,9 @@ Rails.application.routes.draw do
   post "clock-in" => "employee/clockings#clock_in", as: :clock_in
   post "clock-out" => "employee/clockings#clock_out", as: :clock_out
 
-  resources :corrections, controller: "employee/corrections", only: %i[index new create]
+  resources :corrections, controller: "employee/corrections", only: %i[index new create] do
+    get :day, on: :collection
+  end
   resource :account, controller: "employee/accounts", only: :show
   patch "account/contact" => "employee/accounts#update_contact", as: :account_contact
   patch "account/password" => "employee/accounts#update_password", as: :account_password

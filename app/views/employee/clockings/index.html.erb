@@ -94,7 +94,7 @@ end %>
                         <% [ :entry, :exit ].each do |kind| %>
                           <div class="clocking-swipe-slot">
                             <% if (swipe = swipe_row[kind]) %>
-                              <span class="clocking-swipe">
+                              <span class="<%= clocking_swipe_class(swipe) %>">
                                 <%= icon clocking_icon_name(swipe.kind), title: clocking_kind_text(swipe.kind), class: "clocking-swipe-icon" %>
                                 <span class="clocking-swipe-time"><%= l(swipe.swipe_at, format: :hour_minute) %></span>
                               </span>
@@ -106,7 +106,7 @@ end %>
                   </div>
 
                   <% if SwipeCorrection.employee_request_day_allowed?(day[:date]) %>
-                    <%= link_to new_correction_path(date: day[:date].iso8601),
+                    <%= link_to new_correction_path(day: day[:date].iso8601),
                       class: class_names("clocking-correction-link", "is-incomplete": day[:swipes_count].odd?),
                       title: t(".request_correction_for_day", date: l(day[:date], format: :long)),
                       aria: { label: t(".request_correction_for_day", date: l(day[:date], format: :long)) } do %>

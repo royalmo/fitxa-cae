@@ -13,8 +13,8 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
         status: :pending,
         day: Date.current,
         details: {
-          "request_kind" => "missing_exit",
-          "requested_swipes" => [ { "kind" => "exit", "swipe_at" => 1.hour.from_now.iso8601 } ]
+          "invalidated_swipe_ids" => [],
+          "requested_swipes" => [ { "kind" => "exit", "hour" => 1.hour.from_now.strftime("%H:%M:%S") } ]
         }
       )
 
