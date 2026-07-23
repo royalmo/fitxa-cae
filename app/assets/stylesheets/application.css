@@ -1176,6 +1176,53 @@ input[type="submit"].is-submitting {
   font-size: 1rem;
 }
 
+.correction-day-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.correction-human-resources-marker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.correction-human-resources-marker::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.45rem);
+  z-index: 20;
+  max-width: min(16rem, 72vw);
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: var(--text);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  opacity: 0;
+  pointer-events: none;
+  translate: -50% 0.12rem;
+  transition: opacity 0.12s ease, translate 0.12s ease;
+  white-space: nowrap;
+}
+
+.correction-human-resources-marker:hover::after,
+.correction-human-resources-marker:focus-within::after {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+.correction-human-resources-icon {
+  flex: 0 0 auto;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
 .correction-content p {
   margin: 0;
   color: var(--muted);

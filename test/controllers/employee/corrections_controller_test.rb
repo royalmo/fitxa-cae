@@ -374,9 +374,41 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".correction-change-separator", 2
     assert_select ".correction-status-icon[aria-label='Pendent'][title='Pendent']"
     assert_select ".correction-row-action-icon[aria-label='Editar'][title='Editar']"
+    assert_select ".correction-human-resources-icon", 0
+    assert_select ".correction-human-resources-marker", 0
     assert_select ".correction-answer", 0
     assert_no_match "Pendent de revisió", response.body
     assert_select ".correction-row .badge-pending", 0
+  end
+
+  test "marks corrections created by human resources in the list" do
+    manager = create_manager
+    employee = create_employee(password: "1234")
+    correction = employee.swipe_corrections.create!(
+      requester: manager,
+      status: :approved,
+      validator: manager,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+      }
+    )
+
+    log_in_employee(employee)
+    get corrections_path, params: { month: 7, year: 2026 }
+
+    assert_response :success
+    assert_select "a.correction-row[href='#{correction_path(correction)}'] .correction-day-title" do
+      assert_select "time[datetime='2026-07-02']", text: I18n.l(correction.day, format: :weekday_day_month)
+      assert_select(
+        ".correction-human-resources-marker" \
+          "[aria-label='Correcció realitzada per RRHH']" \
+          "[data-tooltip='Correcció realitzada per RRHH']"
+      )
+      assert_select ".correction-human-resources-marker[title]", 0
+      assert_select ".correction-human-resources-marker .correction-human-resources-icon[aria-hidden='true']"
+    end
   end
 
   test "does not show result count when corrections list is empty" do
@@ -611,8 +643,33 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     get correction_path(correction)
 
     assert_response :success
+    assert_select ".correction-show-status.is-approved"
+    assert_select ".correction-show-status span", text: "Creada per RRHH"
+    assert_select ".correction-show-status .correction-status-icon[aria-label='Creada per RRHH']" \
+      "[title='Creada per RRHH']"
     assert_select ".correction-show-block h2", text: "Comentari de Recursos Humans"
     assert_match "Comentari intern de RRHH.", response.body
+  end
+
+  test "shows rejected human resources correction status if one exists" do
+    manager = create_manager
+    employee = create_employee(password: "1234")
+    correction = employee.swipe_corrections.create!(
+      requester: manager,
+      status: :rejected,
+      validator: manager,
+      day: Date.new(2026, 7, 2),
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
+    )
+    log_in_employee(employee)
+
+    get correction_path(correction)
+
+    assert_response :success
+    assert_select ".correction-show-status.is-rejected"
+    assert_select ".correction-show-status span", text: "Creada i rebutjada per RRHH"
+    assert_select ".correction-show-status .correction-status-icon[aria-label='Creada i rebutjada per RRHH']" \
+      "[title='Creada i rebutjada per RRHH']"
   end
 
   test "redirects pending correction detail to the editable correction form" do

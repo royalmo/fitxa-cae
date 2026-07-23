@@ -14,12 +14,14 @@
 
 <%= render "layouts/flash_messages", class: "employee-page-flash" %>
 
+<% correction_status_label = correction_show_status_text(@correction) %>
+
 <section class="correction-show-section" aria-label="<%= t(".heading") %>">
   <div class="correction-show-status is-<%= @correction.status %>">
     <%= icon correction_status_icon_name(@correction.status),
-      title: correction_status_text(@correction.status),
+      title: correction_status_label,
       class: class_names("correction-status-icon", "is-#{@correction.status}") %>
-    <span><%= correction_status_text(@correction.status) %></span>
+    <span><%= correction_status_label %></span>
     <small>
       <% if correction_answered_at(@correction) %>
         <%= t(".answered_at", date: l(correction_answered_at(@correction), format: :short)) %>

@@ -198,12 +198,15 @@ ca:
         pending: "Pendent"
         approved: "Aprovada"
         rejected: "Rebutjada"
+        created_by_human_resources: "Creada per RRHH"
+        created_and_rejected_by_human_resources: "Creada i rebutjada per RRHH"
       summary:
         requested_swipes: "Hora sol·licitada: %{swipes}"
         invalidated_swipes:
           one: "1 fitxatge a invalidar"
           other: "%{count} fitxatges a invalidar"
         no_details: "Sense detall addicional."
+      human_resources_created_tooltip: "Correcció realitzada per RRHH"
       index:
         title: "Correccions"
         heading: "Correccions"

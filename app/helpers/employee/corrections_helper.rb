@@ -73,9 +73,25 @@ module Employee::CorrectionsHelper
   end
 
   def correction_requester_comment_heading(correction)
-    return t("employee.corrections.show.human_resources_comment") if correction.requester_type == "Manager"
+    return t("employee.corrections.show.human_resources_comment") if correction_created_by_human_resources?(correction)
 
     t("employee.corrections.show.comment")
+  end
+
+  def correction_created_by_human_resources?(correction)
+    correction.requester_type == "Manager"
+  end
+
+  def correction_show_status_text(correction)
+    return correction_status_text(correction.status) unless correction_created_by_human_resources?(correction)
+
+    if correction.approved?
+      t("employee.corrections.statuses.created_by_human_resources")
+    elsif correction.rejected?
+      t("employee.corrections.statuses.created_and_rejected_by_human_resources")
+    else
+      correction_status_text(correction.status)
+    end
   end
 
   def correction_status_text(status)

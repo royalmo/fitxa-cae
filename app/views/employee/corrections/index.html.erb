@@ -103,6 +103,14 @@ end %>
             <div class="correction-content">
               <strong class="correction-day-title">
                 <time datetime="<%= correction.day.iso8601 %>"><%= l(correction.day, format: :weekday_day_month) %></time>
+                <% if correction_created_by_human_resources?(correction) %>
+                  <% human_resources_created_tooltip = t("employee.corrections.human_resources_created_tooltip") %>
+                  <span class="correction-human-resources-marker"
+                    aria-label="<%= human_resources_created_tooltip %>"
+                    data-tooltip="<%= human_resources_created_tooltip %>">
+                    <%= icon "hammer", class: "correction-human-resources-icon" %>
+                  </span>
+                <% end %>
               </strong>
               <% change_items = correction_change_items(correction, @correction_invalidated_swipes_by_id) %>
               <% if change_items.any? %>
