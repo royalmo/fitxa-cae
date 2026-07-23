@@ -1998,7 +1998,6 @@ input[type="submit"].is-submitting {
 .employee-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
   min-width: 0;
   color: var(--muted);
   font-size: 0.9rem;
@@ -2011,6 +2010,7 @@ input[type="submit"].is-submitting {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-right: 0.5rem;
 }
 
 .employee-topbar-actions {
@@ -2024,6 +2024,7 @@ input[type="submit"].is-submitting {
   margin: 0;
 }
 
+.employee-admin-button,
 .employee-logout-button {
   display: inline-flex;
   align-items: center;
@@ -2040,11 +2041,17 @@ input[type="submit"].is-submitting {
   font-weight: 800;
 }
 
+.employee-admin-button {
+  text-decoration: none;
+}
+
+.employee-admin-button .icon,
 .employee-logout-button .icon {
   width: 0.95rem;
   height: 0.95rem;
 }
 
+.employee-admin-button:hover,
 .employee-logout-button:hover {
   color: var(--text);
   background: rgba(11, 11, 11, 0.06);

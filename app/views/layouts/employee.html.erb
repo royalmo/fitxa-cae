@@ -17,6 +17,11 @@
           </div>
 
           <% if employee_signed_in? %>
+            <% if current_employee.manager.present? %>
+              <%= link_to admin_root_path, class: "employee-admin-button", title: t("employee.nav.admin"), aria: { label: t("employee.nav.admin") } do %>
+                <%= icon "hammer" %>
+              <% end %>
+            <% end %>
             <%= button_to logout_path, method: :delete, form_class: "topbar-form", class: "employee-logout-button", title: t("employee.nav.logout"), aria: { label: t("employee.nav.logout") } do %>
               <%= icon "log-out", title: t("employee.nav.logout") %>
             <% end %>

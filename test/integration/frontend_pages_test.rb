@@ -17,6 +17,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".employee-topbar .employee-logout-button[title='Tancar sessió'][aria-label='Tancar sessió']"
     assert_select ".employee-topbar .employee-logout-button svg.icon[role='img'][aria-label='Tancar sessió']"
     assert_select ".employee-topbar .employee-logout-button", text: /Sortir/, count: 0
+    assert_select ".employee-topbar .employee-admin-button", 0
     assert_select ".employee-topbar .icon-button", 0
     assert_select "body.employee-shell > .flash", 0
     assert_select ".employee-nav svg.icon", 4
@@ -56,6 +57,25 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".account-hr-contact h2", text: "Contactar amb Recursos Humans"
     assert_select ".account-save-button[data-submitting-label='Desant...']"
     assert_select ".account-hr-contact-form button[data-submitting-label='Enviant...']"
+  end
+
+  test "employee topbar links to admin when employee has a linked manager" do
+    employee = create_employee(password: "1234")
+    create_manager(employee: employee)
+    log_in_employee(employee)
+
+    get root_path
+
+    assert_response :success
+    assert_select ".employee-topbar .employee-admin-button[href='#{admin_root_path}'][title='Accés admin'][aria-label='Accés admin']"
+    assert_select ".employee-topbar .employee-admin-button svg.icon[aria-hidden='true']"
+
+    action_classes = css_select(".employee-topbar-actions > *").map { |node| node["class"] }
+    assert_operator action_classes.index("employee-admin-button"), :<, action_classes.index("topbar-form")
+
+    get admin_root_path
+
+    assert_redirected_to admin_login_path
   end
 
   test "admin pages render" do

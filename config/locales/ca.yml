@@ -137,6 +137,7 @@ ca:
     nav:
       label: "Navegació de treballador"
       account: "Compte"
+      admin: "Accés admin"
       clockings: "Fitxatges"
       corrections: "Correccions"
       logout: "Tancar sessió"
