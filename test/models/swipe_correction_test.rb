@@ -73,4 +73,17 @@ class SwipeCorrectionTest < ActiveSupport::TestCase
     assert_model_error duplicate, :day, :pending_taken
     assert_predicate reviewed, :valid?
   end
+
+  test "soft deleted pending correction does not block another pending correction for the same day" do
+    employee = create_employee
+    deleted = SwipeCorrection.create!(employee: employee, requester: employee, day: Date.new(2026, 6, 30), status: :pending)
+    deleted.soft_delete!
+
+    duplicate = SwipeCorrection.new(employee: employee, requester: employee, day: Date.new(2026, 6, 30), status: :pending)
+
+    assert_predicate deleted, :soft_deleted?
+    assert_includes SwipeCorrection.deleted, deleted
+    assert_not_includes SwipeCorrection.kept, deleted
+    assert_predicate duplicate, :valid?
+  end
 end

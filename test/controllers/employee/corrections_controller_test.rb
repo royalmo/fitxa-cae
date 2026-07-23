@@ -56,7 +56,14 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "input[type='date'][name='date'][value='2026-06-03'][min='2026-06-01'][max='2026-07-19']"
+    assert_select ".correction-swipe-table-header [role='columnheader']", text: "Entrades"
+    assert_select ".correction-swipe-table-header [role='columnheader']", text: "Sortides"
     assert_select ".correction-existing-swipe", text: /08:40/
+    assert_select ".correction-swipe-request-row input[type='hidden'][name='requested_swipes[][kind]'][value='entry']"
+    assert_select ".correction-swipe-request-row input[type='hidden'][name='requested_swipes[][kind]'][value='exit']"
+    assert_select ".correction-swipe-request-row input[type='time'][name='requested_swipes[][time]'][aria-label='Afegir entrada']"
+    assert_select ".correction-swipe-request-row input[type='time'][name='requested_swipes[][time]'][aria-label='Afegir sortida']"
+    assert_select ".correction-swipe-request-row select", 0
     assert_select ".correction-select-day-state[hidden]"
     assert_select ".correction-loading-state[hidden]"
     assert_select ".correction-form-details[hidden]", 0
@@ -64,10 +71,57 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='time']", 0
   end
 
+  test "new correction form shows delete button for a pending correction" do
+    employee = create_employee(password: "1234")
+    pending_correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+      },
+      requester_comments: "Correcció pendent"
+    )
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      get new_correction_path, params: { day: "2026-07-02" }
+    end
+
+    assert_response :success
+    assert_select ".correction-pending-note", text: I18n.t("employee.corrections.new.pending_loaded")
+    assert_select ".correction-delete-action[hidden]", 0
+    assert_select "a.correction-delete-button[href='#{correction_path(pending_correction)}'][data-turbo-method='delete']", text: /Eliminar sol·licitud/
+    assert_select "a.correction-delete-button[data-turbo-confirm]", 0
+  end
+
+  test "blank requested swipe inputs are ignored when another correction change exists" do
+    employee = create_employee(password: "1234")
+    swipe = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 40), metadata: "employee_portal")
+    log_in_employee(employee)
+
+    assert_difference "SwipeCorrection.count", 1 do
+      post corrections_path, params: {
+        date: "2026-07-02",
+        invalidated_swipe_ids: [ swipe.id ],
+        requested_swipes: [
+          { kind: "entry", time: "" },
+          { kind: "exit", time: "" }
+        ]
+      }
+    end
+
+    assert_redirected_to corrections_path
+    correction = employee.swipe_corrections.last
+    assert_equal [ swipe.id ], correction.details["invalidated_swipe_ids"]
+    assert_equal [], correction.details["requested_swipes"]
+  end
+
   test "loads correction day swipes and pending correction as json" do
     employee = create_employee(password: "1234")
     swipe = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 40), metadata: "employee_portal")
-    employee.swipe_corrections.create!(
+    pending_correction = employee.swipe_corrections.create!(
       requester: employee,
       status: :pending,
       day: Date.new(2026, 7, 2),
@@ -86,6 +140,8 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     payload = response.parsed_body
     assert_equal true, payload["day_allowed"]
+    assert_equal pending_correction.id.to_s, payload["pending_correction"]["id"]
+    assert_equal correction_path(pending_correction), payload["pending_correction"]["delete_url"]
     assert_equal [ swipe.id.to_s ], payload["pending_correction"]["invalidated_swipe_ids"]
     assert_equal [ { "kind" => "entry", "time" => "08:05:00" } ], payload["pending_correction"]["requested_swipes"]
     assert_equal "Correcció pendent", payload["pending_correction"]["comment"]
@@ -124,6 +180,62 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ { "kind" => "exit", "hour" => "17:30:00" } ], pending_correction.details["requested_swipes"]
   end
 
+  test "deletes a pending correction for the signed in employee" do
+    employee = create_employee(password: "1234")
+    pending_correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+      },
+      requester_comments: "Correcció pendent"
+    )
+    log_in_employee(employee)
+
+    assert_no_difference -> { SwipeCorrection.with_deleted.count } do
+      assert_difference -> { SwipeCorrection.count }, -1 do
+        delete correction_path(pending_correction)
+      end
+    end
+
+    assert_redirected_to corrections_path
+    assert_not_nil SwipeCorrection.deleted.find(pending_correction.id).deleted_at
+    assert_equal I18n.t("employee.flash.correction_deleted"), flash[:notice][:message]
+    assert_equal I18n.t("employee.flash.undo"), flash[:notice][:action][:label]
+    assert_equal restore_correction_path(pending_correction), flash[:notice][:action][:path]
+    assert_equal :post, flash[:notice][:action][:method]
+
+    follow_redirect!
+
+    assert_select ".flash-message", text: I18n.t("employee.flash.correction_deleted")
+    assert_select "form.flash-action-form[action='#{restore_correction_path(pending_correction)}'][method='post']"
+    assert_select ".flash-action", text: I18n.t("employee.flash.undo")
+  end
+
+  test "restores a soft deleted pending correction and returns to the correction form" do
+    employee = create_employee(password: "1234")
+    pending_correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+      },
+      requester_comments: "Correcció pendent"
+    )
+    pending_correction.soft_delete!
+    log_in_employee(employee)
+
+    post restore_correction_path(pending_correction)
+
+    assert_redirected_to new_correction_path(day: "2026-07-02")
+    assert_nil pending_correction.reload.deleted_at
+    assert_equal I18n.t("employee.flash.correction_restored"), flash[:notice]
+  end
+
   test "rejects correction requests outside current and previous month" do
     employee = create_employee(password: "1234")
     log_in_employee(employee)
@@ -139,7 +251,9 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_select ".error-summary", text: I18n.t("employee.corrections.create.date_out_of_range")
+    assert_select ".error-summary .error-summary-content", text: I18n.t("employee.corrections.create.date_out_of_range")
+    assert_select ".error-summary[data-controller='dismissible'][role='alert']"
+    assert_select ".error-summary .error-summary-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
   end
 
   test "rejects incomplete correction requests" do
@@ -156,6 +270,28 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select ".error-summary"
+    assert_select ".error-summary .error-summary-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
+    assert_select "form.correction-form[data-action='input->correction-form#dismissErrors change->correction-form#dismissErrors']"
+  end
+
+  test "rejects correction requests without any changes" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      assert_no_difference "SwipeCorrection.count" do
+        post corrections_path, params: {
+          date: "2026-07-02",
+          requested_swipes: [],
+          note: "Sense canvis"
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".error-summary .error-summary-content", text: I18n.t("employee.corrections.create.missing_changes")
+    assert_select ".error-summary .error-summary-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
+    assert_select "form.correction-form[data-action='input->correction-form#dismissErrors change->correction-form#dismissErrors']"
   end
 
   test "lists corrections from the signed in employee" do

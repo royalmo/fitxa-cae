@@ -144,7 +144,7 @@ input[type="submit"],
 .mini-button,
 .primary-clock {
   color: #ffffff;
-  border-color: var(--text);
+  border-color: transparent;
   background: var(--brand-red);
 }
 
@@ -160,7 +160,7 @@ input[type="submit"]:hover,
 .muted-button,
 .icon-button {
   color: var(--text);
-  border-color: var(--text);
+  border-color: var(--muted);
   background: #ffffff;
 }
 

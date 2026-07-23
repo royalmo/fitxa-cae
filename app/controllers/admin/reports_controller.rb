@@ -54,8 +54,7 @@ class Admin::ReportsController < Admin::BaseController
   end
 
   def report_correction_counts_by_employee_id
-    SwipeCorrection
-      .where(employee_id: report_employee_ids, day: report_range)
+    SwipeCorrection.where(employee_id: report_employee_ids, day: report_range)
       .group(:employee_id)
       .count
   end

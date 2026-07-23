@@ -151,6 +151,7 @@ td small,
   width: 1rem;
   height: 1rem;
   color: #23734c;
+  margin-bottom: 3px;
 }
 
 .flash-alert .flash-icon {
@@ -164,9 +165,33 @@ td small,
   gap: 0.6rem;
 }
 
-.dismissible-flash span {
+.flash-message {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.flash-action-form {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.flash-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.8rem;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: 6px;
+  color: #164f34;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.flash-action:hover {
+  background: rgba(35, 115, 76, 0.08);
 }
 
 .flash-close {
@@ -897,7 +922,6 @@ input[type="submit"].is-submitting {
 .correction-new-link {
   min-height: 2.35rem;
   padding: 0 0.8rem;
-  border: 0;
   font-size: 0.9rem;
 }
 
@@ -1094,6 +1118,34 @@ input[type="submit"].is-submitting {
   font-size: 0.88rem;
 }
 
+.correction-form-actions {
+  justify-content: space-between;
+}
+
+.correction-submit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.correction-delete-action {
+  margin-right: auto;
+}
+
+.correction-delete-button {
+  color: var(--primary);
+  border-color: rgba(227, 6, 19, 0.28);
+  background: #ffffff;
+}
+
+.correction-delete-button:hover {
+  border-color: rgba(227, 6, 19, 0.48);
+  background: rgba(227, 6, 19, 0.05);
+}
+
 .correction-pending-note {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -1162,107 +1214,183 @@ input[type="submit"].is-submitting {
   font-weight: 800;
 }
 
-.correction-existing-swipes,
-.correction-requested-swipes {
+.correction-existing-swipes {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.correction-swipe-table {
   display: grid;
   gap: 0.45rem;
 }
 
-.correction-existing-swipe,
-.correction-requested-row {
+.correction-swipe-table-header,
+.correction-swipe-table-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.correction-swipe-table-header {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.correction-swipe-table-cell {
+  display: grid;
+  min-width: 0;
+  min-height: 2.75rem;
+}
+
+.correction-swipe-empty-slot {
+  align-self: center;
+  padding-left: 0.7rem;
+  color: #c6c6c6;
+}
+
+.correction-existing-swipe {
   display: grid;
   gap: 0.5rem;
   align-items: center;
 }
 
 .correction-existing-swipe {
-  grid-template-columns: auto minmax(0, 1fr);
-  padding: 0.5rem 0;
-  border-top: 1px solid var(--line);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    color 0.16s ease;
 }
 
-.correction-existing-swipe:last-child {
-  border-bottom: 1px solid var(--line);
+.correction-existing-swipe:hover {
+  border-color: rgba(227, 6, 19, 0.35);
+  background: rgba(227, 6, 19, 0.03);
 }
 
-.correction-existing-swipe input {
-  width: 1rem;
-  height: 1rem;
-  accent-color: var(--primary);
+.correction-existing-swipe:has(input:checked) {
+  border-color: rgba(180, 83, 9, 0.36);
+  color: rgba(180, 83, 9, 0.7);
+  background: rgba(180, 83, 9, 0.06);
 }
 
-.correction-existing-swipe > span {
+.correction-existing-swipe-main {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.6rem;
   min-width: 0;
 }
 
-.correction-existing-swipe-icon,
-.correction-existing-swipe-kind {
+.correction-existing-swipe-kind-icon {
+  width: 1.15rem;
+  height: 1.15rem;
   color: var(--muted);
 }
 
-.correction-existing-swipe-icon {
+.correction-existing-swipe:has(input:checked) .correction-existing-swipe-kind-icon {
+  color: currentColor;
+}
+
+.correction-existing-swipe-copy {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.correction-existing-swipe-copy strong {
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.correction-existing-swipe:has(input:checked) .correction-existing-swipe-copy strong {
+  text-decoration: line-through;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 0.12em;
+}
+
+.correction-existing-swipe-copy small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.correction-existing-swipe:has(input:checked) .correction-existing-swipe-copy small {
+  color: currentColor;
+}
+
+.correction-existing-swipe-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+}
+
+.correction-existing-swipe-state-icon {
   width: 1rem;
   height: 1rem;
 }
 
-.correction-existing-swipe-kind {
-  min-width: 3.9rem;
-  font-size: 0.86rem;
-  font-weight: 800;
+.correction-existing-swipe:hover .correction-existing-swipe-state {
+  color: var(--primary);
+  background: rgba(227, 6, 19, 0.06);
 }
 
-.correction-existing-swipe small {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 0.78rem;
+.correction-existing-swipe-remove {
+  display: none;
 }
 
-.correction-empty-swipes {
-  margin: 0;
+.correction-existing-swipe:has(input:checked) .correction-existing-swipe-state {
+  color: #b45309;
+  background: rgba(180, 83, 9, 0.08);
 }
 
-.correction-requested-row {
-  grid-template-columns: minmax(0, 1fr) 8rem auto;
+.correction-existing-swipe:has(input:checked) .correction-existing-swipe-keep {
+  display: none;
 }
 
-.correction-requested-row select,
-.correction-requested-row input {
-  min-height: 2.35rem;
+.correction-existing-swipe:has(input:checked) .correction-existing-swipe-remove {
+  display: inline;
+}
+
+.correction-swipe-request-row {
+  padding-top: 0.15rem;
+}
+
+.correction-requested-swipe {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.75rem;
   padding: 0.45rem 0.55rem;
+  border: 1px dashed rgba(227, 6, 19, 0.35);
+  border-radius: 8px;
+  background: rgba(227, 6, 19, 0.03);
 }
 
-.correction-row-remove {
-  min-height: 2.35rem;
-  padding: 0 0.6rem;
-  border: 0;
-  border-radius: 6px;
-  color: var(--muted);
-  background: transparent;
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.correction-row-remove:hover {
+.correction-requested-swipe-icon {
+  width: 1rem;
+  height: 1rem;
   color: var(--primary);
-  background: var(--surface-soft);
 }
 
-.correction-add-swipe-button {
-  justify-self: start;
-  min-height: 2.2rem;
-  padding: 0 0.75rem;
+.correction-requested-swipe input[type="time"] {
+  min-height: 2rem;
+  padding: 0.35rem 0.5rem;
   border-color: var(--line);
-  color: var(--primary);
-  background: transparent;
-  font-size: 0.88rem;
-}
-
-.correction-add-swipe-button:hover {
-  border-color: rgba(227, 6, 19, 0.7);
-  background: var(--surface-soft);
+  border-radius: 6px;
 }
 
 .correction-choice-list {
@@ -1926,7 +2054,7 @@ input[type="submit"].is-submitting {
 }
 
 .error-summary {
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
   margin-bottom: 1rem;
   border: 1px solid #f2b8b5;
@@ -1954,6 +2082,27 @@ input[type="submit"].is-submitting {
 
 .error-summary-content p {
   margin: 0;
+}
+
+.error-summary-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: -0.35rem;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 0;
+}
+
+.error-summary-close:hover {
+  color: var(--text);
 }
 
 .fallback-shell {
@@ -2063,15 +2212,6 @@ input[type="submit"].is-submitting {
     text-align: left;
   }
 
-  .correction-requested-row {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .correction-row-remove {
-    grid-column: 1 / -1;
-    justify-self: start;
-  }
-
   .form-actions {
     justify-content: stretch;
   }
@@ -2080,6 +2220,19 @@ input[type="submit"].is-submitting {
   .form-actions input[type="submit"],
   .action-row .button {
     width: 100%;
+  }
+
+  .correction-form-actions,
+  .correction-submit-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    margin: 0;
+  }
+
+  .correction-delete-action {
+    width: 100%;
+    margin: 0;
   }
 
   .employee-nav {

@@ -4,22 +4,28 @@ export default class extends Controller {
   static targets = [
     "date",
     "existingSwipes",
-    "existingEmpty",
-    "requestedSwipes",
     "comment",
     "pendingNotice",
     "formContent",
     "emptyPrompt",
-    "loadingPrompt"
+    "loadingPrompt",
+    "deleteAction",
+    "deleteLink"
   ]
 
   static values = {
     dayUrl: String,
-    entryLabel: String,
-    exitLabel: String,
-    removeLabel: String,
+    entriesLabel: String,
+    exitsLabel: String,
+    requestEntryLabel: String,
+    requestExitLabel: String,
+    existingSwipesLabel: String,
+    entryIcon: String,
+    exitIcon: String,
+    keepSwipeLabel: String,
     removeSwipeLabel: String,
-    existingEmpty: String
+    keepSwipeIcon: String,
+    removeSwipeIcon: String
   }
 
   loadDay() {
@@ -49,14 +55,11 @@ export default class extends Controller {
       })
   }
 
-  addRequestedSwipe(event) {
-    event.preventDefault()
-    this.addRequestedSwipeRow({ kind: "entry", time: "" })
-  }
-
-  removeRequestedSwipe(event) {
-    event.preventDefault()
-    event.currentTarget.closest(".correction-requested-row")?.remove()
+  dismissErrors() {
+    this.element
+      .closest(".correction-form-section")
+      ?.querySelectorAll(".error-summary")
+      .forEach((summary) => summary.remove())
   }
 
   renderDay(data) {
@@ -70,10 +73,14 @@ export default class extends Controller {
     this.formContentTarget.hidden = false
     this.emptyPromptTarget.hidden = true
     this.loadingPromptTarget.hidden = true
-    this.renderExistingSwipes(data.swipes || [], pendingCorrection?.invalidated_swipe_ids || [])
-    this.renderRequestedSwipes(pendingCorrection?.requested_swipes || [])
+    this.renderSwipeTable(
+      data.swipes || [],
+      pendingCorrection?.invalidated_swipe_ids || [],
+      pendingCorrection?.requested_swipes || []
+    )
     this.commentTarget.value = pendingCorrection?.comment || ""
     this.pendingNoticeTarget.hidden = !pendingCorrection
+    this.renderDeleteAction(pendingCorrection)
   }
 
   showLoading() {
@@ -81,6 +88,7 @@ export default class extends Controller {
     this.emptyPromptTarget.hidden = true
     this.loadingPromptTarget.hidden = false
     this.pendingNoticeTarget.hidden = true
+    this.renderDeleteAction(null)
   }
 
   clearDay() {
@@ -88,50 +96,128 @@ export default class extends Controller {
     this.emptyPromptTarget.hidden = false
     this.loadingPromptTarget.hidden = true
     this.pendingNoticeTarget.hidden = true
-    this.existingEmptyTarget.hidden = true
+    this.renderDeleteAction(null)
     this.existingSwipesTarget.replaceChildren()
-    this.requestedSwipesTarget.replaceChildren()
     this.commentTarget.value = ""
   }
 
-  renderExistingSwipes(swipes, invalidatedSwipeIds) {
-    this.existingSwipesTarget.replaceChildren()
-    this.existingEmptyTarget.hidden = swipes.length > 0
+  renderDeleteAction(pendingCorrection) {
+    if (pendingCorrection?.delete_url) {
+      this.deleteLinkTarget.href = pendingCorrection.delete_url
+      this.deleteActionTarget.hidden = false
+    } else {
+      this.deleteActionTarget.hidden = true
+      this.deleteLinkTarget.href = "#"
+    }
+  }
 
-    swipes.forEach((swipe) => {
-      const label = document.createElement("label")
-      label.className = "correction-existing-swipe"
-      label.innerHTML = `
-        <input type="checkbox" name="invalidated_swipe_ids[]" value="${this.escapeAttribute(swipe.id)}" ${invalidatedSwipeIds.includes(String(swipe.id)) ? "checked" : ""}>
-        <span>
-          <span class="correction-existing-swipe-kind">${this.escapeHTML(swipe.kind_text)}</span>
-          <span>${this.escapeHTML(swipe.time)}</span>
-          <small>${this.escapeHTML(this.removeSwipeLabelValue)}</small>
+  renderSwipeTable(swipes, invalidatedSwipeIds, requestedSwipes) {
+    this.existingSwipesTarget.replaceChildren()
+
+    const table = document.createElement("div")
+    table.className = "correction-swipe-table"
+    table.setAttribute("role", "table")
+    table.setAttribute("aria-label", this.existingSwipesLabelValue)
+    table.innerHTML = `
+      <div class="correction-swipe-table-header" role="row">
+        <span role="columnheader">${this.escapeHTML(this.entriesLabelValue)}</span>
+        <span role="columnheader">${this.escapeHTML(this.exitsLabelValue)}</span>
+      </div>
+    `
+
+    this.swipeRows(swipes).forEach((swipeRow) => {
+      const row = document.createElement("div")
+      row.className = "correction-swipe-table-row"
+      row.setAttribute("role", "row")
+      row.append(this.swipeCell(swipeRow.entry, invalidatedSwipeIds))
+      row.append(this.swipeCell(swipeRow.exit, invalidatedSwipeIds))
+      table.append(row)
+    })
+
+    table.append(this.requestedSwipeRow(requestedSwipes))
+    this.existingSwipesTarget.append(table)
+  }
+
+  swipeCell(swipe, invalidatedSwipeIds) {
+    const cell = document.createElement("div")
+    cell.className = "correction-swipe-table-cell"
+    cell.setAttribute("role", "cell")
+
+    if (!swipe) {
+      cell.innerHTML = '<span class="correction-swipe-empty-slot" aria-hidden="true">—</span>'
+      return cell
+    }
+
+    const label = document.createElement("label")
+    label.className = "correction-existing-swipe"
+    label.dataset.kind = swipe.kind
+    label.innerHTML = `
+        <input type="checkbox" name="invalidated_swipe_ids[]" value="${this.escapeAttribute(swipe.id)}" class="sr-only" ${invalidatedSwipeIds.includes(String(swipe.id)) ? "checked" : ""}>
+        <span class="correction-existing-swipe-main">
+          ${this.swipeKindIcon(swipe.kind)}
+          <span class="correction-existing-swipe-copy">
+            <strong>${this.escapeHTML(swipe.time)}</strong>
+          </span>
+        </span>
+        <span class="correction-existing-swipe-state">
+          <span class="correction-existing-swipe-keep" title="${this.escapeAttribute(this.removeSwipeLabelValue)}" aria-label="${this.escapeAttribute(this.removeSwipeLabelValue)}">
+            ${this.removeSwipeIconValue}
+          </span>
+          <span class="correction-existing-swipe-remove" title="${this.escapeAttribute(this.keepSwipeLabelValue)}" aria-label="${this.escapeAttribute(this.keepSwipeLabelValue)}">
+            ${this.keepSwipeIconValue}
+          </span>
         </span>
       `
-      this.existingSwipesTarget.append(label)
+    cell.append(label)
+    return cell
+  }
+
+  swipeRows(swipes) {
+    const rows = []
+    let currentRow = null
+
+    swipes.forEach((swipe) => {
+      if (swipe.kind === "entry") {
+        currentRow = { entry: swipe, exit: null }
+        rows.push(currentRow)
+      } else if (currentRow && !currentRow.exit) {
+        currentRow.exit = swipe
+      } else {
+        currentRow = { entry: null, exit: swipe }
+        rows.push(currentRow)
+      }
     })
+
+    return rows
   }
 
-  renderRequestedSwipes(requestedSwipes) {
-    this.requestedSwipesTarget.replaceChildren()
-    requestedSwipes.forEach((requestedSwipe) => this.addRequestedSwipeRow(requestedSwipe))
-  }
-
-  addRequestedSwipeRow(requestedSwipe) {
+  requestedSwipeRow(requestedSwipes) {
     const row = document.createElement("div")
-    row.className = "correction-requested-row"
-    row.innerHTML = `
-      <select name="requested_swipes[][kind]">
-        <option value="entry" ${requestedSwipe.kind === "entry" ? "selected" : ""}>${this.escapeHTML(this.entryLabelValue)}</option>
-        <option value="exit" ${requestedSwipe.kind === "exit" ? "selected" : ""}>${this.escapeHTML(this.exitLabelValue)}</option>
-      </select>
-      <input type="time" name="requested_swipes[][time]" value="${this.escapeAttribute((requestedSwipe.time || "").slice(0, 5))}">
-      <button type="button" class="correction-row-remove" data-action="correction-form#removeRequestedSwipe">
-        ${this.escapeHTML(this.removeLabelValue)}
-      </button>
+    row.className = "correction-swipe-table-row correction-swipe-request-row"
+    row.setAttribute("role", "row")
+    row.append(this.requestedSwipeCell("entry", requestedSwipes))
+    row.append(this.requestedSwipeCell("exit", requestedSwipes))
+
+    return row
+  }
+
+  requestedSwipeCell(kind, requestedSwipes) {
+    const cell = document.createElement("div")
+    const label = document.createElement("label")
+    const requestLabel = kind === "entry" ? this.requestEntryLabelValue : this.requestExitLabelValue
+    const requestedSwipe = requestedSwipes.find((swipe) => swipe.kind === kind)
+
+    cell.className = "correction-swipe-table-cell"
+    cell.setAttribute("role", "cell")
+    label.className = "correction-requested-swipe"
+    label.dataset.kind = kind
+    label.innerHTML = `
+      ${this.requestedSwipeIcon(kind)}
+      <input type="hidden" name="requested_swipes[][kind]" value="${this.escapeAttribute(kind)}">
+      <input type="time" name="requested_swipes[][time]" value="${this.escapeAttribute((requestedSwipe?.time || "").slice(0, 5))}" aria-label="${this.escapeAttribute(requestLabel)}">
     `
-    this.requestedSwipesTarget.append(row)
+    cell.append(label)
+    return cell
   }
 
   escapeHTML(value) {
@@ -146,5 +232,13 @@ export default class extends Controller {
 
   escapeAttribute(value) {
     return this.escapeHTML(value)
+  }
+
+  swipeKindIcon(kind) {
+    return kind === "exit" ? this.exitIconValue : this.entryIconValue
+  }
+
+  requestedSwipeIcon(kind) {
+    return this.swipeKindIcon(kind).replace("correction-existing-swipe-kind-icon", "correction-requested-swipe-icon")
   }
 }

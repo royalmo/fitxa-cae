@@ -1,7 +1,7 @@
 <% content_for :title, t(".title") %>
 <% password_error_messages = @account_error_context.to_s == "password" ? @employee.errors.full_messages : [] %>
 <% contact_error_messages = @account_error_context.to_s == "contact" ? @employee.errors.full_messages : [] %>
-<% password_panel_open = @password_panel_open || password_error_messages.any? || params.values_at(:current_password, :password, :password_confirmation).any?(&:present?) %>
+<% password_panel_open = @password_panel_open || password_error_messages.any? || params.values_at(:password, :password_confirmation).any?(&:present?) %>
 
 <section class="page-intro">
   <div>
@@ -55,10 +55,6 @@
         <%= render "layouts/error_summary", messages: password_error_messages, title: t(".error_title") %>
 
         <%= form_with url: account_password_path, method: :patch, class: "stacked-form compact-form account-password-form" do |form| %>
-          <div class="field">
-            <%= form.label :current_password, t(".current_password") %>
-            <%= form.password_field :current_password, autocomplete: "current-password" %>
-          </div>
           <div class="field">
             <%= form.label :password, t(".new_password") %>
             <%= form.password_field :password, autocomplete: "new-password" %>

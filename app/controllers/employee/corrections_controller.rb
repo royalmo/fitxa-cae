@@ -69,6 +69,22 @@ class Employee::CorrectionsController < ApplicationController
     end
   end
 
+  def destroy
+    correction = current_employee.swipe_corrections.pending.find(params[:id])
+    correction.soft_delete!
+
+    redirect_to corrections_path, notice: correction_deleted_flash(correction)
+  end
+
+  def restore
+    correction = current_employee.swipe_corrections.deleted.pending.find(params[:id])
+    correction.restore!
+
+    redirect_to new_correction_path(day: correction.day.iso8601), notice: t("employee.flash.correction_restored")
+  rescue ActiveRecord::RecordInvalid
+    redirect_to corrections_path, alert: t("employee.flash.correction_restore_failed")
+  end
+
   private
 
   def filtered_correction_scope
@@ -110,6 +126,7 @@ class Employee::CorrectionsController < ApplicationController
     @day_swipes = @form_has_day ? swipes_for_day(@form_day) : []
     @invalidated_swipe_ids = form_invalidated_swipe_ids(@correction)
     @requested_swipes = form_requested_swipes(@correction)
+    @requested_swipes_by_kind = @requested_swipes.index_by { |requested_swipe| requested_swipe["kind"] }
     @requester_comments = correction_params[:note].presence || @correction.requester_comments
   end
 
@@ -143,7 +160,7 @@ class Employee::CorrectionsController < ApplicationController
     Array(correction_params[:requested_swipes]).filter_map do |requested_swipe|
       kind = (requested_swipe["kind"] || requested_swipe[:kind]).to_s
       time = (requested_swipe["time"] || requested_swipe[:time]).to_s
-      next if kind.blank? && time.blank?
+      next if time.blank?
 
       { "kind" => kind, "time" => time }
     end
@@ -206,6 +223,17 @@ class Employee::CorrectionsController < ApplicationController
     @employee.swipe_corrections.pending.find_by(day: day) if day
   end
 
+  def correction_deleted_flash(correction)
+    {
+      message: t("employee.flash.correction_deleted"),
+      action: {
+        label: t("employee.flash.undo"),
+        path: restore_correction_path(correction),
+        method: :post
+      }
+    }
+  end
+
   def form_invalidated_swipe_ids(correction)
     return Array(correction.details&.fetch("invalidated_swipe_ids", nil)).map(&:to_s) if correction.details.present?
 
@@ -232,6 +260,8 @@ class Employee::CorrectionsController < ApplicationController
     return unless correction
 
     {
+      id: correction.id.to_s,
+      delete_url: correction_path(correction),
       invalidated_swipe_ids: Array(correction.details&.fetch("invalidated_swipe_ids", nil)).map(&:to_s),
       requested_swipes: requested_swipes_for_form(correction),
       comment: correction.requester_comments.to_s

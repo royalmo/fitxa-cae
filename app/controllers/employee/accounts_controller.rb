@@ -65,7 +65,7 @@ class Employee::AccountsController < ApplicationController
   end
 
   def account_password_params
-    params.permit(:current_password, :password, :password_confirmation)
+    params.permit(:password, :password_confirmation)
   end
 
   def hr_contact_params
@@ -82,22 +82,11 @@ class Employee::AccountsController < ApplicationController
       return
     end
 
-    unless current_password_valid_for_change?
-      @employee.errors.add(:base, t(".current_password_invalid"))
-      return
-    end
-
     if account_password_params[:password] != account_password_params[:password_confirmation]
       @employee.errors.add(:base, t(".password_confirmation_invalid"))
       return
     end
 
     @employee.password = account_password_params[:password]
-  end
-
-  def current_password_valid_for_change?
-    return true unless @employee.password_login_enabled?
-
-    @employee.authenticate(account_password_params[:current_password].to_s)
   end
 end

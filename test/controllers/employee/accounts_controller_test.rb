@@ -32,6 +32,7 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select "details.account-password-panel > summary .account-summary-icon-down"
     assert_select "details.account-password-panel > summary .account-summary-icon-up"
     assert_select "details.account-password-panel form.account-password-form[action='#{account_password_path}']"
+    assert_select "details.account-password-panel form.account-password-form input[name='current_password']", 0
     assert_select ".account-save-button.account-primary-button[form='account_contact_form'][data-submitting-label='Desant...']", text: "Desar canvis"
     assert_select ".account-password-form .account-primary-button[data-submitting-label='Canviant...']", text: "Canviar contrasenya"
     assert_select "hr.account-divider + section.account-hr-contact#human_resources_contact"
@@ -68,57 +69,49 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".employee-page-flash .flash-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
   end
 
-  test "requires current password to change an existing password" do
+  test "changes an existing password without current password" do
     employee = create_employee(password: "1234")
     log_in_employee(employee)
 
     patch account_password_path, params: {
       email: "new@example.test",
       phone: "+34 611 222 333",
-      current_password: "bad",
       password: "5678",
       password_confirmation: "5678"
     }
 
-    assert_response :unprocessable_entity
-    assert_select "details.account-password-panel[open]"
-    assert_select "details.account-password-panel[open] .account-summary-icon-up"
-    assert_select ".account-section > .error-summary", 0
-    assert_select "details.account-password-panel[open] > .error-summary.error-summary-single", text: I18n.t("employee.accounts.update_password.current_password_invalid")
-    assert_select "details.account-password-panel[open] > .error-summary .error-summary-icon"
-    assert_select "details.account-password-panel[open] > .error-summary strong", 0
-    assert_select "details.account-password-panel[open] > .error-summary ul", 0
+    assert_redirected_to account_path
     employee.reload
     assert_not_equal "new@example.test", employee.email
     assert_not_equal "+34 611 222 333", employee.phone
-    assert employee.reload.authenticate("1234")
-    assert_not employee.authenticate("5678")
+    assert_not employee.authenticate("1234")
+    assert employee.authenticate("5678")
   end
 
   test "requires a new password in the password form" do
     employee = create_employee(password: "1234")
     log_in_employee(employee)
 
-    patch account_password_path, params: {
-      current_password: "1234"
-    }
+    patch account_password_path, params: {}
 
     assert_response :unprocessable_entity
     assert_select "details.account-password-panel[open]"
     assert_select ".account-section > .error-summary", 0
-    assert_select "details.account-password-panel[open] > .error-summary.error-summary-single", text: I18n.t("employee.accounts.update_password.password_blank")
+    assert_select "details.account-password-panel[open] > .error-summary.error-summary-single"
+    assert_select "details.account-password-panel[open] > .error-summary .error-summary-content", text: I18n.t("employee.accounts.update_password.password_blank")
     assert_select "details.account-password-panel[open] > .error-summary .error-summary-icon"
+    assert_select "details.account-password-panel[open] > .error-summary .error-summary-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
     assert_select "details.account-password-panel[open] > .error-summary strong", 0
     assert_select "details.account-password-panel[open] > .error-summary ul", 0
     assert employee.reload.authenticate("1234")
   end
 
-  test "changes password when current password and confirmation are valid" do
+  test "ignores submitted current password when changing password" do
     employee = create_employee(password: "1234")
     log_in_employee(employee)
 
     patch account_password_path, params: {
-      current_password: "1234",
+      current_password: "bad",
       password: "5678",
       password_confirmation: "5678"
     }

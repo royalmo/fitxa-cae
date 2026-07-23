@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_19_193111) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_23_063938) do
   create_table "audit_actions", force: :cascade do |t|
     t.integer "author_id", null: false
     t.string "author_type", null: false
@@ -60,6 +60,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_193111) do
   create_table "swipe_corrections", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "day", null: false
+    t.datetime "deleted_at"
     t.json "details"
     t.integer "employee_id", null: false
     t.text "requester_comments"
@@ -69,7 +70,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_193111) do
     t.datetime "updated_at", null: false
     t.text "validator_comments"
     t.integer "validator_id"
-    t.index ["employee_id", "day"], name: "index_swipe_corrections_on_employee_day_pending", unique: true, where: "status = 'pending'"
+    t.index ["deleted_at"], name: "index_swipe_corrections_on_deleted_at"
+    t.index ["employee_id", "day"], name: "index_swipe_corrections_on_employee_day_pending", unique: true, where: "status = 'pending' AND deleted_at IS NULL"
     t.index ["employee_id"], name: "index_swipe_corrections_on_employee_id"
     t.index ["requester_type", "requester_id"], name: "index_swipe_corrections_on_requester"
     t.index ["validator_id"], name: "index_swipe_corrections_on_validator_id"
