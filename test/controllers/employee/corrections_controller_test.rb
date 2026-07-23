@@ -524,7 +524,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form.corrections-filter-form"
     assert_select "fieldset.corrections-filter-panel > legend.sr-only", text: "Filtrar per"
     assert_select "fieldset.corrections-filter-panel > .corrections-filter-header > .corrections-filter-heading", text: "Filtrar per:"
-    assert_select "fieldset.corrections-filter-panel > .corrections-filter-header > .corrections-result-count[data-list-loading-target='results']", text: "Mostrant 1-1 de 1 correccions"
+    assert_select "fieldset.corrections-filter-panel > .corrections-filter-header > .corrections-result-count[data-list-loading-target='results']", text: "Mostrant 1-1 de 1"
     assert_select "fieldset.corrections-filter-panel > hr.corrections-filter-divider"
     assert_select "[data-list-loading-target='results']"
     assert_select ".list-loading-state[data-list-loading-target='loading'][hidden]", text: "Carregant..."
@@ -540,7 +540,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".corrections-month-filter", text: /Mes:/
     assert_select "#corrections_month[data-action='change->list-loading#filter'] option[selected][value='7']"
     assert_select "#corrections_year[data-action='change->list-loading#filter'] option[selected][value='2026']"
-    assert_select ".corrections-result-count", text: "Mostrant 1-1 de 1 correccions"
+    assert_select ".corrections-result-count", text: "Mostrant 1-1 de 1"
     assert_select ".correction-row", 1
     assert_select "a.correction-row[href='#{correction_path(approved_correction)}']", 1
     assert_select ".correction-day-title time[datetime='2026-07-02']", text: I18n.l(approved_correction.day, format: :weekday_day_month)
@@ -648,7 +648,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".correction-row", 10
-    assert_select ".corrections-result-count", text: "Mostrant 1-10 de 25 correccions"
+    assert_select ".corrections-result-count", text: "Mostrant 1-10 de 25"
     assert_select ".corrections-page-status", text: "Pàgina 1 de 3"
     assert_select "a.corrections-page-link[href='#{corrections_path(month: 7, year: 2026, page: 2)}'][data-action='click->list-loading#navigate']", text: "Següent"
     assert_select "a.correction-row" do |links|
@@ -663,7 +663,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".correction-row", 10
-    assert_select ".corrections-result-count", text: "Mostrant 11-20 de 25 correccions"
+    assert_select ".corrections-result-count", text: "Mostrant 11-20 de 25"
     assert_select ".corrections-page-status", text: "Pàgina 2 de 3"
     assert_select "a.correction-row" do |links|
       hrefs = links.map { |link| link["href"] }
@@ -676,7 +676,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".correction-row", 5
-    assert_select ".corrections-result-count", text: "Mostrant 21-25 de 25 correccions"
+    assert_select ".corrections-result-count", text: "Mostrant 21-25 de 25"
     assert_select ".corrections-page-status", text: "Pàgina 3 de 3"
     assert_select "a.correction-row" do |links|
       assert_includes links.map { |link| link["href"] }, new_correction_path(day: "2026-07-01")
