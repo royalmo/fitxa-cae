@@ -1,6 +1,8 @@
 class Employee::ClockingsController < ApplicationController
   include EmployeeClockingSummaries
 
+  RECENT_CLOCKING_UNDO_WINDOW = 30.seconds
+
   layout "employee"
 
   def index
@@ -22,6 +24,8 @@ class Employee::ClockingsController < ApplicationController
   end
 
   def clock_in
+    return if undo_recent_clocking
+
     if current_employee.clocked_in?
       redirect_to root_path, alert: t("employee.flash.already_clocked_in")
       return
@@ -37,6 +41,8 @@ class Employee::ClockingsController < ApplicationController
   end
 
   def clock_out
+    return if undo_recent_clocking
+
     unless current_employee.clocked_in?
       redirect_to root_path, alert: t("employee.flash.already_clocked_out")
       return
@@ -52,6 +58,23 @@ class Employee::ClockingsController < ApplicationController
   end
 
   private
+
+  def undo_recent_clocking
+    recent_swipe = undoable_recent_swipe
+    return false unless recent_swipe
+
+    recent_swipe.destroy!
+    redirect_to root_path, notice: t("employee.flash.clocking_undone")
+    true
+  end
+
+  def undoable_recent_swipe(now: Time.current)
+    latest_swipe = current_employee.latest_swipe(at: now)
+    return if latest_swipe.blank? || latest_swipe.forged?
+    return if now - latest_swipe.swipe_at >= RECENT_CLOCKING_UNDO_WINDOW
+
+    latest_swipe
+  end
 
   def clocking_month_reachable?(month)
     month.between?(@min_clocking_month, @max_clocking_month)

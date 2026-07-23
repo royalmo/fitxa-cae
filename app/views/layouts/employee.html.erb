@@ -5,16 +5,18 @@
   </head>
 
   <body class="employee-shell" data-controller="submit-feedback">
-    <% employee_name = employee_display_name(current_employee || @employee) %>
+    <% employee = current_employee || @employee %>
+    <% employee_name = employee_topbar_name(employee) %>
+    <% full_employee_name = employee_display_name(employee) %>
 
     <header class="employee-topbar">
       <div class="employee-topbar-inner">
         <%= render "layouts/brand_mark", path: root_path %>
 
         <div class="employee-topbar-actions">
-          <div class="employee-chip">
+          <%= link_to account_path, class: "employee-chip", title: full_employee_name do %>
             <span><%= employee_name %></span>
-          </div>
+          <% end %>
 
           <% if employee_signed_in? %>
             <% if current_employee.manager.present? %>
@@ -30,7 +32,7 @@
       </div>
     </header>
 
-    <main class="employee-main">
+    <main class="<%= class_names("employee-main", content_for(:main_class)) %>">
       <%= yield %>
     </main>
 

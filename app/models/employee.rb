@@ -72,12 +72,15 @@ class Employee < ApplicationRecord
     password_digest.present?
   end
 
-  def latest_swipe(at: Time.current)
-    swipes.kept.where(swipe_at: ..at).order(swipe_at: :desc, id: :desc).first
+  def latest_swipe(at: Time.current, on: nil)
+    scope = swipes.kept.where(swipe_at: ..at)
+    scope = scope.for_day(on) if on
+
+    scope.order(swipe_at: :desc, id: :desc).first
   end
 
   def open_entry_swipe(at: Time.current)
-    swipe = latest_swipe(at: at)
+    swipe = latest_swipe(at: at, on: at.in_time_zone.to_date)
     swipe if swipe&.entry?
   end
 

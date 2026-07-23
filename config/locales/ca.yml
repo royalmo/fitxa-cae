@@ -8,8 +8,10 @@ ca:
     formats:
       short: "%-d/%-m/%Y"
       long: "%-d %B %Y"
+      day_month: "%-d de %B"
       month_year: "%B %Y"
       weekday_day_month: "%A, %-d de %B"
+      weekday_day_month_year: "%A, %-d de %B de %Y"
 
   time:
     formats:
@@ -148,6 +150,7 @@ ca:
       already_clocked_out: "No tens cap entrada oberta."
       clocked_in: "Entrada registrada."
       clocked_out: "Sortida registrada."
+      clocking_undone: "Fitxatge desfet."
       correction_deleted: "Sol·licitud eliminada."
       correction_requested: "Sol·licitud enviada a RRHH."
       correction_restored: "Sol·licitud recuperada."
@@ -159,20 +162,19 @@ ca:
       show:
         title: "Avui"
         hello: "Hola, %{name}"
-        clocked_in_since: "Treballant des de"
-        not_clocked_in: "Sense entrada oberta"
-        latest_swipe: "Últim fitxatge: %{kind} a les %{time}"
         clock_in: "Entrar"
         clock_out: "Sortir"
-        week_title: "Setmana"
-        worked: "Treballat"
-        days: "Dies amb activitat"
-        days_count:
+        correct_today: "Corregir"
+        week_title: "Resum setmanal"
+        week_activity_label: "Activitat"
+        week_corrections_label: "Correccions"
+        week_days:
           one: "1 dia"
           other: "%{count} dies"
-        corrections: "Correccions"
-        today_clockings: "Moviments d'avui"
-        today_clockings_empty: "Encara no hi ha fitxatges avui."
+        week_activity: "%{duration} en %{days}"
+        week_corrections_empty: "Cap correcció."
+        today_clockings: "Fitxatges d'avui"
+        today_clockings_empty: "Encara no hi ha fitxatges per avui."
     clockings:
       index:
         title: "Fitxatges"

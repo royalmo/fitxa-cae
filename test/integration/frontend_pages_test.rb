@@ -7,8 +7,16 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
     assert_select "title", text: "Avui | FitxaCAE"
-    assert_select "h1", text: "Avui"
-    assert_select ".today-intro-meta", text: /Hola/
+    assert_select "h1", text: "Hola, Ada"
+    assert_select ".today-date time"
+    assert_select ".today-intro-meta", 0
+    assert_select ".today-total", 0
+    assert_select ".today-punch-button[data-controller='punch-timer'][data-punch-timer-base-seconds-value='0']"
+    assert_select ".today-punch-button[data-punch-timer-started-at-value]", 0
+    assert_select ".today-punch-button .today-punch-action-row .today-punch-label", text: "Entrar"
+    assert_select ".today-punch-button .today-punch-duration-number.is-hours[data-punch-timer-target='hours']", text: "0"
+    assert_select ".today-punch-button .today-punch-duration-number[data-punch-timer-target='minutes']", text: "00"
+    assert_select ".today-punch-button .today-punch-duration-number[data-punch-timer-target='seconds']", text: "00"
     assert_select "body[data-controller~='submit-feedback']"
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 0
@@ -17,12 +25,18 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".employee-topbar .employee-logout-button[title='Tancar sessió'][aria-label='Tancar sessió']"
     assert_select ".employee-topbar .employee-logout-button svg.icon[role='img'][aria-label='Tancar sessió']"
     assert_select ".employee-topbar .employee-logout-button", text: /Sortir/, count: 0
+    assert_select ".employee-topbar a.employee-chip[href='#{account_path}'][title='Ada Soler'] span", text: "Ada Soler"
     assert_select ".employee-topbar .employee-admin-button", 0
     assert_select ".employee-topbar .icon-button", 0
     assert_select "body.employee-shell > .flash", 0
     assert_select ".employee-nav svg.icon", 4
-    assert_select ".today-clock-panel svg.icon"
-    assert_select ".clock-action-form button[type='submit'][data-submitting-label]"
+    assert_select ".today-punch-button svg.icon"
+    assert_select ".clock-action-form button.today-punch-button[type='submit'][data-submitting-label]"
+    assert_select ".today-section-header h2", text: "Fitxatges d'avui"
+    assert_select ".today-correction-link", text: "Corregir"
+    assert_select ".today-section-header h2", text: "Resum setmanal"
+    assert_select ".today-week-lines dt", text: "Correccions"
+    assert_select ".today-week-lines dd a[href='#{corrections_path(month: Date.current.month, year: Date.current.year)}'] em", text: "Cap correcció."
     assert_select ".request-row", 0
     assert_no_match %("admin":), response.body
     assert_no_match "Previst", response.body
@@ -57,6 +71,17 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".account-hr-contact h2", text: "Contactar amb Recursos Humans"
     assert_select ".account-save-button[data-submitting-label='Desant...']"
     assert_select ".account-hr-contact-form button[data-submitting-label='Enviant...']"
+  end
+
+  test "employee topbar name links to account and trims long names" do
+    employee = create_employee(first_name: "Maria", last_name: "Rodriguez Casals", password: "1234")
+    log_in_employee(employee)
+
+    get root_path
+
+    assert_response :success
+    assert_select ".employee-topbar a.employee-chip[href='#{account_path}'][title='Maria Rodriguez Casals'] span", text: "Maria Rodriguez"
+    assert_select ".employee-topbar a.employee-chip", text: /Casals/, count: 0
   end
 
   test "employee topbar links to admin when employee has a linked manager" do

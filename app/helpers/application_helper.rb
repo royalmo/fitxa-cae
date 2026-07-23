@@ -1,6 +1,8 @@
 require "cgi"
 
 module ApplicationHelper
+  EMPLOYEE_TOPBAR_NAME_LIMIT = 20
+
   def nav_item_class(path, exact: nil)
     target = path.to_s
     exact = target == "/" if exact.nil?
@@ -37,6 +39,22 @@ module ApplicationHelper
 
   def employee_display_name(employee)
     employee&.full_name.presence || employee&.first_name.presence || t("employee.guest")
+  end
+
+  def employee_topbar_name(employee)
+    name = employee_display_name(employee).squish
+    return name if name.length <= EMPLOYEE_TOPBAR_NAME_LIMIT
+
+    compact_words = []
+
+    name.split.each do |word|
+      candidate = [ *compact_words, word ].join(" ")
+      break if candidate.length > EMPLOYEE_TOPBAR_NAME_LIMIT
+
+      compact_words << word
+    end
+
+    compact_words.presence&.join(" ") || name.truncate(EMPLOYEE_TOPBAR_NAME_LIMIT, omission: "")
   end
 
   def manager_display_name(manager)

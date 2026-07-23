@@ -63,6 +63,15 @@ class EmployeeTest < ActiveSupport::TestCase
     assert_includes employee.authored_audit_actions, audit_action
   end
 
+  test "only an entry from the current day counts as open" do
+    employee = create_employee
+    employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8), metadata: "employee_portal")
+
+    assert employee.clocked_in?(at: Time.zone.local(2026, 7, 2, 12))
+    assert_not employee.clocked_in?(at: Time.zone.local(2026, 7, 3, 8))
+    assert_nil employee.open_entry_swipe(at: Time.zone.local(2026, 7, 3, 8))
+  end
+
   test "generates hashes and validates login codes without storing plaintext code" do
     employee = create_employee
 

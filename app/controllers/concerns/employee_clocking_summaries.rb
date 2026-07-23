@@ -26,8 +26,7 @@ module EmployeeClockingSummaries
 
     {
       clocked_in: open_entry.present?,
-      clocked_in_at: open_entry&.swipe_at,
-      latest_swipe: employee.latest_swipe
+      clocked_in_at: open_entry&.swipe_at
     }
   end
 
@@ -35,11 +34,13 @@ module EmployeeClockingSummaries
     start_date = date.beginning_of_week(:monday)
     end_date = date.end_of_week(:monday)
     swipes = employee.swipes.kept.where(swipe_at: start_date.beginning_of_day..end_date.end_of_day).chronological.to_a
+    correction_counts = employee.swipe_corrections.where(day: start_date..end_date).group(:status).count
 
     {
       worked_seconds: swipes.group_by { |swipe| swipe.swipe_at.to_date }.values.sum { |day_swipes| Swipe.paired_work_seconds(day_swipes) },
       days: swipes.map { |swipe| swipe.swipe_at.to_date }.uniq.count,
-      corrections: employee.swipe_corrections.where(day: start_date..end_date).count
+      corrections: correction_counts.values.sum,
+      correction_counts: correction_counts
     }
   end
 

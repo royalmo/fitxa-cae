@@ -262,8 +262,10 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "entry", entry.kind
     assert_equal "employee_portal", entry.metadata
 
-    assert_no_difference "employee.swipes.count" do
-      post clock_in_path
+    travel_to Time.zone.local(2026, 7, 2, 8, 16) do
+      assert_no_difference "employee.swipes.count" do
+        post clock_in_path
+      end
     end
 
     travel_to Time.zone.local(2026, 7, 2, 17, 5) do
@@ -272,6 +274,93 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
+    assert_equal "exit", employee.swipes.last.kind
+  end
+
+  test "clock in ignores an open entry from a previous day" do
+    employee = create_employee(password: "1234")
+    employee.swipes.create!(
+      kind: :entry,
+      swipe_at: Time.zone.local(2026, 7, 1, 8, 15),
+      metadata: "employee_portal"
+    )
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 2, 8, 15) do
+      assert_difference "employee.swipes.count", 1 do
+        post clock_in_path
+      end
+    end
+
+    assert_redirected_to root_path
+    assert_equal "entry", employee.swipes.last.kind
+    assert_equal Time.zone.local(2026, 7, 2, 8, 15), employee.swipes.last.swipe_at
+  end
+
+  test "clock out within thirty seconds deletes the latest employee clock in" do
+    employee = create_employee(password: "1234")
+    entry = employee.swipes.create!(
+      kind: :entry,
+      swipe_at: Time.zone.local(2026, 7, 2, 8, 15),
+      metadata: "employee_portal"
+    )
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 2, 8, 15, 20) do
+      assert_difference "employee.swipes.count", -1 do
+        post clock_out_path
+      end
+    end
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("employee.flash.clocking_undone"), flash[:notice]
+    assert_not Swipe.exists?(entry.id)
+  end
+
+  test "clock in within thirty seconds deletes the latest employee clock out" do
+    employee = create_employee(password: "1234")
+    employee.swipes.create!(
+      kind: :entry,
+      swipe_at: Time.zone.local(2026, 7, 2, 8, 15),
+      metadata: "employee_portal"
+    )
+    exit_swipe = employee.swipes.create!(
+      kind: :exit,
+      swipe_at: Time.zone.local(2026, 7, 2, 17, 5),
+      metadata: "employee_portal"
+    )
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 2, 17, 5, 20) do
+      assert_difference "employee.swipes.count", -1 do
+        post clock_in_path
+      end
+    end
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("employee.flash.clocking_undone"), flash[:notice]
+    assert_not Swipe.exists?(exit_swipe.id)
+  end
+
+  test "recent forged swipes are not deleted by clocking actions" do
+    employee = create_employee(password: "1234")
+    forged_entry = employee.swipes.create!(
+      kind: :entry,
+      swipe_at: Time.zone.local(2026, 7, 2, 8, 15),
+      metadata: "admin_correction:1",
+      forged: true
+    )
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 2, 8, 15, 20) do
+      assert_difference "employee.swipes.count", 1 do
+        post clock_out_path
+      end
+    end
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("employee.flash.clocked_out"), flash[:notice]
+    assert Swipe.exists?(forged_entry.id)
     assert_equal "exit", employee.swipes.last.kind
   end
 

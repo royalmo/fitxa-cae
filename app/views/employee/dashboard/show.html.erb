@@ -1,105 +1,118 @@
 <% content_for :title, t(".title") %>
+<% content_for :main_class, "today-main" %>
 
-<section class="page-intro split-intro today-intro">
+<section class="page-intro today-intro">
   <div>
-    <h1 class="page-title"><%= icon "house", class: "icon-large" %><span><%= t(".title") %></span></h1>
-  </div>
-
-  <div class="today-intro-meta">
-    <strong><%= t(".hello", name: @employee.first_name) %></strong>
-    <time datetime="<%= Date.current.iso8601 %>"><%= l(Date.current, format: :weekday_day_month) %></time>
+    <h1 class="page-title"><span><%= t(".hello", name: @employee.first_name) %></span></h1>
+    <p class="today-date">
+      <time datetime="<%= @today.iso8601 %>"><%= dashboard_date_text(@today) %></time>
+    </p>
   </div>
 </section>
 
 <%= render "layouts/flash_messages", class: "employee-page-flash" %>
 
+<% punch_duration = dashboard_duration_parts(@today_worked_seconds) %>
+
 <div class="today-layout">
-  <section class="<%= class_names("today-clock-panel", "is-clocked-in": @clock_state[:clocked_in]) %>">
-    <div class="today-clock-main">
-      <p class="today-clock-label">
-        <%= icon @clock_state[:clocked_in] ? "log-in" : "clock" %>
-        <span><%= @clock_state[:clocked_in] ? t(".clocked_in_since") : t(".not_clocked_in") %></span>
-      </p>
-
-      <% if @clock_state[:clocked_in_at] %>
-        <time class="today-clock-time clock-time" datetime="<%= @clock_state[:clocked_in_at].iso8601 %>">
-          <%= l(@clock_state[:clocked_in_at], format: :hour_minute) %>
-        </time>
-      <% else %>
-        <span class="today-clock-time clock-time">--:--</span>
-      <% end %>
-
-      <% if @clock_state[:latest_swipe] %>
-        <p class="today-clock-note">
-          <%= t(".latest_swipe", kind: clocking_kind_text(@clock_state[:latest_swipe].kind), time: l(@clock_state[:latest_swipe].swipe_at, format: :hour_minute)) %>
-        </p>
-      <% end %>
-    </div>
-
+  <section class="today-punch-section" aria-label="<%= t(".title") %>">
     <% if @clock_state[:clocked_in] %>
       <%= button_to clock_out_path,
         method: :post,
-        form_class: "clock-action-form today-clock-action-form",
-        class: "primary-clock today-clock-action danger",
-        data: { submitting_label: t("shared.submitting.sending") } do %>
-        <%= icon "log-out" %>
-        <span><%= t(".clock_out") %></span>
+        form_class: "clock-action-form today-punch-action-form",
+        class: "today-punch-button is-active",
+        data: {
+          controller: "punch-timer",
+          punch_timer_base_seconds_value: @today_worked_seconds,
+          punch_timer_started_at_value: @clock_state[:clocked_in_at]&.iso8601,
+          submitting_label: t("shared.submitting.sending")
+        }.compact do %>
+        <span class="today-punch-action-row">
+          <%= icon "log-out" %>
+          <span class="today-punch-label"><%= t(".clock_out") %></span>
+        </span>
+        <span class="today-punch-duration">
+          <span class="today-punch-duration-number is-hours" data-punch-timer-target="hours"><%= punch_duration[:hours] %></span><span class="today-punch-duration-unit">h</span>
+          <span class="today-punch-duration-number" data-punch-timer-target="minutes"><%= punch_duration[:minutes] %></span><span class="today-punch-duration-unit">m</span>
+          <span class="today-punch-duration-number" data-punch-timer-target="seconds"><%= punch_duration[:seconds] %></span><span class="today-punch-duration-unit">s</span>
+        </span>
       <% end %>
     <% else %>
       <%= button_to clock_in_path,
         method: :post,
-        form_class: "clock-action-form today-clock-action-form",
-        class: "primary-clock today-clock-action",
-        data: { submitting_label: t("shared.submitting.entering") } do %>
-        <%= icon "log-in" %>
-        <span><%= t(".clock_in") %></span>
+        form_class: "clock-action-form today-punch-action-form",
+        class: "today-punch-button",
+        data: {
+          controller: "punch-timer",
+          punch_timer_base_seconds_value: @today_worked_seconds,
+          submitting_label: t("shared.submitting.entering")
+        } do %>
+        <span class="today-punch-action-row">
+          <%= icon "log-in" %>
+          <span class="today-punch-label"><%= t(".clock_in") %></span>
+        </span>
+        <span class="today-punch-duration">
+          <span class="today-punch-duration-number is-hours" data-punch-timer-target="hours"><%= punch_duration[:hours] %></span><span class="today-punch-duration-unit">h</span>
+          <span class="today-punch-duration-number" data-punch-timer-target="minutes"><%= punch_duration[:minutes] %></span><span class="today-punch-duration-unit">m</span>
+          <span class="today-punch-duration-number" data-punch-timer-target="seconds"><%= punch_duration[:seconds] %></span><span class="today-punch-duration-unit">s</span>
+        </span>
       <% end %>
     <% end %>
   </section>
 
-  <section class="today-section">
-    <div class="today-section-header">
-      <h2 class="panel-title"><%= icon "list-checks" %><span><%= t(".today_clockings") %></span></h2>
-    </div>
-
-    <% if @today_swipes.any? %>
-      <ol class="today-timeline timeline">
-        <% @today_swipes.each do |swipe| %>
-          <li class="today-timeline-item">
-            <span class="timeline-icon today-timeline-icon"><%= icon clocking_icon_name(swipe.kind) %></span>
-            <time datetime="<%= swipe.swipe_at.iso8601 %>"><%= l(swipe.swipe_at, format: :hour_minute) %></time>
-            <div>
-              <strong><%= clocking_kind_text(swipe.kind) %></strong>
-              <span><%= source_text(swipe.metadata.presence || "employee_portal") %></span>
-            </div>
-          </li>
-        <% end %>
-      </ol>
-    <% else %>
-      <div class="today-empty-state">
-        <%= icon "list-checks", class: "empty-state-icon" %>
-        <p><%= t(".today_clockings_empty") %></p>
+  <section class="today-section today-clockings-section">
+    <header class="today-section-header">
+      <div class="today-section-heading-row">
+        <h2><%= t(".today_clockings") %></h2>
+        <%= link_to t(".correct_today"),
+          new_correction_path(day: @today.iso8601),
+          class: "today-correction-link" %>
       </div>
-    <% end %>
+      <hr class="today-section-rule">
+    </header>
+
+    <div class="today-history-summary">
+      <% if @today_swipes.empty? %>
+        <p class="today-history-empty"><em><%= t(".today_clockings_empty") %></em></p>
+      <% end %>
+
+      <% if @today_summary[:swipes].any? %>
+        <div class="today-swipe-list">
+          <% @today_summary[:swipes].each do |swipe| %>
+            <span class="<%= class_names(clocking_swipe_class(swipe), "is-#{swipe.kind}") %>">
+              <%= icon clocking_icon_name(swipe.kind), title: clocking_kind_text(swipe.kind), class: "clocking-swipe-icon" %>
+              <span class="clocking-swipe-time"><%= l(swipe.swipe_at, format: :hour_minute) %></span>
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
   </section>
 
   <section class="today-section today-week-section">
-    <div class="today-section-header">
-      <h2 class="panel-title"><%= icon "calendar-days" %><span><%= t(".week_title") %></span></h2>
-    </div>
+    <header class="today-section-header">
+      <h2><%= t(".week_title") %></h2>
+      <hr class="today-section-rule">
+    </header>
 
-    <dl class="today-metric-list metric-list">
+    <dl class="today-week-lines">
       <div>
-        <dt><%= t(".worked") %></dt>
-        <dd><%= duration_text(@week_summary[:worked_seconds]) %></dd>
+        <dt><%= link_to t(".week_activity_label"), dashboard_clockings_path(@today) %></dt>
+        <dd><%= link_to weekly_activity_text(@week_summary), dashboard_clockings_path(@today) %></dd>
       </div>
       <div>
-        <dt><%= t(".days") %></dt>
-        <dd><%= t(".days_count", count: @week_summary[:days]) %></dd>
-      </div>
-      <div>
-        <dt><%= t(".corrections") %></dt>
-        <dd><%= @week_summary[:corrections] %></dd>
+        <dt><%= link_to t(".week_corrections_label"), dashboard_corrections_path(@today) %></dt>
+        <dd>
+          <% if weekly_corrections_empty?(@week_summary) %>
+            <%= link_to dashboard_corrections_path(@today) do %>
+              <em><%= weekly_corrections_text(@week_summary) %></em>
+            <% end %>
+          <% else %>
+            <% weekly_correction_parts(@week_summary).each_with_index do |part, index| %>
+              <%= ", " if index.positive? %><%= link_to part[:text], dashboard_corrections_path(@today, status: part[:status]) %>
+            <% end %>
+          <% end %>
+        </dd>
       </div>
     </dl>
   </section>
