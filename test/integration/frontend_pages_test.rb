@@ -7,7 +7,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
     assert_select "title", text: "Avui | FitxaCAE"
-    assert_select "h1", text: /Hola/
+    assert_select "h1", text: "Avui"
+    assert_select ".today-intro-meta", text: /Hola/
     assert_select "body[data-controller~='submit-feedback']"
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 0
@@ -19,8 +20,9 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".employee-topbar .icon-button", 0
     assert_select "body.employee-shell > .flash", 0
     assert_select ".employee-nav svg.icon", 4
-    assert_select ".clock-card svg.icon"
+    assert_select ".today-clock-panel svg.icon"
     assert_select ".clock-action-form button[type='submit'][data-submitting-label]"
+    assert_select ".request-row", 0
     assert_no_match %("admin":), response.body
     assert_no_match "Previst", response.body
     assert_no_match "Balanç", response.body

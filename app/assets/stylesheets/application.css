@@ -2186,6 +2186,196 @@ input[type="submit"].is-submitting {
   background: #8f1d14;
 }
 
+.today-intro {
+  align-items: center;
+}
+
+.today-intro-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.15rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.today-intro-meta strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.today-layout {
+  display: grid;
+  gap: 1.25rem;
+  width: min(100%, 32rem);
+  margin: 0 auto;
+}
+
+.today-clock-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+  padding: 0.95rem;
+  border: 1px solid rgba(104, 104, 104, 0.16);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.today-clock-panel.is-clocked-in {
+  border-color: rgba(22, 101, 52, 0.2);
+  background: #f5fbf7;
+}
+
+.today-clock-main {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.today-clock-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.today-clock-panel.is-clocked-in .today-clock-label .icon {
+  color: #15803d;
+}
+
+.today-clock-time {
+  color: var(--text);
+  font-size: clamp(2.9rem, 12vw, 4.65rem);
+}
+
+.today-clock-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.today-clock-action-form {
+  align-self: stretch;
+  margin: 0;
+}
+
+.today-clock-action {
+  width: auto;
+  min-width: 7.5rem;
+  height: 100%;
+  min-height: 3rem;
+  padding: 0 1rem;
+  font-size: 1rem;
+}
+
+.today-section {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.today-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.today-section-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.today-timeline {
+  gap: 0;
+}
+
+.today-timeline-item {
+  align-items: center;
+  min-height: 3.25rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.today-timeline-item:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.today-timeline-icon {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 8px;
+  background: rgba(104, 104, 104, 0.08);
+}
+
+.today-timeline-item .timeline-icon .icon {
+  color: var(--muted);
+}
+
+.today-timeline-item time {
+  color: var(--text);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.today-timeline-item strong {
+  font-weight: 700;
+}
+
+.today-empty-state {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.65rem;
+  min-height: 30vh;
+  color: var(--muted);
+  text-align: center;
+}
+
+.today-empty-state .empty-state-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  color: #a9adb5;
+}
+
+.today-empty-state p {
+  margin: 0;
+}
+
+.today-week-section {
+  padding-top: 0.2rem;
+}
+
+.today-metric-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.today-metric-list div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(104, 104, 104, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.today-metric-list dt,
+.today-metric-list dd {
+  text-align: left;
+}
+
+.today-metric-list dt {
+  font-size: 0.82rem;
+}
+
+.today-metric-list dd {
+  font-size: 1.05rem;
+}
+
 .employee-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2604,6 +2794,25 @@ input[type="submit"].is-submitting {
 
   .employee-grid,
   .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .today-intro-meta {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .today-clock-panel {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .today-clock-action {
+    width: 100%;
+    min-height: 3.25rem;
+  }
+
+  .today-metric-list {
     grid-template-columns: 1fr;
   }
 

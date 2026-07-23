@@ -158,7 +158,6 @@ ca:
       show:
         title: "Avui"
         hello: "Hola, %{name}"
-        date: "Avui"
         clocked_in_since: "Treballant des de"
         not_clocked_in: "Sense entrada oberta"
         latest_swipe: "Últim fitxatge: %{kind} a les %{time}"
@@ -173,9 +172,6 @@ ca:
         corrections: "Correccions"
         today_clockings: "Moviments d'avui"
         today_clockings_empty: "Encara no hi ha fitxatges avui."
-        correction_title: "Correcció pendent"
-        correction_empty: "No tens cap correcció pendent."
-        request_correction: "Demanar correcció"
     clockings:
       index:
         title: "Fitxatges"

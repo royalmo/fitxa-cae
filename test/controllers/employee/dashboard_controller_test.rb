@@ -20,9 +20,16 @@ class Employee::DashboardControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    assert_select "h1", text: "Hola, Ada"
+    assert_select "h1.page-title", text: "Avui"
+    assert_select ".today-intro-meta", text: /Hola, Ada/
     assert_select ".clock-time", text: "08:05"
-    assert_select ".timeline strong", text: "Entrada"
-    assert_select ".request-row", text: /Sortida 17:00/
+    assert_select ".today-clock-panel.is-clocked-in"
+    assert_select ".today-clock-action.danger", text: "Sortir"
+    assert_select ".today-timeline-item strong", text: "Entrada"
+    assert_select ".today-metric-list", text: /Correccions/
+    assert_select ".today-metric-list dd", text: "1"
+    assert_select ".request-row", 0
+    assert_no_match "Correcció pendent", response.body
+    assert_no_match "Sortida 17:00", response.body
   end
 end
