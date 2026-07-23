@@ -13,6 +13,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
         invalidated_swipe_ids: [ swipe.id ],
         requested_swipes: [
           { kind: "entry", time: "08:05" },
+          { kind: "entry", time: "13:00" },
           { kind: "exit", time: "17:00" }
         ]
       }
@@ -26,6 +27,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ swipe.id ], correction.details["invalidated_swipe_ids"]
     assert_equal "entry", correction.details["requested_swipes"].first["kind"]
     assert_equal "08:05:00", correction.details["requested_swipes"].first["hour"]
+    assert_equal [ "entry", "entry", "exit" ], correction.details["requested_swipes"].map { |requested_swipe| requested_swipe["kind"] }
     assert_equal "Vaig entrar abans.", correction.requester_comments
   end
 
@@ -38,6 +40,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
+    assert_select "a.page-title-close[href='#{corrections_path}'][title='#{I18n.t("employee.corrections.new.back_to_list")}'][aria-label='#{I18n.t("employee.corrections.new.back_to_list")}']"
     assert_select "input[type='date'][name='date'][value]", 0
     assert_select ".correction-select-day-state", text: "Selecciona un dia per sol·licitar una correcció."
     assert_select ".correction-select-day-state .empty-state-icon"
@@ -56,14 +59,16 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "input[type='date'][name='date'][value='2026-06-03'][min='2026-06-01'][max='2026-07-19']"
-    assert_select ".correction-swipe-table-header [role='columnheader']", text: "Entrades"
-    assert_select ".correction-swipe-table-header [role='columnheader']", text: "Sortides"
-    assert_select ".correction-existing-swipe", text: /08:40/
-    assert_select ".correction-swipe-request-row input[type='hidden'][name='requested_swipes[][kind]'][value='entry']"
-    assert_select ".correction-swipe-request-row input[type='hidden'][name='requested_swipes[][kind]'][value='exit']"
-    assert_select ".correction-swipe-request-row input[type='time'][name='requested_swipes[][time]'][aria-label='Afegir entrada']"
-    assert_select ".correction-swipe-request-row input[type='time'][name='requested_swipes[][time]'][aria-label='Afegir sortida']"
-    assert_select ".correction-swipe-request-row select", 0
+    assert_select ".correction-swipe-column", 2
+    assert_select ".correction-swipe-column[data-kind='entry'] .correction-swipe-column-header", text: "Entrades"
+    assert_select ".correction-swipe-column[data-kind='exit'] .correction-swipe-column-header", text: "Sortides"
+    assert_select ".correction-swipe-column[data-kind='entry'] .correction-existing-swipe", text: /08:40/
+    assert_select ".correction-swipe-request-cell", 0
+    assert_select ".correction-swipe-request-cell select", 0
+    assert_select ".correction-swipe-empty-slot", 0
+    assert_select ".correction-swipe-column[data-kind='entry'] button.correction-requested-swipe-add[data-action='correction-form#addRequestedSwipe'][data-kind='entry']", text: /Afegir entrada/
+    assert_select ".correction-swipe-column[data-kind='exit'] button.correction-requested-swipe-add[data-action='correction-form#addRequestedSwipe'][data-kind='exit']", text: /Afegir sortida/
+    assert_select ".correction-swipe-table-row", 0
     assert_select ".correction-select-day-state[hidden]"
     assert_select ".correction-loading-state[hidden]"
     assert_select ".correction-form-details[hidden]", 0
@@ -79,7 +84,11 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       day: Date.new(2026, 7, 2),
       details: {
         "invalidated_swipe_ids" => [],
-        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+        "requested_swipes" => [
+          { "kind" => "entry", "hour" => "13:10:00" },
+          { "kind" => "entry", "hour" => "08:05:00" },
+          { "kind" => "exit", "hour" => "17:30:00" }
+        ]
       },
       requester_comments: "Correcció pendent"
     )
@@ -94,6 +103,20 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".correction-delete-action[hidden]", 0
     assert_select "a.correction-delete-button[href='#{correction_path(pending_correction)}'][data-turbo-method='delete']", text: /Eliminar sol·licitud/
     assert_select "a.correction-delete-button[data-turbo-confirm]", 0
+    assert_select ".correction-swipe-column[data-kind='entry'] .correction-swipe-request-cell", 2
+    assert_select ".correction-swipe-column[data-kind='exit'] .correction-swipe-request-cell", 1
+    assert_select ".correction-swipe-request-cell .correction-existing-swipe.correction-requested-swipe", 3
+    assert_select ".correction-swipe-request-cell .correction-existing-swipe-main", 3
+    assert_select ".correction-swipe-request-cell .correction-existing-swipe-copy", 3
+    assert_select ".correction-swipe-request-cell .correction-existing-swipe-kind-icon", 3
+    assert_select ".correction-swipe-request-cell .correction-existing-swipe-state.correction-requested-swipe-remove", 3
+    assert_select ".correction-swipe-request-cell input[type='time'][name='requested_swipes[][time]'][value='08:05']"
+    assert_select ".correction-swipe-request-cell input[type='time'][name='requested_swipes[][time]'][value='13:10']"
+    assert_select ".correction-swipe-request-cell input[type='time'][name='requested_swipes[][time]'][value='17:30']"
+    assert_select ".correction-swipe-column[data-kind='entry'] .correction-swipe-request-cell input[type='time']" do |inputs|
+      assert_equal %w[08:05 13:10], inputs.map { |input| input["value"] }
+    end
+    assert_select "button.correction-requested-swipe-remove[aria-label='#{I18n.t("employee.corrections.new.remove_requested_swipe")}']", 3
   end
 
   test "blank requested swipe inputs are ignored when another correction change exists" do
@@ -127,7 +150,10 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       day: Date.new(2026, 7, 2),
       details: {
         "invalidated_swipe_ids" => [ swipe.id ],
-        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+        "requested_swipes" => [
+          { "kind" => "entry", "hour" => "13:10:00" },
+          { "kind" => "entry", "hour" => "08:05:00" }
+        ]
       },
       requester_comments: "Correcció pendent"
     )
@@ -143,7 +169,10 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal pending_correction.id.to_s, payload["pending_correction"]["id"]
     assert_equal correction_path(pending_correction), payload["pending_correction"]["delete_url"]
     assert_equal [ swipe.id.to_s ], payload["pending_correction"]["invalidated_swipe_ids"]
-    assert_equal [ { "kind" => "entry", "time" => "08:05:00" } ], payload["pending_correction"]["requested_swipes"]
+    assert_equal [
+      { "kind" => "entry", "time" => "08:05:00" },
+      { "kind" => "entry", "time" => "13:10:00" }
+    ], payload["pending_correction"]["requested_swipes"]
     assert_equal "Correcció pendent", payload["pending_correction"]["comment"]
     assert_equal "08:40", payload["swipes"].first["time"]
   end
@@ -271,7 +300,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select ".error-summary"
     assert_select ".error-summary .error-summary-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
-    assert_select "form.correction-form[data-action='input->correction-form#dismissErrors change->correction-form#dismissErrors']"
+    assert_select "form.correction-form[data-action='input->correction-form#dismissErrors change->correction-form#dismissErrors focusout->correction-form#sortRequestedSwipeColumn']"
   end
 
   test "rejects correction requests without any changes" do
@@ -291,7 +320,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select ".error-summary .error-summary-content", text: I18n.t("employee.corrections.create.missing_changes")
     assert_select ".error-summary .error-summary-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
-    assert_select "form.correction-form[data-action='input->correction-form#dismissErrors change->correction-form#dismissErrors']"
+    assert_select "form.correction-form[data-action='input->correction-form#dismissErrors change->correction-form#dismissErrors focusout->correction-form#sortRequestedSwipeColumn']"
   end
 
   test "lists corrections from the signed in employee" do

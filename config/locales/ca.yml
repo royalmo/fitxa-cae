@@ -224,6 +224,7 @@ ca:
       new:
         title: "Nova correcció"
         heading: "Nova correcció"
+        back_to_list: "Tornar a correccions"
         error_title: "Revisa la sol·licitud"
         date: "Dia"
         select_day_empty: "Selecciona un dia per sol·licitar una correcció."
@@ -236,7 +237,8 @@ ca:
         request_exit: "Afegir sortida"
         keep_swipe: "Restaurar"
         remove_swipe: "Invalidar"
-        note: "Comentari"
+        remove_requested_swipe: "Eliminar fitxatge sol·licitat"
+        note: "Comentari (opcional)"
         note_placeholder: "Afegeix el context que necessiti RRHH per revisar la correcció."
         delete: "Eliminar sol·licitud"
         submit: "Enviar a RRHH"

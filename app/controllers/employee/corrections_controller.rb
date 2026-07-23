@@ -126,7 +126,7 @@ class Employee::CorrectionsController < ApplicationController
     @day_swipes = @form_has_day ? swipes_for_day(@form_day) : []
     @invalidated_swipe_ids = form_invalidated_swipe_ids(@correction)
     @requested_swipes = form_requested_swipes(@correction)
-    @requested_swipes_by_kind = @requested_swipes.index_by { |requested_swipe| requested_swipe["kind"] }
+    @requested_swipes_by_kind = @requested_swipes.group_by { |requested_swipe| requested_swipe["kind"] }
     @requester_comments = correction_params[:note].presence || @correction.requester_comments
   end
 
@@ -157,13 +157,15 @@ class Employee::CorrectionsController < ApplicationController
   end
 
   def submitted_requested_swipes
-    Array(correction_params[:requested_swipes]).filter_map do |requested_swipe|
+    swipes = Array(correction_params[:requested_swipes]).filter_map do |requested_swipe|
       kind = (requested_swipe["kind"] || requested_swipe[:kind]).to_s
       time = (requested_swipe["time"] || requested_swipe[:time]).to_s
       next if time.blank?
 
       { "kind" => kind, "time" => time }
     end
+
+    sort_requested_swipes(swipes)
   end
 
   def normalized_requested_swipes
@@ -247,13 +249,34 @@ class Employee::CorrectionsController < ApplicationController
   end
 
   def requested_swipes_for_form(correction)
-    Array(correction.details&.fetch("requested_swipes", nil)).filter_map do |requested_swipe|
+    swipes = Array(correction.details&.fetch("requested_swipes", nil)).filter_map do |requested_swipe|
       kind = requested_swipe["kind"].to_s
       time = requested_swipe["hour"].presence
       next unless kind.present? && time.present?
 
       { "kind" => kind, "time" => time }
     end
+
+    sort_requested_swipes(swipes)
+  end
+
+  def sort_requested_swipes(swipes)
+    Array(swipes).each_with_index.sort_by do |requested_swipe, index|
+      kind = (requested_swipe["kind"] || requested_swipe[:kind]).to_s
+      kind_index = Swipe.kinds.keys.index(kind) || Swipe.kinds.size
+
+      [ kind_index, requested_swipe_minutes(requested_swipe), index ]
+    end.map(&:first)
+  end
+
+  def requested_swipe_minutes(requested_swipe)
+    time = requested_swipe["hour"] || requested_swipe[:hour] || requested_swipe["time"] || requested_swipe[:time]
+    time = time.to_s
+    match = time.match(/\A(\d{1,2}):(\d{2})/)
+
+    return Float::INFINITY unless match
+
+    (match[1].to_i * 60) + match[2].to_i
   end
 
   def pending_correction_payload(correction)

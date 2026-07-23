@@ -24,8 +24,15 @@ export default class extends Controller {
     exitIcon: String,
     keepSwipeLabel: String,
     removeSwipeLabel: String,
+    removeRequestedSwipeLabel: String,
     keepSwipeIcon: String,
-    removeSwipeIcon: String
+    removeSwipeIcon: String,
+    requestedRemoveIcon: String,
+    addIcon: String
+  }
+
+  connect() {
+    this.sortSwipeColumns()
   }
 
   loadDay() {
@@ -111,42 +118,73 @@ export default class extends Controller {
     }
   }
 
+  addRequestedSwipe(event) {
+    const button = event.currentTarget
+    const kind = button.dataset.kind
+    const list = button.closest(".correction-swipe-column")?.querySelector(".correction-swipe-column-list")
+
+    if (!list || !["entry", "exit"].includes(kind)) return
+
+    const cell = this.requestedSwipeCell(kind)
+    list.append(cell)
+    cell.querySelector("input[type='time']")?.focus()
+    this.dismissErrors()
+  }
+
+  removeRequestedSwipe(event) {
+    event.currentTarget.closest(".correction-swipe-request-cell")?.remove()
+    this.dismissErrors()
+  }
+
+  sortRequestedSwipeColumn(event) {
+    if (!event.target.matches(".correction-requested-swipe input[type='time']")) return
+
+    const list = event.target.closest(".correction-swipe-column-list")
+
+    if (list) this.sortSwipeColumnList(list)
+  }
+
   renderSwipeTable(swipes, invalidatedSwipeIds, requestedSwipes) {
     this.existingSwipesTarget.replaceChildren()
 
     const table = document.createElement("div")
     table.className = "correction-swipe-table"
-    table.setAttribute("role", "table")
+    table.setAttribute("role", "group")
     table.setAttribute("aria-label", this.existingSwipesLabelValue)
-    table.innerHTML = `
-      <div class="correction-swipe-table-header" role="row">
-        <span role="columnheader">${this.escapeHTML(this.entriesLabelValue)}</span>
-        <span role="columnheader">${this.escapeHTML(this.exitsLabelValue)}</span>
-      </div>
-    `
-
-    this.swipeRows(swipes).forEach((swipeRow) => {
-      const row = document.createElement("div")
-      row.className = "correction-swipe-table-row"
-      row.setAttribute("role", "row")
-      row.append(this.swipeCell(swipeRow.entry, invalidatedSwipeIds))
-      row.append(this.swipeCell(swipeRow.exit, invalidatedSwipeIds))
-      table.append(row)
-    })
-
-    table.append(this.requestedSwipeRow(requestedSwipes))
+    table.append(this.swipeColumn("entry", swipes, invalidatedSwipeIds, requestedSwipes))
+    table.append(this.swipeColumn("exit", swipes, invalidatedSwipeIds, requestedSwipes))
     this.existingSwipesTarget.append(table)
+    this.sortSwipeColumns()
+  }
+
+  swipeColumn(kind, swipes, invalidatedSwipeIds, requestedSwipes) {
+    const column = document.createElement("div")
+    const header = document.createElement("div")
+    const list = document.createElement("div")
+    const columnSwipes = swipes.filter((swipe) => swipe.kind === kind)
+
+    column.className = "correction-swipe-column"
+    column.dataset.kind = kind
+    header.className = "correction-swipe-column-header"
+    header.textContent = kind === "entry" ? this.entriesLabelValue : this.exitsLabelValue
+    list.className = "correction-swipe-column-list"
+
+    if (columnSwipes.length) {
+      columnSwipes.forEach((swipe) => list.append(this.swipeCell(swipe, invalidatedSwipeIds)))
+    }
+
+    requestedSwipes
+      .filter((swipe) => swipe.kind === kind)
+      .forEach((swipe) => list.append(this.requestedSwipeCell(kind, swipe)))
+
+    column.append(header, list, this.requestedSwipeAddButton(kind))
+
+    return column
   }
 
   swipeCell(swipe, invalidatedSwipeIds) {
     const cell = document.createElement("div")
     cell.className = "correction-swipe-table-cell"
-    cell.setAttribute("role", "cell")
-
-    if (!swipe) {
-      cell.innerHTML = '<span class="correction-swipe-empty-slot" aria-hidden="true">—</span>'
-      return cell
-    }
 
     const label = document.createElement("label")
     label.className = "correction-existing-swipe"
@@ -172,52 +210,74 @@ export default class extends Controller {
     return cell
   }
 
-  swipeRows(swipes) {
-    const rows = []
-    let currentRow = null
-
-    swipes.forEach((swipe) => {
-      if (swipe.kind === "entry") {
-        currentRow = { entry: swipe, exit: null }
-        rows.push(currentRow)
-      } else if (currentRow && !currentRow.exit) {
-        currentRow.exit = swipe
-      } else {
-        currentRow = { entry: null, exit: swipe }
-        rows.push(currentRow)
-      }
-    })
-
-    return rows
-  }
-
-  requestedSwipeRow(requestedSwipes) {
-    const row = document.createElement("div")
-    row.className = "correction-swipe-table-row correction-swipe-request-row"
-    row.setAttribute("role", "row")
-    row.append(this.requestedSwipeCell("entry", requestedSwipes))
-    row.append(this.requestedSwipeCell("exit", requestedSwipes))
-
-    return row
-  }
-
-  requestedSwipeCell(kind, requestedSwipes) {
+  requestedSwipeCell(kind, requestedSwipe = {}) {
     const cell = document.createElement("div")
-    const label = document.createElement("label")
+    const wrapper = document.createElement("div")
     const requestLabel = kind === "entry" ? this.requestEntryLabelValue : this.requestExitLabelValue
-    const requestedSwipe = requestedSwipes.find((swipe) => swipe.kind === kind)
 
-    cell.className = "correction-swipe-table-cell"
-    cell.setAttribute("role", "cell")
-    label.className = "correction-requested-swipe"
-    label.dataset.kind = kind
-    label.innerHTML = `
-      ${this.requestedSwipeIcon(kind)}
-      <input type="hidden" name="requested_swipes[][kind]" value="${this.escapeAttribute(kind)}">
-      <input type="time" name="requested_swipes[][time]" value="${this.escapeAttribute((requestedSwipe?.time || "").slice(0, 5))}" aria-label="${this.escapeAttribute(requestLabel)}">
+    cell.className = "correction-swipe-table-cell correction-swipe-request-cell"
+    wrapper.className = "correction-existing-swipe correction-requested-swipe"
+    wrapper.dataset.kind = kind
+    wrapper.innerHTML = `
+      <span class="correction-existing-swipe-main">
+        ${this.swipeKindIcon(kind)}
+        <span class="correction-existing-swipe-copy">
+          <input type="hidden" name="requested_swipes[][kind]" value="${this.escapeAttribute(kind)}">
+          <input type="time" name="requested_swipes[][time]" value="${this.escapeAttribute((requestedSwipe?.time || "").slice(0, 5))}" aria-label="${this.escapeAttribute(requestLabel)}">
+        </span>
+      </span>
+      <button type="button" class="correction-existing-swipe-state correction-requested-swipe-remove" title="${this.escapeAttribute(this.removeRequestedSwipeLabelValue)}" aria-label="${this.escapeAttribute(this.removeRequestedSwipeLabelValue)}" data-action="correction-form#removeRequestedSwipe">
+        ${this.requestedRemoveIconValue}
+      </button>
     `
-    cell.append(label)
+    cell.append(wrapper)
     return cell
+  }
+
+  requestedSwipeAddButton(kind) {
+    const button = document.createElement("button")
+    const requestLabel = kind === "entry" ? this.requestEntryLabelValue : this.requestExitLabelValue
+
+    button.type = "button"
+    button.className = "correction-requested-swipe-add"
+    button.dataset.action = "correction-form#addRequestedSwipe"
+    button.dataset.kind = kind
+    button.innerHTML = `
+      ${this.addIconValue}
+      <span>${this.escapeHTML(requestLabel)}</span>
+    `
+
+    return button
+  }
+
+  sortSwipeColumnList(list) {
+    Array.from(list.children)
+      .filter((child) => child.classList.contains("correction-swipe-table-cell"))
+      .map((cell, index) => ({
+        cell,
+        index,
+        minutes: this.swipeCellMinutes(cell)
+      }))
+      .sort((left, right) => (left.minutes - right.minutes) || (left.index - right.index))
+      .forEach(({ cell }) => list.append(cell))
+  }
+
+  sortSwipeColumns() {
+    this.existingSwipesTarget
+      .querySelectorAll(".correction-swipe-column-list")
+      .forEach((list) => this.sortSwipeColumnList(list))
+  }
+
+  swipeCellMinutes(cell) {
+    const value =
+      cell.querySelector(".correction-requested-swipe input[type='time']")?.value ||
+      cell.querySelector(".correction-existing-swipe-copy strong")?.textContent ||
+      ""
+    const match = value.trim().match(/^(\d{1,2}):(\d{2})/)
+
+    if (!match) return Number.POSITIVE_INFINITY
+
+    return (Number(match[1]) * 60) + Number(match[2])
   }
 
   escapeHTML(value) {
@@ -236,9 +296,5 @@ export default class extends Controller {
 
   swipeKindIcon(kind) {
     return kind === "exit" ? this.exitIconValue : this.entryIconValue
-  }
-
-  requestedSwipeIcon(kind) {
-    return this.swipeKindIcon(kind).replace("correction-existing-swipe-kind-icon", "correction-requested-swipe-icon")
   }
 }
