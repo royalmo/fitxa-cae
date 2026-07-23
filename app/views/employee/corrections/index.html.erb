@@ -8,6 +8,8 @@ end %>
 <% correction_year_options = correction_year_values.map do |year|
   [year, year, { disabled: year < @min_correction_month.year || year > @max_correction_month.year }]
 end %>
+<% selected_correction_month_unavailable = @selected_month < @min_correction_month || @selected_month > @max_correction_month %>
+<% selected_correction_year_unavailable = @selected_month.year < @min_correction_month.year || @selected_month.year > @max_correction_month.year %>
 
 <section class="page-intro split-intro corrections-intro">
   <div>
@@ -64,6 +66,7 @@ end %>
       <div class="corrections-month-filter">
         <span class="corrections-filter-label"><%= t(".month") %>:</span>
         <%= label_tag "corrections_month", t(".month"), class: "sr-only" %>
+        <%= hidden_field_tag :month, @selected_month.month if selected_correction_month_unavailable %>
         <%= select_tag :month,
           options_for_select(correction_month_options, @selected_month.month),
           id: "corrections_month",
@@ -72,6 +75,7 @@ end %>
         <span class="corrections-month-join"><%= t(".month_year_join") %></span>
 
         <%= label_tag "corrections_year", t(".year"), class: "sr-only" %>
+        <%= hidden_field_tag :year, @selected_month.year if selected_correction_year_unavailable %>
         <%= select_tag :year,
           options_for_select(correction_year_options, @selected_month.year),
           id: "corrections_year",
@@ -156,7 +160,7 @@ end %>
     <% else %>
       <div class="empty-state corrections-empty-state">
         <%= icon "square-pen", class: "empty-state-icon" %>
-        <p><%= t(".empty") %></p>
+        <p><%= correction_empty_message(@selected_month, @selected_status) %></p>
       </div>
     <% end %>
   </div>

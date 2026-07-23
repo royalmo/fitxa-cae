@@ -8,8 +8,8 @@ class Employee::CorrectionsController < ApplicationController
     @employee = current_employee
     @filterable_statuses = FILTERABLE_STATUSES
     @selected_status = selected_correction_status
-    @selected_month = selected_correction_month
     @min_correction_month, @max_correction_month = correction_month_bounds
+    @selected_month = selected_correction_month
 
     filtered_corrections = filtered_correction_scope
     @corrections_count = filtered_corrections.count
@@ -125,13 +125,34 @@ class Employee::CorrectionsController < ApplicationController
       return Date.strptime(params[:month].to_s, "%Y-%m")
     end
 
-    year = Integer(params[:year], exception: false)
-    month = Integer(params[:month], exception: false)
+    year = requested_correction_year
+    month = requested_correction_month_number(year)
     return unless month&.between?(1, 12) && year&.positive?
 
     Date.new(year, month, 1)
   rescue Date::Error
     nil
+  end
+
+  def requested_correction_year
+    requested_year = Integer(params[:year], exception: false)
+    return requested_year if requested_year
+
+    @min_correction_month.year if @min_correction_month.year == @max_correction_month.year
+  end
+
+  def requested_correction_month_number(year)
+    requested_month = Integer(params[:month], exception: false)
+    return requested_month if requested_month
+    return unless year
+
+    if year <= @min_correction_month.year
+      @min_correction_month.month
+    elsif year >= @max_correction_month.year
+      @max_correction_month.month
+    else
+      1
+    end
   end
 
   def correction_month_bounds

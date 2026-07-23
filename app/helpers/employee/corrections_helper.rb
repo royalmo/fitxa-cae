@@ -102,6 +102,19 @@ module Employee::CorrectionsHelper
     t("employee.corrections.index.status_options.#{status}")
   end
 
+  def correction_empty_message(selected_month, selected_status)
+    return t("employee.corrections.index.empty") if selected_month == Time.zone.today.beginning_of_month
+
+    if selected_status.present?
+      t(
+        "employee.corrections.index.empty_month_with_status",
+        status: t("employee.corrections.index.empty_statuses.#{selected_status}")
+      )
+    else
+      t("employee.corrections.index.empty_month")
+    end
+  end
+
   private
 
   def correction_status_filter_symbol(status)

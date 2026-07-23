@@ -383,13 +383,81 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     employee = create_employee(password: "1234")
     log_in_employee(employee)
 
-    get corrections_path
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      get corrections_path
+    end
 
     assert_response :success
     assert_select ".corrections-empty-state", text: I18n.t("employee.corrections.index.empty")
     assert_select ".corrections-result-count", 0
     assert_select "#corrections_month[disabled]", 0
     assert_select "#corrections_year[disabled]", 0
+  end
+
+  test "shows month-specific empty message for older correction months" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      get corrections_path, params: { month: 6, year: 2026 }
+    end
+
+    assert_response :success
+    assert_select ".corrections-empty-state", text: "No hi ha correccions en aquest mes."
+
+    {
+      pending: "No hi ha correccions pendents en aquest mes.",
+      approved: "No hi ha correccions aprovades en aquest mes.",
+      rejected: "No hi ha correccions rebutjades en aquest mes."
+    }.each do |status, message|
+      travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+        get corrections_path, params: { month: 6, year: 2026, status: status }
+      end
+
+      assert_response :success
+      assert_select ".corrections-empty-state", text: message
+    end
+  end
+
+  test "keeps unreachable correction month params in filter form" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      get corrections_path, params: { month: 5, year: 2013 }
+    end
+
+    assert_response :success
+    assert_select "#corrections_month option[selected][disabled][value='5']"
+    assert_select "#corrections_year option[selected][disabled][value='2013']"
+    assert_select "input[type='hidden'][name='month'][value='5']"
+    assert_select "input[type='hidden'][name='year'][value='2013']"
+
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      get corrections_path, params: { month: 5, year: 2013, status: "approved" }
+    end
+
+    assert_response :success
+    assert_select "input[type='radio'][name='status'][value='approved'][checked]"
+    assert_select "#corrections_month option[selected][disabled][value='5']"
+    assert_select "#corrections_year option[selected][disabled][value='2013']"
+    assert_select "input[type='hidden'][name='month'][value='5']"
+    assert_select "input[type='hidden'][name='year'][value='2013']"
+  end
+
+  test "keeps requested unreachable year when month param is missing" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      get corrections_path, params: { year: 2013 }
+    end
+
+    assert_response :success
+    assert_select "#corrections_month option[selected][disabled][value='7']"
+    assert_select "#corrections_year option[selected][disabled][value='2013']"
+    assert_select "input[type='hidden'][name='month'][value='7']"
+    assert_select "input[type='hidden'][name='year'][value='2013']"
   end
 
   test "defaults correction month filter to the latest month with corrections" do

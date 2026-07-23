@@ -1284,7 +1284,7 @@ input[type="submit"].is-submitting {
   gap: 0.8rem;
   place-content: center;
   justify-items: center;
-  min-height: calc(100dvh - 17rem);
+  min-height: 50vh;
   padding: 2.25rem 1rem;
   text-align: center;
 }

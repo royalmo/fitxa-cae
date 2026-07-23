@@ -225,6 +225,8 @@ ca:
         answered: "Resposta"
         unanswered: "Pendent de revisió"
         empty: "Encara no has enviat cap correcció."
+        empty_month: "No hi ha correccions en aquest mes."
+        empty_month_with_status: "No hi ha correccions %{status} en aquest mes."
         showing_count: "Mostrant %{from}-%{to} de %{count} correccions"
         pagination: "Paginació de correccions"
         previous_page: "Anterior"
@@ -236,6 +238,10 @@ ca:
           pending: "Pendents"
           approved: "Aprovades"
           rejected: "Rebutjades"
+        empty_statuses:
+          pending: "pendents"
+          approved: "aprovades"
+          rejected: "rebutjades"
       show:
         title: "Correcció"
         heading: "Detall de la correcció"
