@@ -326,13 +326,21 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
   test "lists corrections from the signed in employee" do
     employee = create_employee(password: "1234")
     other_employee = create_employee(national_id: valid_dni(12_345_679), password: "1234")
-    employee.swipe_corrections.create!(
+    invalidated_swipe = employee.swipes.create!(
+      kind: :entry,
+      swipe_at: Time.zone.local(2026, 7, 2, 8, 40),
+      metadata: "employee_portal"
+    )
+    correction = employee.swipe_corrections.create!(
       requester: employee,
       status: :pending,
       day: Date.new(2026, 7, 2),
       details: {
-        "invalidated_swipe_ids" => [],
-        "requested_swipes" => [ { "kind" => "exit", "hour" => "17:00:00" } ]
+        "invalidated_swipe_ids" => [ invalidated_swipe.id ],
+        "requested_swipes" => [
+          { "kind" => "exit", "hour" => "17:00:00" },
+          { "kind" => "entry", "hour" => "08:05:00" }
+        ]
       },
       requester_comments: "Sortida oblidada"
     )
@@ -348,15 +356,77 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     get corrections_path
 
     assert_response :success
-    assert_match "Sortida oblidada", response.body
+    assert_select "a.correction-row" do |links|
+      assert_includes links.map { |link| link["href"] }, new_correction_path(day: "2026-07-02")
+    end
+    assert_select ".correction-day-title time[datetime='2026-07-02']", text: I18n.l(correction.day, format: :weekday_day_month)
+    assert_no_match "Correcció de fitxatge", response.body
+    assert_no_match "Hora sol·licitada", response.body
+    assert_no_match "Sortida oblidada", response.body
     assert_no_match "No visible", response.body
+    assert_select ".correction-change-summary[aria-label='Entrada 08:05 · Invalidar 08:40 · Sortida 17:00']"
+    assert_select ".correction-change-item > span" do |times|
+      assert_equal %w[08:05 08:40 17:00], times.map { |time| time.text.squish }
+    end
+    assert_select ".correction-change-item.is-entry .correction-change-icon[aria-label='Entrada'][title='Entrada']"
+    assert_select ".correction-change-item.is-invalidate .correction-change-icon[aria-label='Invalidar'][title='Invalidar']"
+    assert_select ".correction-change-item.is-exit .correction-change-icon[aria-label='Sortida'][title='Sortida']"
+    assert_select ".correction-change-separator", 2
     assert_select ".correction-status-icon[aria-label='Pendent'][title='Pendent']"
+    assert_select ".correction-row-action-icon[aria-label='Editar'][title='Editar']"
+    assert_select ".correction-answer", 0
+    assert_no_match "Pendent de revisió", response.body
     assert_select ".correction-row .badge-pending", 0
+  end
+
+  test "does not show result count when corrections list is empty" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    get corrections_path
+
+    assert_response :success
+    assert_select ".corrections-empty-state", text: I18n.t("employee.corrections.index.empty")
+    assert_select ".corrections-result-count", 0
+    assert_select "#corrections_month[disabled]", 0
+    assert_select "#corrections_year[disabled]", 0
+  end
+
+  test "defaults correction month filter to the latest month with corrections" do
+    employee = create_employee(password: "1234")
+    older_correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :approved,
+      day: Date.new(2026, 5, 30),
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
+    )
+    latest_correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 6, 30),
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
+    )
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      get corrections_path
+    end
+
+    assert_response :success
+    assert_select "#corrections_month option[selected][value='6']"
+    assert_select "#corrections_year option[selected][value='2026']"
+    assert_select ".correction-row", 1
+    assert_select "a.correction-row" do |links|
+      hrefs = links.map { |link| link["href"] }
+
+      assert_includes hrefs, new_correction_path(day: latest_correction.day.iso8601)
+      assert_not_includes hrefs, correction_path(older_correction)
+    end
   end
 
   test "filters corrections by status and month" do
     employee = create_employee(password: "1234")
-    employee.swipe_corrections.create!(
+    approved_correction = employee.swipe_corrections.create!(
       requester: employee,
       status: :approved,
       day: Date.new(2026, 7, 2),
@@ -379,29 +449,127 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     )
 
     log_in_employee(employee)
-    get corrections_path, params: { status: "approved", month: "2026-07" }
+    get corrections_path, params: { status: "approved", month: 7, year: 2026 }
 
     assert_response :success
+    assert_select "[data-controller='list-loading']"
     assert_select "form.corrections-filter-form"
-    assert_select "select[name='status'] option[selected][value='approved']"
-    assert_select "select[name='status'] option[value='approved']", text: "👍 Aprovat"
-    assert_select "select[name='status'] option[value='rejected']", text: "👎 Rebutjat"
-    assert_select "select[name='status'] option[value='pending']", text: "⌛ Pendent"
-    assert_select "select[name='month'] option[selected][value='2026-07']"
+    assert_select "fieldset.corrections-filter-panel > legend.sr-only", text: "Filtrar per"
+    assert_select "fieldset.corrections-filter-panel > .corrections-filter-header > .corrections-filter-heading", text: "Filtrar per:"
+    assert_select "fieldset.corrections-filter-panel > .corrections-filter-header > .corrections-result-count[data-list-loading-target='results']", text: "Mostrant 1-1 de 1 correccions"
+    assert_select "fieldset.corrections-filter-panel > hr.corrections-filter-divider"
+    assert_select "[data-list-loading-target='results']"
+    assert_select ".list-loading-state[data-list-loading-target='loading'][hidden]", text: "Carregant..."
+    assert_select ".corrections-status-filter legend.sr-only", text: "Estat"
+    assert_select ".corrections-status-filter > .corrections-filter-label", text: "Estat:"
+    assert_select "input[type='radio'][name='status'][value='']", 1
+    assert_select "input[type='radio'][name='status'][value=''][checked]", 0
+    assert_select "input[type='radio'][name='status'][value=''][autocomplete='off'] + span", text: "Totes"
+    assert_select "input[type='radio'][name='status'][value='pending'][autocomplete='off'] + svg.corrections-status-option-icon + span", text: "Pendents"
+    assert_select "input[type='radio'][name='status'][value='approved'][checked][autocomplete='off'] + svg.corrections-status-option-icon + span", text: "Aprovades"
+    assert_select "input[type='radio'][name='status'][value='approved'][data-action='change->list-loading#filter']"
+    assert_select "input[type='radio'][name='status'][value='rejected'][autocomplete='off'] + svg.corrections-status-option-icon + span", text: "Rebutjades"
+    assert_select ".corrections-month-filter", text: /Mes:/
+    assert_select "#corrections_month[data-action='change->list-loading#filter'] option[selected][value='7']"
+    assert_select "#corrections_year[data-action='change->list-loading#filter'] option[selected][value='2026']"
+    assert_select ".corrections-result-count", text: "Mostrant 1-1 de 1 correccions"
     assert_select ".correction-row", 1
-    assert_match "Visible aprovada", response.body
+    assert_select "a.correction-row[href='#{correction_path(approved_correction)}']", 1
+    assert_select ".correction-day-title time[datetime='2026-07-02']", text: I18n.l(approved_correction.day, format: :weekday_day_month)
+    assert_select ".correction-row-action-icon[aria-label='Veure'][title='Veure']"
+    assert_select ".correction-answer", 0
+    assert_no_match "Visible aprovada", response.body
     assert_no_match "Pendent juliol", response.body
     assert_no_match "Aprovada juny", response.body
   end
 
-  test "paginates corrections twenty per page" do
+  test "shows a reviewed correction as read only" do
+    manager = create_manager
+    employee = create_employee(password: "1234")
+    invalidated_swipe = employee.swipes.create!(
+      kind: :entry,
+      swipe_at: Time.zone.local(2026, 7, 2, 8, 40),
+      metadata: "employee_portal",
+      removed: true
+    )
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :approved,
+      validator: manager,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [ invalidated_swipe.id ],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+      },
+      requester_comments: "Em vaig equivocar.",
+      validator_comments: "Aprovat per RRHH."
+    )
+    log_in_employee(employee)
+
+    get correction_path(correction)
+
+    assert_response :success
+    assert_select "h1.page-title", text: I18n.l(correction.day, format: :weekday_day_month)
+    assert_select "a.page-title-close[href='#{corrections_path}']"
+    assert_select ".correction-show-status.is-approved"
+    assert_select ".correction-show-status span", text: "Aprovada"
+    assert_select ".correction-show-status .correction-status-icon[aria-label='Aprovada'][title='Aprovada']"
+    assert_select ".correction-show-block h2" do |headings|
+      heading_texts = headings.map { |heading| heading.text.squish }
+
+      assert_includes heading_texts, "Comentari"
+    end
+    assert_select ".correction-readonly-swipe[data-kind='entry']", text: "08:40"
+    assert_select ".correction-readonly-swipe[data-kind='entry']", text: "08:05"
+    assert_match "Em vaig equivocar.", response.body
+    assert_match "Aprovat per RRHH.", response.body
+    assert_select "form.correction-form", 0
+    assert_select ".correction-swipe-request-cell input[type='time']", 0
+  end
+
+  test "shows human resources comment title when a reviewed correction was requested by a manager" do
+    manager = create_manager
+    employee = create_employee(password: "1234")
+    correction = employee.swipe_corrections.create!(
+      requester: manager,
+      status: :approved,
+      validator: manager,
+      day: Date.new(2026, 7, 2),
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] },
+      requester_comments: "Comentari intern de RRHH."
+    )
+    log_in_employee(employee)
+
+    get correction_path(correction)
+
+    assert_response :success
+    assert_select ".correction-show-block h2", text: "Comentari de Recursos Humans"
+    assert_match "Comentari intern de RRHH.", response.body
+  end
+
+  test "redirects pending correction detail to the editable correction form" do
+    employee = create_employee(password: "1234")
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
+    )
+    log_in_employee(employee)
+
+    get correction_path(correction)
+
+    assert_redirected_to new_correction_path(day: "2026-07-02")
+  end
+
+  test "paginates corrections ten per page" do
     employee = create_employee(password: "1234")
 
     25.times do |index|
       employee.swipe_corrections.create!(
         requester: employee,
         status: :pending,
-        day: Date.new(2026, 7, 1) + index.days,
+        day: Date.new(2026, 7, 1) + (index % 28).days,
         details: { "invalidated_swipe_ids" => [], "requested_swipes" => [ { "kind" => "exit", "hour" => "17:00:00" } ] },
         requester_comments: "Correccio #{index}"
       )
@@ -411,17 +579,39 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     get corrections_path
 
     assert_response :success
-    assert_select ".correction-row", 20
-    assert_select ".corrections-page-status", text: "Pàgina 1 de 2"
-    assert_select "a.corrections-page-link[href='#{corrections_path(page: 2)}']", text: "Següent"
-    assert_match "Correccio 24", response.body
-    assert_no_match "Correccio 0", response.body
+    assert_select ".correction-row", 10
+    assert_select ".corrections-result-count", text: "Mostrant 1-10 de 25 correccions"
+    assert_select ".corrections-page-status", text: "Pàgina 1 de 3"
+    assert_select "a.corrections-page-link[href='#{corrections_path(month: 7, year: 2026, page: 2)}'][data-action='click->list-loading#navigate']", text: "Següent"
+    assert_select "a.correction-row" do |links|
+      hrefs = links.map { |link| link["href"] }
 
-    get corrections_path, params: { page: 2 }
+      assert_includes hrefs, new_correction_path(day: "2026-07-25")
+      assert_includes hrefs, new_correction_path(day: "2026-07-16")
+      assert_not_includes hrefs, new_correction_path(day: "2026-07-15")
+    end
+
+    get corrections_path, params: { month: 7, year: 2026, page: 2 }
+
+    assert_response :success
+    assert_select ".correction-row", 10
+    assert_select ".corrections-result-count", text: "Mostrant 11-20 de 25 correccions"
+    assert_select ".corrections-page-status", text: "Pàgina 2 de 3"
+    assert_select "a.correction-row" do |links|
+      hrefs = links.map { |link| link["href"] }
+
+      assert_includes hrefs, new_correction_path(day: "2026-07-15")
+      assert_not_includes hrefs, new_correction_path(day: "2026-07-01")
+    end
+
+    get corrections_path, params: { month: 7, year: 2026, page: 3 }
 
     assert_response :success
     assert_select ".correction-row", 5
-    assert_select ".corrections-page-status", text: "Pàgina 2 de 2"
-    assert_match "Correccio 0", response.body
+    assert_select ".corrections-result-count", text: "Mostrant 21-25 de 25 correccions"
+    assert_select ".corrections-page-status", text: "Pàgina 3 de 3"
+    assert_select "a.correction-row" do |links|
+      assert_includes links.map { |link| link["href"] }, new_correction_path(day: "2026-07-01")
+    end
   end
 end

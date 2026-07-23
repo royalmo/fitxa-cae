@@ -1,5 +1,5 @@
 class Employee::CorrectionsController < ApplicationController
-  CORRECTIONS_PER_PAGE = 20
+  CORRECTIONS_PER_PAGE = 10
   FILTERABLE_STATUSES = %w[pending approved rejected].freeze
 
   layout "employee"
@@ -9,24 +9,40 @@ class Employee::CorrectionsController < ApplicationController
     @filterable_statuses = FILTERABLE_STATUSES
     @selected_status = selected_correction_status
     @selected_month = selected_correction_month
-    @correction_months = correction_filter_months
+    @min_correction_month, @max_correction_month = correction_month_bounds
 
     filtered_corrections = filtered_correction_scope
     @corrections_count = filtered_corrections.count
     @total_pages = [ (@corrections_count.to_f / CORRECTIONS_PER_PAGE).ceil, 1 ].max
     @page = [ requested_page, @total_pages ].min
+    @corrections_range_start = ((@page - 1) * CORRECTIONS_PER_PAGE) + 1 if @corrections_count.positive?
     @previous_page = @page - 1 if @page > 1
     @next_page = @page + 1 if @page < @total_pages
     @corrections = filtered_corrections
       .order(day: :desc, created_at: :desc)
       .offset((@page - 1) * CORRECTIONS_PER_PAGE)
       .limit(CORRECTIONS_PER_PAGE)
+    @corrections_range_end = @corrections_range_start + @corrections.size - 1 if @corrections_range_start
+    @correction_invalidated_swipes_by_id = invalidated_swipes_by_id(@corrections)
   end
 
   def new
     @employee = current_employee
     @correction_date_range = correction_date_range
     load_correction_form_context(correction_form_day)
+  end
+
+  def show
+    @employee = current_employee
+    @correction = @employee.swipe_corrections.find(params[:id])
+
+    if @correction.pending?
+      redirect_to new_correction_path(day: @correction.day.iso8601)
+      return
+    end
+
+    @invalidated_swipes = @employee.swipes.where(id: correction_invalidated_swipe_ids(@correction)).chronological
+    @requested_swipes = requested_swipes_for_form(@correction)
   end
 
   def day
@@ -99,23 +115,48 @@ class Employee::CorrectionsController < ApplicationController
   end
 
   def selected_correction_month
-    return if params[:month].blank?
+    requested_correction_month || latest_correction_month || Time.zone.today.beginning_of_month
+  end
 
-    Date.strptime(params[:month].to_s, "%Y-%m")
+  def requested_correction_month
+    return if params[:month].blank? && params[:year].blank?
+
+    if params[:year].blank? && params[:month].to_s.match?(/\A\d{4}-\d{1,2}\z/)
+      return Date.strptime(params[:month].to_s, "%Y-%m")
+    end
+
+    year = Integer(params[:year], exception: false)
+    month = Integer(params[:month], exception: false)
+    return unless month&.between?(1, 12) && year&.positive?
+
+    Date.new(year, month, 1)
   rescue Date::Error
     nil
   end
 
-  def correction_filter_months
-    months = @employee.swipe_corrections.order(day: :desc).pluck(:day).map(&:beginning_of_month)
-    months << @selected_month if @selected_month
-    months.uniq.sort.reverse
+  def correction_month_bounds
+    months = @employee.swipe_corrections.pluck(:day).map(&:beginning_of_month)
+    months << Time.zone.today.beginning_of_month
+    months.compact!
+
+    [ months.min, months.max ]
+  end
+
+  def latest_correction_month
+    @employee.swipe_corrections.maximum(:day)&.beginning_of_month
   end
 
   def requested_page
     page = Integer(params[:page], exception: false)
 
     page&.positive? ? page : 1
+  end
+
+  def invalidated_swipes_by_id(corrections)
+    swipe_ids = corrections.flat_map { |correction| correction_invalidated_swipe_ids(correction) }.compact_blank.uniq
+    return {} if swipe_ids.empty?
+
+    @employee.swipes.where(id: swipe_ids).index_by { |swipe| swipe.id.to_s }
   end
 
   def load_correction_form_context(day, correction: nil)
@@ -237,9 +278,13 @@ class Employee::CorrectionsController < ApplicationController
   end
 
   def form_invalidated_swipe_ids(correction)
-    return Array(correction.details&.fetch("invalidated_swipe_ids", nil)).map(&:to_s) if correction.details.present?
+    return correction_invalidated_swipe_ids(correction) if correction.details.present?
 
     Array(correction_params[:invalidated_swipe_ids]).map(&:to_s)
+  end
+
+  def correction_invalidated_swipe_ids(correction)
+    Array(correction.details&.fetch("invalidated_swipe_ids", nil)).map(&:to_s)
   end
 
   def form_requested_swipes(correction)

@@ -21,7 +21,7 @@ Rails.application.routes.draw do
   post "clock-in" => "employee/clockings#clock_in", as: :clock_in
   post "clock-out" => "employee/clockings#clock_out", as: :clock_out
 
-  resources :corrections, controller: "employee/corrections", only: %i[index new create destroy] do
+  resources :corrections, controller: "employee/corrections", only: %i[index show new create destroy] do
     get :day, on: :collection
     post :restore, on: :member
   end

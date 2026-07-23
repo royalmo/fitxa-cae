@@ -1,4 +1,13 @@
 <% content_for :title, t(".title") %>
+<% correction_month_options = (1..12).map do |month_number|
+  month_date = Date.new(@selected_month.year, month_number, 1)
+  disabled = month_date < @min_correction_month || month_date > @max_correction_month
+  [l(month_date, format: "%B"), month_number, { disabled: disabled }]
+end %>
+<% correction_year_values = ((@min_correction_month.year..@max_correction_month.year).to_a + [@selected_month.year]).uniq.sort %>
+<% correction_year_options = correction_year_values.map do |year|
+  [year, year, { disabled: year < @min_correction_month.year || year > @max_correction_month.year }]
+end %>
 
 <section class="page-intro split-intro corrections-intro">
   <div>
@@ -12,78 +21,148 @@
 
 <%= render "layouts/flash_messages", class: "employee-page-flash" %>
 
-<%= form_with url: corrections_path, method: :get, class: "corrections-filter-form" do |form| %>
-  <div class="field">
-    <%= form.label :status, t(".status"), class: "sr-only" %>
-    <%= form.select :status,
-      [[t(".all_statuses"), ""]] + @filterable_statuses.map { |status| [correction_status_filter_label(status), status] },
-      selected: @selected_status,
-      onchange: "this.form.requestSubmit()" %>
-  </div>
-
-  <div class="field">
-    <%= form.label :month, t(".month"), class: "sr-only" %>
-    <%= form.select :month,
-      [[t(".all_months"), ""]] + @correction_months.map { |month| [l(month, format: :month_year), month.strftime("%Y-%m")] },
-      selected: @selected_month&.strftime("%Y-%m"),
-      onchange: "this.form.requestSubmit()" %>
-  </div>
-
-  <noscript>
-    <%= form.submit t("shared.filter"), class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } %>
-  </noscript>
-<% end %>
-
-<% if @corrections.any? %>
-  <section class="corrections-list" aria-label="<%= t(".heading") %>">
-    <% @corrections.each do |correction| %>
-      <article class="correction-row">
-        <div class="correction-status">
-          <%= icon correction_status_icon_name(correction.status),
-            title: status_text(correction.status),
-            class: class_names("correction-status-icon", "is-#{correction.status}") %>
+<div data-controller="list-loading">
+  <%= form_with url: corrections_path, method: :get, class: "corrections-filter-form" do |form| %>
+    <fieldset class="corrections-filter-panel">
+      <legend class="sr-only"><%= t(".filters") %></legend>
+      <div class="corrections-filter-header">
+        <p class="corrections-filter-heading"><%= t(".filters") %>:</p>
+        <% if @corrections_count.positive? %>
+          <p class="corrections-result-count" data-list-loading-target="results">
+            <%= t(".showing_count",
+              from: @corrections_range_start,
+              to: @corrections_range_end,
+              count: @corrections_count) %>
+          </p>
+        <% end %>
+      </div>
+      <hr class="corrections-filter-divider">
+      <fieldset class="corrections-status-filter">
+        <legend class="sr-only"><%= t(".status") %></legend>
+        <span class="corrections-filter-label"><%= t(".status") %>:</span>
+        <div class="corrections-status-options">
+          <% [[t(".all_statuses"), nil]].
+            concat(@filterable_statuses.map { |status| [correction_status_radio_label(status), status] }).
+            each do |label, status| %>
+            <% radio_id = "corrections_status_#{status.presence || "all"}" %>
+            <label class="corrections-status-option" for="<%= radio_id %>">
+              <%= radio_button_tag :status,
+                status.to_s,
+                @selected_status == status,
+                id: radio_id,
+                autocomplete: "off",
+                data: { action: "change->list-loading#filter" } %>
+              <% if status.present? %>
+                <%= icon correction_status_icon_name(status), class: "corrections-status-option-icon" %>
+              <% end %>
+              <span><%= label %></span>
+            </label>
+          <% end %>
         </div>
-        <div class="correction-content">
-          <div class="correction-row-header">
-            <time datetime="<%= correction.day.iso8601 %>"><%= l(correction.day, format: :weekday_day_month) %></time>
-          </div>
-          <strong><%= correction_title(correction) %></strong>
-          <p><%= correction_requested_text(correction) %></p>
-        </div>
-        <div class="correction-result">
-          <small class="correction-answer">
-            <%= correction_answered_at(correction) ? l(correction_answered_at(correction), format: :short) : t(".unanswered") %>
-          </small>
-        </div>
-      </article>
-    <% end %>
-  </section>
+      </fieldset>
 
-  <% if @total_pages > 1 %>
-    <% correction_pagination_params = {
-      status: @selected_status,
-      month: @selected_month&.strftime("%Y-%m")
-    }.compact %>
+      <div class="corrections-month-filter">
+        <span class="corrections-filter-label"><%= t(".month") %>:</span>
+        <%= label_tag "corrections_month", t(".month"), class: "sr-only" %>
+        <%= select_tag :month,
+          options_for_select(correction_month_options, @selected_month.month),
+          id: "corrections_month",
+          data: { action: "change->list-loading#filter" } %>
 
-    <nav class="corrections-pagination" aria-label="<%= t(".pagination") %>">
-      <% if @previous_page %>
-        <%= link_to t(".previous_page"), corrections_path(correction_pagination_params.merge(page: @previous_page)), class: "corrections-page-link" %>
-      <% else %>
-        <span class="corrections-page-link is-disabled"><%= t(".previous_page") %></span>
-      <% end %>
+        <span class="corrections-month-join"><%= t(".month_year_join") %></span>
 
-      <span class="corrections-page-status"><%= t(".page_status", page: @page, total_pages: @total_pages) %></span>
+        <%= label_tag "corrections_year", t(".year"), class: "sr-only" %>
+        <%= select_tag :year,
+          options_for_select(correction_year_options, @selected_month.year),
+          id: "corrections_year",
+          data: { action: "change->list-loading#filter" } %>
+      </div>
+    </fieldset>
 
-      <% if @next_page %>
-        <%= link_to t(".next_page"), corrections_path(correction_pagination_params.merge(page: @next_page)), class: "corrections-page-link" %>
-      <% else %>
-        <span class="corrections-page-link is-disabled"><%= t(".next_page") %></span>
-      <% end %>
-    </nav>
+    <noscript>
+      <%= form.submit t("shared.filter"), class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } %>
+    </noscript>
   <% end %>
-<% else %>
-  <div class="empty-state corrections-empty-state">
-    <%= icon "square-pen", class: "empty-state-icon" %>
-    <p><%= t(".empty") %></p>
+
+  <div data-list-loading-target="results">
+    <% if @corrections.any? %>
+      <section class="corrections-list" aria-label="<%= t(".heading") %>">
+        <% @corrections.each do |correction| %>
+          <%= link_to employee_correction_row_path(correction),
+            class: class_names("correction-row", "is-#{correction.status}"),
+            aria: { label: t(".open_correction", date: l(correction.day, format: :weekday_day_month)) } do %>
+            <div class="correction-status">
+              <%= icon correction_status_icon_name(correction.status),
+                title: status_text(correction.status),
+                class: class_names("correction-status-icon", "is-#{correction.status}") %>
+            </div>
+            <div class="correction-content">
+              <strong class="correction-day-title">
+                <time datetime="<%= correction.day.iso8601 %>"><%= l(correction.day, format: :weekday_day_month) %></time>
+              </strong>
+              <% change_items = correction_change_items(correction, @correction_invalidated_swipes_by_id) %>
+              <% if change_items.any? %>
+                <div class="correction-change-summary" aria-label="<%= change_items.map { |item| correction_change_item_label(item) }.join(" · ") %>">
+                  <% change_items.each_with_index do |item, index| %>
+                    <% if index.positive? %>
+                      <span class="correction-change-separator" aria-hidden="true">·</span>
+                    <% end %>
+                    <span class="correction-change-item is-<%= item[:type] %>">
+                      <%= icon correction_change_icon_name(item),
+                        title: correction_change_icon_title(item),
+                        class: "correction-change-icon" %>
+                      <span><%= item[:time] %></span>
+                    </span>
+                  <% end %>
+                </div>
+              <% else %>
+                <p><%= t("employee.corrections.summary.no_details") %></p>
+              <% end %>
+            </div>
+            <div class="correction-result">
+              <span class="correction-row-action">
+                <%= icon correction.pending? ? "pencil" : "eye",
+                  title: correction.pending? ? t("shared.edit") : t("shared.view"),
+                  class: "correction-row-action-icon" %>
+              </span>
+            </div>
+          <% end %>
+        <% end %>
+      </section>
+
+      <% if @total_pages > 1 %>
+        <% correction_pagination_params = {
+          status: @selected_status,
+          month: @selected_month.month,
+          year: @selected_month.year
+        }.compact %>
+
+        <nav class="corrections-pagination" aria-label="<%= t(".pagination") %>">
+          <% if @previous_page %>
+            <%= link_to t(".previous_page"), corrections_path(correction_pagination_params.merge(page: @previous_page)), class: "corrections-page-link", data: { action: "click->list-loading#navigate" } %>
+          <% else %>
+            <span class="corrections-page-link is-disabled"><%= t(".previous_page") %></span>
+          <% end %>
+
+          <span class="corrections-page-status"><%= t(".page_status", page: @page, total_pages: @total_pages) %></span>
+
+          <% if @next_page %>
+            <%= link_to t(".next_page"), corrections_path(correction_pagination_params.merge(page: @next_page)), class: "corrections-page-link", data: { action: "click->list-loading#navigate" } %>
+          <% else %>
+            <span class="corrections-page-link is-disabled"><%= t(".next_page") %></span>
+          <% end %>
+        </nav>
+      <% end %>
+    <% else %>
+      <div class="empty-state corrections-empty-state">
+        <%= icon "square-pen", class: "empty-state-icon" %>
+        <p><%= t(".empty") %></p>
+      </div>
+    <% end %>
   </div>
-<% end %>
+
+  <div class="list-loading-state" data-list-loading-target="loading" role="status" aria-live="polite" hidden>
+    <span class="submit-spinner list-loading-spinner" aria-hidden="true"></span>
+    <p><%= t(".loading") %></p>
+  </div>
+</div>

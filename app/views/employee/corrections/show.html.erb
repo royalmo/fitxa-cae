@@ -1,0 +1,73 @@
+<% content_for :title, l(@correction.day, format: :weekday_day_month) %>
+
+<section class="page-intro">
+  <div>
+    <h1 class="page-title">
+      <%= icon "square-pen", class: "icon-large" %>
+      <span><%= l(@correction.day, format: :weekday_day_month) %></span>
+    </h1>
+  </div>
+  <%= link_to corrections_path, class: "page-title-close", title: t(".back_to_list"), aria: { label: t(".back_to_list") } do %>
+    <%= icon "x" %>
+  <% end %>
+</section>
+
+<%= render "layouts/flash_messages", class: "employee-page-flash" %>
+
+<section class="correction-show-section" aria-label="<%= t(".heading") %>">
+  <div class="correction-show-status is-<%= @correction.status %>">
+    <%= icon correction_status_icon_name(@correction.status),
+      title: correction_status_text(@correction.status),
+      class: class_names("correction-status-icon", "is-#{@correction.status}") %>
+    <span><%= correction_status_text(@correction.status) %></span>
+    <small>
+      <% if correction_answered_at(@correction) %>
+        <%= t(".answered_at", date: l(correction_answered_at(@correction), format: :short)) %>
+      <% else %>
+        <%= t(".sent_at", date: l(@correction.created_at, format: :short)) %>
+      <% end %>
+    </small>
+  </div>
+
+  <% if @invalidated_swipes.any? %>
+    <div class="correction-show-block">
+      <h2><%= t(".invalidated_swipes") %></h2>
+      <div class="correction-show-swipes">
+        <% @invalidated_swipes.each do |swipe| %>
+          <span class="correction-readonly-swipe" data-kind="<%= swipe.kind %>">
+            <%= icon clocking_icon_name(swipe.kind), title: clocking_kind_text(swipe.kind), class: "correction-readonly-swipe-icon" %>
+            <span><%= l(swipe.swipe_at, format: :hour_minute) %></span>
+          </span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @requested_swipes.any? %>
+    <div class="correction-show-block">
+      <h2><%= t(".requested_swipes") %></h2>
+      <div class="correction-show-swipes">
+        <% @requested_swipes.each do |requested_swipe| %>
+          <span class="correction-readonly-swipe" data-kind="<%= requested_swipe["kind"] %>">
+            <%= icon clocking_icon_name(requested_swipe["kind"]), title: clocking_kind_text(requested_swipe["kind"]), class: "correction-readonly-swipe-icon" %>
+            <span><%= requested_swipe["time"].to_s.first(5) %></span>
+          </span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @correction.requester_comments.present? %>
+    <div class="correction-show-block">
+      <h2><%= correction_requester_comment_heading(@correction) %></h2>
+      <p><%= @correction.requester_comments %></p>
+    </div>
+  <% end %>
+
+  <% if @correction.validator_comments.present? %>
+    <div class="correction-show-block">
+      <h2><%= t(".response") %></h2>
+      <p><%= @correction.validator_comments %></p>
+    </div>
+  <% end %>
+</section>

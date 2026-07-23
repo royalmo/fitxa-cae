@@ -85,16 +85,19 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".page-intro p", 0
+    assert_select "[data-controller='list-loading']"
+    assert_select "[data-list-loading-target='results']"
+    assert_select ".list-loading-state[data-list-loading-target='loading'][hidden]", text: "Carregant..."
     assert_select ".clockings-intro .page-title", text: "Historial"
     assert_select ".clockings-month-controls"
     assert_select "form.clockings-month-form[action='#{clockings_path}'][method='get']"
-    assert_select "#clockings_month[name='month'] option[selected][value='6']"
+    assert_select "#clockings_month[name='month'][data-action='change->list-loading#filter'] option[selected][value='6']"
     assert_select "#clockings_month[disabled]", 0
-    assert_select "#clockings_year[name='year'] option[selected][value='2026']"
+    assert_select "#clockings_year[name='year'][data-action='change->list-loading#filter'] option[selected][value='2026']"
     assert_select "#clockings_year[disabled]"
     assert_select "input[type='hidden'][name='year'][value='2026']"
-    assert_select "a.clockings-month-arrow[href='#{clockings_path(month: 5, year: 2026)}'][aria-label='Mes anterior']"
-    assert_select "a.clockings-month-arrow[href='#{clockings_path(month: 7, year: 2026)}'][aria-label='Mes següent']"
+    assert_select "a.clockings-month-arrow[href='#{clockings_path(month: 5, year: 2026)}'][aria-label='Mes anterior'][data-action='click->list-loading#navigate']"
+    assert_select "a.clockings-month-arrow[href='#{clockings_path(month: 7, year: 2026)}'][aria-label='Mes següent'][data-action='click->list-loading#navigate']"
     assert_select "td", text: /3 de juny/i
     assert_select ".clocking-swipe", text: "08:00"
     assert_select ".clocking-swipe", text: "08:30", count: 0
@@ -140,7 +143,7 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "table", 0
     assert_select ".clockings-empty-state .empty-state-icon"
     assert_select ".clockings-empty-state", text: /No hi ha registres per aquest mes/
-    assert_select "a.clockings-current-month-link[href='#{clockings_path(month: 7, year: 2026)}']", text: "Anar al mes actual"
+    assert_select "a.clockings-current-month-link[href='#{clockings_path(month: 7, year: 2026)}'][data-action='click->list-loading#navigate']", text: "Anar al mes actual"
 
     travel_to Time.zone.local(2026, 7, 19, 12, 0) do
       get clockings_path, params: { month: 12, year: 2026 }
