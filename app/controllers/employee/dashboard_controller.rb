@@ -8,7 +8,7 @@ class Employee::DashboardController < ApplicationController
     @today = Time.zone.today
     @clock_state = current_clock_state(@employee)
     @today_swipes = @employee.swipes.kept.for_day(@today).chronological.to_a
-    @today_worked_seconds = Swipe.paired_work_seconds(@today_swipes)
+    @today_worked_seconds = @clock_state[:worked_seconds]
     @today_summary = clocking_day_summaries(@employee, start_date: @today, end_date: @today).first || empty_today_summary
     @week_summary = week_clocking_summary(@employee, date: @today)
   end

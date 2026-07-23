@@ -297,6 +297,63 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal Time.zone.local(2026, 7, 2, 8, 15), employee.swipes.last.swipe_at
   end
 
+  test "clock in treats a pending invalidated entry as already removed" do
+    employee = create_employee(password: "1234")
+    invalidated_entry = employee.swipes.create!(
+      kind: :entry,
+      swipe_at: Time.zone.local(2026, 7, 2, 8, 15),
+      metadata: "employee_portal"
+    )
+    employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [ invalidated_entry.id ],
+        "requested_swipes" => []
+      }
+    )
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 2, 8, 15, 20) do
+      assert_difference "employee.swipes.count", 1 do
+        post clock_in_path
+      end
+    end
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("employee.flash.clocked_in"), flash[:notice]
+    assert Swipe.exists?(invalidated_entry.id)
+    new_entry = employee.swipes.order(:swipe_at, :id).last
+    assert_equal "entry", new_entry.kind
+    assert_equal Time.zone.local(2026, 7, 2, 8, 15, 20), new_entry.swipe_at
+  end
+
+  test "clock out treats a pending requested entry before now as already applied" do
+    employee = create_employee(password: "1234")
+    employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:00:00" } ]
+      }
+    )
+    log_in_employee(employee)
+
+    travel_to Time.zone.local(2026, 7, 2, 10, 0) do
+      assert_difference "employee.swipes.count", 1 do
+        post clock_out_path
+      end
+    end
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("employee.flash.clocked_out"), flash[:notice]
+    assert_equal "exit", employee.swipes.last.kind
+    assert_equal Time.zone.local(2026, 7, 2, 10, 0), employee.swipes.last.swipe_at
+  end
+
   test "clock out within thirty seconds deletes the latest employee clock in" do
     employee = create_employee(password: "1234")
     entry = employee.swipes.create!(

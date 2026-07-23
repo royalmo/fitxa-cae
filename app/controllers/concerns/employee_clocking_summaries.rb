@@ -21,12 +21,15 @@ module EmployeeClockingSummaries
 
   private
 
-  def current_clock_state(employee)
-    open_entry = employee.open_entry_swipe
+  def current_clock_state(employee, at: Time.current)
+    effective_swipes = effective_clocking_swipes(employee, date: at.in_time_zone.to_date, through: at)
+    latest_swipe = effective_swipes.last
+    open_entry = latest_swipe if latest_swipe&.entry?
 
     {
       clocked_in: open_entry.present?,
-      clocked_in_at: open_entry&.swipe_at
+      clocked_in_at: open_entry&.swipe_at,
+      worked_seconds: Swipe.paired_work_seconds(effective_swipes).to_i
     }
   end
 
@@ -56,7 +59,7 @@ module EmployeeClockingSummaries
       day_swipes = swipes_by_date.fetch(date, [])
       day_corrections = corrections_by_date.fetch(date, [])
       display_swipes = clocking_display_swipes(day_swipes, day_corrections)
-      effective_swipes = display_swipes.reject { |swipe| pending_invalidated_swipe?(swipe) }
+      effective_swipes = effective_clocking_display_swipes(display_swipes)
 
       {
         date: date,
@@ -93,6 +96,21 @@ module EmployeeClockingSummaries
 
     (existing_swipes + pending_corrections.flat_map { |correction| pending_requested_swipes(correction) })
       .sort_by { |swipe| [ swipe.swipe_at, pending_requested_swipe?(swipe) ? 1 : 0 ] }
+  end
+
+  def effective_clocking_swipes(employee, date:, through: nil)
+    swipes = employee.swipes.kept.for_day(date)
+    swipes = swipes.where(swipe_at: ..through) if through
+    corrections = employee.swipe_corrections.where(day: date).to_a
+    display_swipes = clocking_display_swipes(swipes.chronological.to_a, corrections)
+
+    effective_clocking_display_swipes(display_swipes, through: through)
+  end
+
+  def effective_clocking_display_swipes(display_swipes, through: nil)
+    display_swipes
+      .select { |swipe| through.blank? || swipe.swipe_at <= through }
+      .reject { |swipe| pending_invalidated_swipe?(swipe) }
   end
 
   def pending_requested_swipes(correction)

@@ -97,8 +97,62 @@ class Employee::DashboardControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
+    assert_select ".today-punch-button.is-active[data-punch-timer-base-seconds-value='0'][data-punch-timer-started-at-value]"
+    assert_select ".today-punch-button.is-active .today-punch-label", text: "Sortir"
     assert_select ".today-history-empty em", text: "Encara no hi ha fitxatges per avui."
     assert_select ".today-swipe-list .clocking-swipe.is-entry.is-pending-requested", text: "08:10"
     assert_select ".today-swipe-list .clocking-swipe.is-exit.is-pending-requested", text: "17:05"
+  end
+
+  test "clock button treats a pending invalidated entry as already removed" do
+    employee = create_employee(password: "1234")
+    entry = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 5), metadata: "employee_portal")
+    employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [ entry.id ],
+        "requested_swipes" => []
+      }
+    )
+
+    log_in_employee(employee)
+    travel_to Time.zone.local(2026, 7, 2, 10, 0) do
+      get root_path
+    end
+
+    assert_response :success
+    assert_select ".today-punch-button.is-active", 0
+    assert_select "form.today-punch-action-form[action='#{clock_in_path}'] .today-punch-button[data-punch-timer-base-seconds-value='0']"
+    assert_select ".today-punch-button .today-punch-label", text: "Entrar"
+    assert_select ".today-swipe-list .clocking-swipe.is-entry.is-pending-invalidated", text: "08:05"
+  end
+
+  test "clock button treats pending requested exits before now as already applied" do
+    employee = create_employee(password: "1234")
+    employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 0), metadata: "employee_portal")
+    employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "exit", "hour" => "09:00:00" } ]
+      }
+    )
+
+    log_in_employee(employee)
+    travel_to Time.zone.local(2026, 7, 2, 10, 0) do
+      get root_path
+    end
+
+    assert_response :success
+    assert_select ".today-punch-button.is-active", 0
+    assert_select "form.today-punch-action-form[action='#{clock_in_path}'] .today-punch-button[data-punch-timer-base-seconds-value='3600']"
+    assert_select ".today-punch-button .today-punch-label", text: "Entrar"
+    assert_select ".today-punch-duration-number.is-hours", text: "1"
+    assert_select ".today-punch-duration-number[data-punch-timer-target='minutes']", text: "00"
+    assert_select ".today-swipe-list .clocking-swipe.is-exit.is-pending-requested", text: "09:00"
   end
 end

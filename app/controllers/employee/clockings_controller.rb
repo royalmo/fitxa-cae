@@ -26,7 +26,7 @@ class Employee::ClockingsController < ApplicationController
   def clock_in
     return if undo_recent_clocking
 
-    if current_employee.clocked_in?
+    if current_clock_state(current_employee)[:clocked_in]
       redirect_to root_path, alert: t("employee.flash.already_clocked_in")
       return
     end
@@ -43,7 +43,7 @@ class Employee::ClockingsController < ApplicationController
   def clock_out
     return if undo_recent_clocking
 
-    unless current_employee.clocked_in?
+    unless current_clock_state(current_employee)[:clocked_in]
       redirect_to root_path, alert: t("employee.flash.already_clocked_out")
       return
     end
@@ -69,8 +69,9 @@ class Employee::ClockingsController < ApplicationController
   end
 
   def undoable_recent_swipe(now: Time.current)
-    latest_swipe = current_employee.latest_swipe(at: now)
-    return if latest_swipe.blank? || latest_swipe.forged?
+    latest_swipe = effective_clocking_swipes(current_employee, date: now.in_time_zone.to_date, through: now).last
+    return unless latest_swipe.is_a?(Swipe)
+    return if latest_swipe.forged?
     return if now - latest_swipe.swipe_at >= RECENT_CLOCKING_UNDO_WINDOW
 
     latest_swipe
