@@ -1,78 +1,115 @@
 <% content_for :title, t(".title") %>
+<% pagination_path = ->(page) { admin_employees_path(request.query_parameters.except("page").merge(page: page)) } %>
 
 <section class="admin-page-heading split-intro">
-  <div>
-    <h1><%= t(".heading") %></h1>
-    <p><%= t(".subtitle") %></p>
-  </div>
-  <div class="action-row">
-    <%= link_to t(".import"), new_admin_import_path, class: "button button-secondary" %>
-    <%= link_to t(".new_employee"), new_admin_employee_path, class: "button button-primary" %>
-  </div>
-</section>
-
-<section class="panel">
-  <%= form_with url: admin_employees_path, method: :get, class: "filter-bar" do |form| %>
-    <div class="field">
-      <%= form.label :q, t("shared.search"), class: "sr-only" %>
-      <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder") %>
-    </div>
-    <div class="field">
-      <%= form.label :tag_id, t(".tags"), class: "sr-only" %>
-      <%= form.select :tag_id, [[t(".all_tags"), ""]] + @tags.map { |tag| [tag.name, tag.id] }, selected: params[:tag_id] %>
-    </div>
-    <div class="field">
-      <%= form.label :status, t(".status"), class: "sr-only" %>
-      <%= form.select :status, [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]], selected: params[:status] %>
-    </div>
-    <%= form.submit t("shared.filter"), class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } %>
+  <h1 class="admin-page-title"><%= icon "users", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
+  <%= link_to new_admin_employee_path, class: "button button-primary" do %>
+    <%= icon "user-plus" %>
+    <span><%= t(".new_employee") %></span>
   <% end %>
 </section>
 
-<section class="panel flush-panel">
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th><%= t(".name") %></th>
-          <th><%= t(".national_id") %></th>
-          <th><%= t(".tags") %></th>
-          <th><%= t(".last_clocking") %></th>
-          <th><%= t(".month_hours") %></th>
-          <th><%= t(".status") %></th>
-          <th><%= t("shared.actions") %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @employees.each do |employee| %>
-          <tr>
-            <td>
-              <div class="person-cell">
-                <div>
-                  <strong><%= employee_display_name(employee) %></strong>
-                  <small><%= [employee.email, employee.phone].compact_blank.join(" · ").presence || t(".no_contact") %></small>
-                </div>
-              </div>
-            </td>
-            <td><%= employee.national_id %></td>
-            <td><%= admin_employee_tags(employee) %></td>
-            <td><%= admin_last_clocking_text(employee, @last_swipes_by_employee_id) %></td>
-            <td><%= duration_text(@month_work_seconds_by_employee_id.fetch(employee.id, 0)) %></td>
-            <td>
-              <span class="<%= badge_class(admin_employee_status(employee)) %>"><%= status_text(admin_employee_status(employee)) %></span>
-            </td>
-            <td>
-              <%= link_to t("shared.edit"), edit_admin_employee_path(employee), class: "text-button" %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+<div data-controller="list-loading">
+  <section class="panel admin-filter-panel">
+    <div class="admin-filter-header">
+      <p class="admin-filter-title"><%= t("admin.filters.title") %></p>
+      <%= render "admin/shared/result_count",
+        count: @admin_records_count,
+        range_start: @admin_records_range_start,
+        range_end: @admin_records_range_end %>
+    </div>
+
+    <%= form_with url: admin_employees_path, method: :get, class: "filter-bar admin-filter-form" do |form| %>
+      <div class="field">
+        <%= form.label :q, t("shared.search"), class: "sr-only" %>
+        <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder") %>
+      </div>
+      <div class="field">
+        <%= form.label :tag_id, t(".tags"), class: "sr-only" %>
+        <%= form.select :tag_id,
+          [[t(".all_tags"), ""]] + @tags.map { |tag| [tag.name, tag.id] },
+          { selected: params[:tag_id] },
+          data: { action: "change->list-loading#filter" } %>
+      </div>
+      <div class="field">
+        <%= form.label :status, t(".status"), class: "sr-only" %>
+        <%= form.select :status,
+          [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]],
+          { selected: params[:status] },
+          data: { action: "change->list-loading#filter" } %>
+      </div>
+      <%= button_tag type: :submit, class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } do %>
+        <%= icon "filter" %>
+        <span><%= t("shared.filter") %></span>
+      <% end %>
+    <% end %>
+  </section>
+
+  <div data-list-loading-target="results">
+    <section class="panel flush-panel">
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th><%= t(".name") %></th>
+              <th><%= t(".national_id") %></th>
+              <th><%= t(".tags") %></th>
+              <th><%= t(".last_clocking") %></th>
+              <th><%= t(".month_hours") %></th>
+              <th><%= t(".status") %></th>
+              <th class="admin-action-column"><%= t("shared.actions") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @employees.each do |employee| %>
+              <% employee_status = admin_employee_status(employee) %>
+              <tr>
+                <td>
+                  <div class="person-cell">
+                    <div>
+                      <strong><%= employee_display_name(employee) %></strong>
+                      <small><%= [employee.email, employee.phone].compact_blank.join(" · ").presence || t(".no_contact") %></small>
+                    </div>
+                  </div>
+                </td>
+                <td><%= employee.national_id %></td>
+                <td><%= admin_employee_tags(employee) %></td>
+                <td><%= admin_last_clocking_text(employee, @last_swipes_by_employee_id) %></td>
+                <td><%= duration_text(@month_work_seconds_by_employee_id.fetch(employee.id, 0)) %></td>
+                <td>
+                  <span class="<%= class_names(badge_class(employee_status), "admin-status-badge") %>">
+                    <%= icon admin_employee_status_icon(employee), class: "admin-badge-icon" %>
+                    <span><%= status_text(employee_status) %></span>
+                  </span>
+                </td>
+                <td class="admin-action-cell">
+                  <%= link_to edit_admin_employee_path(employee),
+                    class: "icon-button admin-row-action",
+                    title: t("shared.edit"),
+                    aria: { label: t("shared.edit") } do %>
+                    <%= icon "pencil" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @employees.empty? %>
+        <div class="empty-state">
+          <p><%= t(".empty") %></p>
+        </div>
+      <% end %>
+    </section>
+
+    <%= render "admin/shared/pagination",
+      page: @admin_page,
+      total_pages: @admin_total_pages,
+      previous_page: @admin_previous_page,
+      next_page: @admin_next_page,
+      path: pagination_path %>
   </div>
 
-  <% if @employees.empty? %>
-    <div class="empty-state">
-      <p><%= t(".empty") %></p>
-    </div>
-  <% end %>
-</section>
+  <%= render "admin/shared/list_loading" %>
+</div>

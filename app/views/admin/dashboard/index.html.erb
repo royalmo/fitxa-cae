@@ -1,16 +1,13 @@
 <% content_for :title, t(".title") %>
 
 <section class="admin-page-heading">
-  <div>
-    <h1><%= t(".heading") %></h1>
-    <p><%= t(".subtitle") %></p>
-  </div>
+  <h1 class="admin-page-title"><%= icon "layout-dashboard", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
 </section>
 
 <section class="stat-grid">
   <% @stats.each do |stat| %>
     <article class="stat-card">
-      <span><%= stat[:label] %></span>
+      <span class="stat-card-label"><%= icon stat[:icon], class: "stat-card-icon" %><span><%= stat[:label] %></span></span>
       <strong><%= stat[:value] %></strong>
       <small><%= stat[:detail] %></small>
     </article>
@@ -20,32 +17,36 @@
 <div class="admin-grid">
   <section class="panel flush-panel">
     <div class="panel-heading padded-heading">
-      <h2><%= t(".live_title") %></h2>
-      <%= link_to t("shared.view"), admin_employees_path, class: "text-button" %>
+      <h2><%= icon "clock", class: "panel-heading-icon" %><span><%= t(".live_title") %></span></h2>
+      <%= link_to admin_employees_path, class: "icon-button admin-panel-link", title: t("shared.view"), aria: { label: t("shared.view") } do %>
+        <%= icon "arrow-right" %>
+      <% end %>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th><%= t(".employee") %></th>
-          <th><%= t(".tags") %></th>
-          <th><%= t(".last_clocking") %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @recent_swipes.each do |swipe| %>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead>
           <tr>
-            <td>
-              <div class="person-cell">
-                <span><%= employee_display_name(swipe.employee) %></span>
-              </div>
-            </td>
-            <td><%= swipe.employee.tags.any? ? swipe.employee.tags.map(&:name).join(", ") : t(".no_tags") %></td>
-            <td><%= clocking_kind_text(swipe.kind) %> · <%= l(swipe.swipe_at, format: :short) %></td>
+            <th><%= t(".employee") %></th>
+            <th><%= t(".tags") %></th>
+            <th><%= t(".last_clocking") %></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @recent_swipes.each do |swipe| %>
+            <tr>
+              <td>
+                <div class="person-cell">
+                  <span><%= employee_display_name(swipe.employee) %></span>
+                </div>
+              </td>
+              <td><%= swipe.employee.tags.any? ? swipe.employee.tags.map(&:name).join(", ") : t(".no_tags") %></td>
+              <td><%= clocking_kind_text(swipe.kind) %> · <%= l(swipe.swipe_at, format: :short) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
 
     <% if @recent_swipes.empty? %>
       <div class="empty-state">
@@ -56,8 +57,10 @@
 
   <section class="panel">
     <div class="panel-heading">
-      <h2><%= t(".corrections_title") %></h2>
-      <%= link_to t("shared.view"), admin_corrections_path, class: "text-button" %>
+      <h2><%= icon "square-pen", class: "panel-heading-icon" %><span><%= t(".corrections_title") %></span></h2>
+      <%= link_to admin_corrections_path, class: "icon-button admin-panel-link", title: t("shared.view"), aria: { label: t("shared.view") } do %>
+        <%= icon "arrow-right" %>
+      <% end %>
     </div>
 
     <div class="request-list compact-list">

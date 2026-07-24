@@ -1,9 +1,11 @@
 class Admin::ReportsController < Admin::BaseController
+  REPORT_ROWS_PER_PAGE = 20
+
   def index
     @month = report_month
     @employees = Employee.order(:last_name, :first_name, :id)
     @selected_employee_id = params[:employee_id].presence
-    @report_employees = report_employees.to_a
+    @report_employees = paginate_admin_relation(report_employees, per_page: REPORT_ROWS_PER_PAGE).to_a
     @swipes_by_employee_id = report_swipes_by_employee_id
     @correction_counts_by_employee_id = report_correction_counts_by_employee_id
     @report_rows = @report_employees.map { |employee| report_row_for(employee) }

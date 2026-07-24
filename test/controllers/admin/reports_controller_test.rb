@@ -21,6 +21,10 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Oriol Puig", response.body
     assert_match "8 h 30 min", response.body
     assert_select "td", text: "1"
+    assert_select "[data-controller='list-loading']"
+    assert_select ".admin-result-count[data-list-loading-target='results']", text: "Mostrant 1-1 de 1"
+    assert_select "button[type='submit'][data-submitting-label='Filtrant...'] svg.icon"
+    assert_select "a[href='#']", 0
   end
 
   test "falls back to current month for invalid month params" do

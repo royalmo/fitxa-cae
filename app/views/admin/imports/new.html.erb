@@ -1,11 +1,7 @@
 <% content_for :title, t(".title") %>
 
 <section class="admin-page-heading split-intro">
-  <div>
-    <h1><%= t(".heading") %></h1>
-    <p><%= t(".subtitle") %></p>
-  </div>
-  <%= link_to t(".template"), "#", class: "button button-secondary" %>
+  <h1 class="admin-page-title"><%= icon "upload", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
 </section>
 
 <section class="panel">
@@ -17,8 +13,14 @@
     </div>
 
     <div class="form-actions">
-      <%= link_to t("shared.cancel"), admin_employees_path, class: "button button-secondary" %>
-      <%= form.submit t(".submit"), class: "button button-primary", data: { submitting_label: t("shared.submitting.importing") } %>
+      <%= link_to admin_employees_path, class: "button button-secondary" do %>
+        <%= icon "x" %>
+        <span><%= t("shared.cancel") %></span>
+      <% end %>
+      <%= button_tag type: :submit, class: "button button-primary", data: { submitting_label: t("shared.submitting.importing") } do %>
+        <%= icon "upload" %>
+        <span><%= t(".submit") %></span>
+      <% end %>
     </div>
   <% end %>
 </section>

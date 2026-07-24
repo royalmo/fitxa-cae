@@ -1,7 +1,12 @@
 class Admin::EmployeesController < Admin::BaseController
+  EMPLOYEES_PER_PAGE = 20
+
   def index
     @tags = Tag.order(:name)
-    @employees = filtered_employees.includes(:tags).order(:last_name, :first_name, :id)
+    @employees = paginate_admin_relation(
+      filtered_employees.order(:last_name, :first_name, :id),
+      per_page: EMPLOYEES_PER_PAGE
+    ).includes(:tags).to_a
     employee_ids = @employees.map(&:id)
     @last_swipes_by_employee_id = last_swipes_by_employee_id(employee_ids)
     @month_work_seconds_by_employee_id = month_work_seconds_by_employee_id(employee_ids)

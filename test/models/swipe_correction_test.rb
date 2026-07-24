@@ -31,6 +31,10 @@ class SwipeCorrectionTest < ActiveSupport::TestCase
     assert_predicate rejected, :valid?
   end
 
+  test "filterable statuses come from the status enum" do
+    assert_equal SwipeCorrection.statuses.keys, SwipeCorrection.filterable_statuses
+  end
+
   test "requires employee requester day and valid status" do
     correction = SwipeCorrection.new(status: "unknown")
 

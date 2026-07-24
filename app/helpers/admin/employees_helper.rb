@@ -3,6 +3,10 @@ module Admin::EmployeesHelper
     employee.active? ? :active : :disabled
   end
 
+  def admin_employee_status_icon(employee)
+    employee.active? ? "circle-check" : "circle-off"
+  end
+
   def admin_employee_tags(employee)
     employee.tags.any? ? employee.tags.map(&:name).join(", ") : t("admin.employees.index.no_tags")
   end

@@ -20,6 +20,37 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Laia Font", response.body
     assert_match "Correcció de fitxatge", response.body
     assert_match "Sortida 17:00", response.body
+    assert_select "[data-controller='list-loading']"
+    assert_select ".admin-result-count[data-list-loading-target='results']",
+      text: "Mostrant 1-#{[ SwipeCorrection.count, 20 ].min} de #{SwipeCorrection.count}"
+    assert_select "button.icon-button.admin-row-action[aria-label='Aprovar'][data-submitting-label='Aprovant...'] svg.icon"
+    assert_select "button.icon-button.admin-row-action[aria-label='Rebutjar'][data-submitting-label='Rebutjant...'] svg.icon"
+    assert_select ".admin-status-badge svg.admin-badge-icon"
+  end
+
+  test "filters corrections by status and employee" do
+    log_in_manager
+    visible_employee = create_employee(first_name: "Nil", last_name: "Prats", national_id: valid_dni(42_200_001))
+    hidden_employee = create_employee(first_name: "Ona", last_name: "Serra", national_id: valid_dni(42_200_002))
+    visible_employee.swipe_corrections.create!(
+      requester: visible_employee,
+      status: :pending,
+      day: Date.new(2026, 7, 4)
+    )
+    hidden_employee.swipe_corrections.create!(
+      requester: hidden_employee,
+      status: :approved,
+      day: Date.new(2026, 7, 4)
+    )
+
+    get admin_corrections_path, params: { status: "pending", employee_id: visible_employee.id }
+
+    assert_response :success
+    row_text = css_select("tbody tr").map { |row| row.text.squish }.join(" ")
+    assert_match "Nil Prats", row_text
+    assert_no_match "Ona Serra", row_text
+    assert_select "#status option[selected][value='pending']"
+    assert_select "#employee_id option[selected][value='#{visible_employee.id}']"
   end
 
   test "approves a pending correction and applies requested swipes" do

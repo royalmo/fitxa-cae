@@ -1,57 +1,118 @@
 <% content_for :title, t(".title") %>
+<% pagination_path = ->(page) { admin_corrections_path(request.query_parameters.except("page").merge(page: page)) } %>
 
 <section class="admin-page-heading">
-  <div>
-    <h1><%= t(".heading") %></h1>
-    <p><%= t(".subtitle") %></p>
-  </div>
+  <h1 class="admin-page-title"><%= icon "square-pen", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
 </section>
 
-<section class="panel flush-panel">
-  <table>
-    <thead>
-      <tr>
-        <th><%= t(".employee") %></th>
-        <th><%= t(".date") %></th>
-        <th><%= t(".request") %></th>
-        <th><%= t(".status") %></th>
-        <th><%= t(".validator") %></th>
-        <th><%= t(".age") %></th>
-        <th><%= t("shared.actions") %></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @corrections.each do |correction| %>
-        <tr>
-          <td><strong><%= employee_display_name(correction.employee) %></strong></td>
-          <td><%= l(correction.day, format: :short) %></td>
-          <td>
-            <strong><%= correction_title(correction) %></strong><br>
-            <span class="muted"><%= correction_requested_text(correction) %></span>
-          </td>
-          <td>
-            <span class="<%= badge_class(correction.status) %>"><%= status_text(correction.status) %></span>
-          </td>
-          <td><%= correction.validator ? manager_display_name(correction.validator) : "—" %></td>
-          <td><%= l(correction.created_at, format: :short) %></td>
-          <td>
-            <% if correction.pending? %>
-              <div class="inline-actions">
-                <%= button_to t("shared.approve"), approve_admin_correction_path(correction), method: :post, class: "mini-button", data: { submitting_label: t("shared.submitting.approving") } %>
-                <%= button_to t("shared.reject"), reject_admin_correction_path(correction), method: :post, class: "mini-button muted-button", data: { submitting_label: t("shared.submitting.rejecting") } %>
-              </div>
-            <% else %>
-              <span class="muted"><%= t("shared.view") %></span>
-            <% end %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-
-  <% if @corrections.empty? %>
-    <div class="empty-state">
-      <p><%= t(".empty") %></p>
+<div data-controller="list-loading">
+  <section class="panel admin-filter-panel">
+    <div class="admin-filter-header">
+      <p class="admin-filter-title"><%= t("admin.filters.title") %></p>
+      <%= render "admin/shared/result_count",
+        count: @admin_records_count,
+        range_start: @admin_records_range_start,
+        range_end: @admin_records_range_end %>
     </div>
-  <% end %>
-</section>
+
+    <%= form_with url: admin_corrections_path, method: :get, class: "filter-bar admin-filter-form admin-corrections-filter-form" do |form| %>
+      <div class="field">
+        <%= form.label :status, t(".status"), class: "sr-only" %>
+        <%= form.select :status,
+          [[t(".all_statuses"), ""]] + @filterable_statuses.map { |status| [status_text(status), status] },
+          { selected: @selected_status },
+          data: { action: "change->list-loading#filter" } %>
+      </div>
+      <div class="field">
+        <%= form.label :employee_id, t(".employee"), class: "sr-only" %>
+        <%= form.select :employee_id,
+          [[t(".all_employees"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] },
+          { selected: @selected_employee_id },
+          data: { action: "change->list-loading#filter" } %>
+      </div>
+      <%= button_tag type: :submit, class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } do %>
+        <%= icon "filter" %>
+        <span><%= t("shared.filter") %></span>
+      <% end %>
+    <% end %>
+  </section>
+
+  <div data-list-loading-target="results">
+    <section class="panel flush-panel">
+      <div class="table-wrap">
+        <table class="admin-table admin-corrections-table">
+          <thead>
+            <tr>
+              <th><%= t(".employee") %></th>
+              <th><%= t(".date") %></th>
+              <th><%= t(".request") %></th>
+              <th><%= t(".status") %></th>
+              <th><%= t(".validator") %></th>
+              <th><%= t(".age") %></th>
+              <th class="admin-action-column"><%= t("shared.actions") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @corrections.each do |correction| %>
+              <tr>
+                <td><strong><%= employee_display_name(correction.employee) %></strong></td>
+                <td><%= l(correction.day, format: :short) %></td>
+                <td>
+                  <strong><%= correction_title(correction) %></strong><br>
+                  <span class="muted"><%= correction_requested_text(correction) %></span>
+                </td>
+                <td>
+                  <span class="<%= class_names(badge_class(correction.status), "admin-status-badge") %>">
+                    <%= icon correction_status_icon_name(correction.status), class: "admin-badge-icon" %>
+                    <span><%= status_text(correction.status) %></span>
+                  </span>
+                </td>
+                <td><%= correction.validator ? manager_display_name(correction.validator) : "—" %></td>
+                <td><%= l(correction.created_at, format: :short) %></td>
+                <td class="admin-action-cell">
+                  <% if correction.pending? %>
+                    <div class="inline-actions admin-table-actions">
+                      <%= button_to approve_admin_correction_path(correction),
+                        method: :post,
+                        class: "icon-button admin-row-action",
+                        title: t("shared.approve"),
+                        aria: { label: t("shared.approve") },
+                        data: { submitting_label: t("shared.submitting.approving") } do %>
+                        <%= icon "check" %>
+                      <% end %>
+                      <%= button_to reject_admin_correction_path(correction),
+                        method: :post,
+                        class: "icon-button admin-row-action admin-row-action-muted",
+                        title: t("shared.reject"),
+                        aria: { label: t("shared.reject") },
+                        data: { submitting_label: t("shared.submitting.rejecting") } do %>
+                        <%= icon "x" %>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span class="muted">—</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @corrections.empty? %>
+        <div class="empty-state">
+          <p><%= t(".empty") %></p>
+        </div>
+      <% end %>
+    </section>
+
+    <%= render "admin/shared/pagination",
+      page: @admin_page,
+      total_pages: @admin_total_pages,
+      previous_page: @admin_previous_page,
+      next_page: @admin_next_page,
+      path: pagination_path %>
+  </div>
+
+  <%= render "admin/shared/list_loading" %>
+</div>

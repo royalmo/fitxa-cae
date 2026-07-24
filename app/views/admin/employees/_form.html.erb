@@ -52,7 +52,13 @@
   </fieldset>
 
   <div class="form-actions">
-    <%= link_to t("shared.cancel"), admin_employees_path, class: "button button-secondary" %>
-    <%= form.submit t("shared.save"), class: "button button-primary", data: { submitting_label: t("shared.submitting.saving") } %>
+    <%= link_to admin_employees_path, class: "button button-secondary" do %>
+      <%= icon "x" %>
+      <span><%= t("shared.cancel") %></span>
+    <% end %>
+    <%= button_tag type: :submit, class: "button button-primary", data: { submitting_label: t("shared.submitting.saving") } do %>
+      <%= icon "save" %>
+      <span><%= t("shared.save") %></span>
+    <% end %>
   </div>
 <% end %>

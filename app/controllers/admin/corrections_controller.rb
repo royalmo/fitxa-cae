@@ -1,6 +1,15 @@
 class Admin::CorrectionsController < Admin::BaseController
+  CORRECTIONS_PER_PAGE = 20
+
   def index
-    @corrections = SwipeCorrection.includes(:employee, :validator).order(created_at: :desc)
+    @filterable_statuses = SwipeCorrection.filterable_statuses
+    @selected_status = selected_correction_status
+    @selected_employee_id = params[:employee_id].presence
+    @employees = Employee.order(:last_name, :first_name, :id)
+    @corrections = paginate_admin_relation(
+      filtered_corrections.order(created_at: :desc),
+      per_page: CORRECTIONS_PER_PAGE
+    ).to_a
   end
 
   def approve
@@ -30,6 +39,17 @@ class Admin::CorrectionsController < Admin::BaseController
   end
 
   private
+
+  def filtered_corrections
+    corrections = SwipeCorrection.includes(:employee, :validator)
+    corrections = corrections.where(status: @selected_status) if @selected_status
+    corrections = corrections.where(employee_id: @selected_employee_id) if @selected_employee_id.present?
+    corrections
+  end
+
+  def selected_correction_status
+    params[:status].to_s if SwipeCorrection.filterable_statuses.include?(params[:status].to_s)
+  end
 
   def approve_correction(correction)
     SwipeCorrection.transaction do

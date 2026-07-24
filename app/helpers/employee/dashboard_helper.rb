@@ -39,7 +39,7 @@ module Employee::DashboardHelper
   def weekly_correction_parts(week_summary)
     counts = week_summary.fetch(:correction_counts, {}).transform_keys(&:to_s)
 
-    SwipeCorrection.statuses.keys.filter_map do |status|
+    SwipeCorrection.filterable_statuses.filter_map do |status|
       count = counts.fetch(status, 0)
       next if count.zero?
 

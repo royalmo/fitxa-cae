@@ -133,21 +133,23 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get admin_employees_path
     assert_response :success
     assert_select "title", text: "Treballadors | FitxaCAE Admin"
+    assert_select ".admin-page-title svg.icon"
     assert_select "table"
-    assert_select "input[type='submit'][data-submitting-label='Filtrant...']"
+    assert_select "button[type='submit'][data-submitting-label='Filtrant...']"
     assert_no_match "Horari", response.body
 
     get new_admin_employee_path
     assert_response :success
     assert_select "title", text: "Nou treballador | FitxaCAE Admin"
     assert_select "form"
-    assert_select "input[type='submit'][data-submitting-label='Desant...']"
+    assert_select "button[type='submit'][data-submitting-label='Desant...']"
     assert_no_match "Horari", response.body
 
     get admin_reports_path
     assert_response :success
     assert_select "title", text: "Informes | FitxaCAE Admin"
     assert_select "h1", text: "Informes de fitxatges"
+    assert_select "a[href='#']", 0
     assert_no_match "Balanç", response.body
     assert_no_match "Incidències", response.body
 
@@ -155,6 +157,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Correccions | FitxaCAE Admin"
     assert_select "table"
+    assert_select "button[type='submit'][data-submitting-label='Filtrant...']"
   end
 
   test "no-op actions redirect to their list screens" do

@@ -8,7 +8,6 @@ ca:
     formats:
       short: "%-d/%-m/%Y"
       long: "%-d %B %Y"
-      day_month: "%-d de %B"
       month_year: "%B %Y"
       weekday_day_month: "%A, %-d de %B"
       weekday_day_month_year: "%A, %-d de %B de %Y"
@@ -30,10 +29,7 @@ ca:
       admin_access: "Accés admin"
       employee_access: "Accés empleat"
     approve: "Aprovar"
-    back: "Tornar"
     cancel: "Cancel·lar"
-    download_csv: "CSV"
-    download_pdf: "PDF"
     edit: "Editar"
     filter: "Filtrar"
     reject: "Rebutjar"
@@ -53,38 +49,17 @@ ca:
   statuses:
     active: "Actiu"
     approved: "Aprovat"
-    complete: "Complet"
-    corrected: "Corregit"
     disabled: "Inactiu"
-    empty: "Sense dades"
-    open: "Obert"
     pending: "Pendent"
     rejected: "Rebutjat"
 
   clocking_kinds:
     entry: "Entrada"
     exit: "Sortida"
-    in: "Entrada"
-    out: "Sortida"
-    pause_start: "Inici pausa"
-    pause_end: "Fi pausa"
-
-  sources:
-    pwa: "PWA"
-    kiosk: "Quiosc"
-    manual: "Manual"
-    employee_portal: "Portal"
 
   errors:
     messages:
       pending_taken: "ja té una sol·licitud pendent per aquest dia"
-
-  demo:
-    stats:
-      inactive: "Inactius"
-      month_hours: "Hores del mes"
-      pending_corrections: "Correccions pendents"
-      present: "Ara presents"
 
   employee:
     guest: "Treballador"
@@ -96,7 +71,6 @@ ca:
       install_prompt: "Instal·la FitxaCAE"
       flash:
         require_login: "Inicia sessió per continuar."
-        signed_in: "Sessió iniciada."
         code_required: "Demana un codi nou per continuar."
       sms:
         body: "El teu codi de Fitxa CAE és %{code}. Caduca en %{minutes} minuts."
@@ -183,7 +157,6 @@ ca:
       index:
         title: "Fitxatges"
         heading: "Historial"
-        intro: "Revisa els darrers dies registrats."
         period: "Període"
         month: "Mes"
         year: "Any"
@@ -191,11 +164,8 @@ ca:
         next_month: "Mes següent"
         request_correction_for_day: "Demanar correcció per %{date}"
         date: "Data"
-        entry: "Entrada"
-        exit: "Sortida"
         hours: "Hores"
         swipes: "Fitxatges"
-        status: "Estat"
         empty: "No hi ha registres per aquest mes"
         current_month_empty: "Apareixeran aquí els fitxatges d'aquest mes"
         current_month: "Anar al mes actual"
@@ -217,19 +187,13 @@ ca:
       index:
         title: "Correccions"
         heading: "Correccions"
-        intro: "Consulta l'estat de les peticions enviades."
         new_request: "Nova correcció"
-        date: "Data"
-        request: "Petició"
         status: "Estat"
         filters: "Filtrar per"
         month: "Mes"
         year: "Any"
         month_year_join: "de"
         all_statuses: "Totes"
-        all_months: "Tots els mesos"
-        answered: "Resposta"
-        unanswered: "Pendent de revisió"
         empty: "Encara no has enviat cap correcció."
         empty_month: "No hi ha correccions en aquest mes."
         empty_month_with_status: "No hi ha correccions %{status} en aquest mes."
@@ -249,10 +213,8 @@ ca:
           approved: "aprovades"
           rejected: "rebutjades"
       show:
-        title: "Correcció"
         heading: "Detall de la correcció"
         back_to_list: "Tornar a correccions"
-        request: "Sol·licitud"
         invalidated_swipes: "Fitxatges a invalidar"
         requested_swipes: "Fitxatges sol·licitats"
         comment: "Comentari"
@@ -291,7 +253,6 @@ ca:
         title: "Compte"
         heading: "Compte"
         error_title: "Revisa els canvis"
-        empty_value: "No informat"
         name: "Nom"
         national_id: "DNI/NIE"
         email: "Correu"
@@ -343,10 +304,19 @@ ca:
       employees: "Treballadors"
       logout: "Tancar sessió"
       reports: "Informes"
+    filters:
+      title: "Filtres"
+    pagination:
+      label: "Paginació"
+      showing_count: "Mostrant %{from}-%{to} de %{count}"
+      empty_count: "Cap resultat"
+      previous_page: "Anterior"
+      next_page: "Següent"
+      page_status: "Pàgina %{page} de %{total_pages}"
+      loading: "Carregant..."
     sessions:
       flash:
-        require_login: "Inicia sessió com a manager per continuar."
-        signed_in: "Sessió de gestió iniciada."
+        require_login: "Inicia sessió per continuar."
       new:
         title: "Accés de gestió"
         heading: "Accés de gestió"
@@ -362,13 +332,11 @@ ca:
       index:
         title: "Resum"
         heading: "Resum operatiu"
-        subtitle: "Vista ràpida de presència, correccions i activitat del mes."
         live_title: "Fitxatges recents"
         corrections_title: "Correccions pendents"
         employee: "Treballador"
         tags: "Etiquetes"
         last_clocking: "Últim fitxatge"
-        request: "Petició"
         no_pending_corrections: "No hi ha correccions pendents."
         no_recent_swipes: "Encara no hi ha fitxatges."
         no_tags: "Sense etiquetes"
@@ -384,9 +352,7 @@ ca:
       index:
         title: "Treballadors"
         heading: "Treballadors"
-        subtitle: "Consulta, filtra i prepara canvis de la plantilla."
         new_employee: "Nou treballador"
-        import: "Importació massiva"
         search_placeholder: "Nom, DNI/NIE o correu"
         tags: "Etiquetes"
         all_tags: "Totes les etiquetes"
@@ -413,42 +379,37 @@ ca:
       new:
         title: "Nou treballador"
         heading: "Nou treballador"
-        subtitle: "Alta preparada per connectar amb el model d'empleat."
       edit:
         title: "Editar treballador"
         heading: "Editar treballador"
-        subtitle: "Actualitza les dades operatives del treballador."
     imports:
       new:
         title: "Importació"
         heading: "Importació massiva"
-        subtitle: "Carrega un CSV amb treballadors, equips i estat inicial."
         file: "Fitxer CSV"
-        template: "Descarregar plantilla"
         submit: "Iniciar importació"
         columns: "Columnes: nom, cognoms, DNI/NIE, correu, telèfon, estat i etiquetes."
     reports:
       index:
         title: "Informes"
         heading: "Informes de fitxatges"
-        subtitle: "Prepara exports mensuals per persona, equip o estat."
         month: "Mes"
         employee: "Treballador"
         all_employees: "Tots els treballadors"
         hours: "Hores registrades"
         days: "Dies"
         corrections: "Correccions"
-        export: "Exportar"
         empty: "No hi ha treballadors per a aquest filtre."
     corrections:
       index:
         title: "Correccions"
         heading: "Correccions"
-        subtitle: "Revisa, aprova o rebutja les peticions de fitxatge."
         employee: "Treballador"
+        all_employees: "Tots els treballadors"
         date: "Data"
         request: "Petició"
         status: "Estat"
+        all_statuses: "Tots"
         validator: "Validador"
         age: "Antiguitat"
         empty: "No hi ha correccions registrades."

@@ -16,6 +16,12 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Nora Vidal", response.body
     assert_match "nora@example.test", response.body
     assert_match "office", response.body
+    assert_select "[data-controller='list-loading']"
+    assert_select ".admin-result-count[data-list-loading-target='results']",
+      text: "Mostrant 1-#{[ Employee.count, 20 ].min} de #{Employee.count}"
+    assert_select "button[type='submit'][data-submitting-label='Filtrant...'] svg.icon"
+    assert_select "a.icon-button.admin-row-action[href='#{edit_admin_employee_path(employee)}'][aria-label='Editar'] svg.icon"
+    assert_select ".admin-status-badge svg.admin-badge-icon"
   end
 
   test "filters employees by search status and tag" do
@@ -30,6 +36,31 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Marc Riera", response.body
     assert_no_match "Ada Riera", response.body
     assert_no_match hidden.national_id, response.body
+  end
+
+  test "paginates employee list" do
+    25.times do |index|
+      create_employee(
+        first_name: "Persona",
+        last_name: format("P%02d", index),
+        national_id: valid_dni(42_000_000 + index)
+      )
+    end
+
+    get admin_employees_path
+
+    expected_count = Employee.count
+    assert_response :success
+    assert_select ".admin-result-count", text: "Mostrant 1-20 de #{expected_count}"
+    assert_select "a.admin-page-link[href='#{admin_employees_path(page: 2)}'][data-action='click->list-loading#navigate']", text: /Següent/
+    assert_match "Persona P00", response.body
+    assert_no_match "Persona P24", response.body
+
+    get admin_employees_path, params: { page: 2 }
+
+    assert_response :success
+    assert_select ".admin-result-count", text: "Mostrant 21-#{expected_count} de #{expected_count}"
+    assert_match "Persona P24", response.body
   end
 
   test "creates an employee with tags and optional password" do
@@ -67,6 +98,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select ".error-summary"
+    assert_select "button[type='submit'][data-submitting-label='Desant...']"
   end
 
   test "updates an employee and can clear tags" do

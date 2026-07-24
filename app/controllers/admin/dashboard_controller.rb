@@ -11,21 +11,25 @@ class Admin::DashboardController < Admin::BaseController
   def dashboard_stats
     [
       {
+        icon: "users",
         label: t(".stats.present"),
         value: present_employee_count,
         detail: t(".stats.now")
       },
       {
+        icon: "hourglass",
         label: t(".stats.pending_corrections"),
         value: SwipeCorrection.pending.count,
         detail: t(".stats.open")
       },
       {
+        icon: "clock",
         label: t(".stats.month_hours"),
         value: helpers.duration_text(month_work_seconds),
         detail: l(@month, format: :month_year)
       },
       {
+        icon: "user-x",
         label: t(".stats.inactive"),
         value: Employee.inactive.count,
         detail: t(".stats.employees")

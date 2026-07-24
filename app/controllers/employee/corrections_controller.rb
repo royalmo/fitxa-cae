@@ -1,12 +1,11 @@
 class Employee::CorrectionsController < ApplicationController
   CORRECTIONS_PER_PAGE = 10
-  FILTERABLE_STATUSES = %w[pending approved rejected].freeze
 
   layout "employee"
 
   def index
     @employee = current_employee
-    @filterable_statuses = FILTERABLE_STATUSES
+    @filterable_statuses = SwipeCorrection.filterable_statuses
     @selected_status = selected_correction_status
     @min_correction_month, @max_correction_month = correction_month_bounds
     @selected_month = selected_correction_month
@@ -111,7 +110,7 @@ class Employee::CorrectionsController < ApplicationController
   end
 
   def selected_correction_status
-    params[:status].to_s if FILTERABLE_STATUSES.include?(params[:status].to_s)
+    params[:status].to_s if SwipeCorrection.filterable_statuses.include?(params[:status].to_s)
   end
 
   def selected_correction_month

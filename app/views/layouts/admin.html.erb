@@ -11,10 +11,17 @@
       <%= render "layouts/brand_mark", path: admin_root_path, class: "admin-brand" %>
 
       <nav class="admin-nav" aria-label="<%= t("admin.nav.label") %>">
-        <%= link_to t("admin.nav.dashboard"), admin_root_path, class: nav_item_class(admin_root_path, exact: true) %>
-        <%= link_to t("admin.nav.employees"), admin_employees_path, class: nav_item_class(admin_employees_path) %>
-        <%= link_to t("admin.nav.corrections"), admin_corrections_path, class: nav_item_class(admin_corrections_path) %>
-        <%= link_to t("admin.nav.reports"), admin_reports_path, class: nav_item_class(admin_reports_path) %>
+        <% [
+          [admin_root_path, "layout-dashboard", t("admin.nav.dashboard"), true],
+          [admin_employees_path, "users", t("admin.nav.employees"), false],
+          [admin_corrections_path, "square-pen", t("admin.nav.corrections"), false],
+          [admin_reports_path, "chart-column", t("admin.nav.reports"), false]
+        ].each do |path, icon_name, label, exact| %>
+          <%= link_to path, class: nav_item_class(path, exact: exact) do %>
+            <%= icon icon_name %>
+            <span><%= label %></span>
+          <% end %>
+        <% end %>
       </nav>
     </aside>
 

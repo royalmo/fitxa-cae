@@ -1,0 +1,29 @@
+<% if total_pages > 1 %>
+  <nav class="admin-pagination" aria-label="<%= t("admin.pagination.label") %>">
+    <% if previous_page %>
+      <%= link_to path.call(previous_page), class: "admin-page-link", data: { action: "click->list-loading#navigate" } do %>
+        <%= icon "chevron-left" %>
+        <span><%= t("admin.pagination.previous_page") %></span>
+      <% end %>
+    <% else %>
+      <span class="admin-page-link is-disabled">
+        <%= icon "chevron-left" %>
+        <span><%= t("admin.pagination.previous_page") %></span>
+      </span>
+    <% end %>
+
+    <span class="admin-page-status"><%= t("admin.pagination.page_status", page: page, total_pages: total_pages) %></span>
+
+    <% if next_page %>
+      <%= link_to path.call(next_page), class: "admin-page-link", data: { action: "click->list-loading#navigate" } do %>
+        <span><%= t("admin.pagination.next_page") %></span>
+        <%= icon "chevron-right" %>
+      <% end %>
+    <% else %>
+      <span class="admin-page-link is-disabled">
+        <span><%= t("admin.pagination.next_page") %></span>
+        <%= icon "chevron-right" %>
+      </span>
+    <% end %>
+  </nav>
+<% end %>

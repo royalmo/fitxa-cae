@@ -1,4 +1,6 @@
 class Admin::BaseController < ApplicationController
+  include AdminPagination
+
   layout "admin"
 
   before_action :authenticate_manager!

@@ -1,55 +1,78 @@
 <% content_for :title, t(".title") %>
+<% pagination_path = ->(page) { admin_reports_path(request.query_parameters.except("page").merge(page: page)) } %>
 
-<section class="admin-page-heading split-intro">
-  <div>
-    <h1><%= t(".heading") %></h1>
-    <p><%= t(".subtitle") %></p>
-  </div>
-  <div class="action-row">
-    <%= link_to t("shared.download_csv"), "#", class: "button button-secondary" %>
-    <%= link_to t("shared.download_pdf"), "#", class: "button button-primary" %>
-  </div>
+<section class="admin-page-heading">
+  <h1 class="admin-page-title"><%= icon "chart-column", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
 </section>
 
-<section class="panel">
-  <%= form_with url: admin_reports_path, method: :get, class: "filter-bar" do |form| %>
-    <div class="field">
-      <%= form.label :month, t(".month"), class: "sr-only" %>
-      <%= form.month_field :month, value: @month.strftime("%Y-%m") %>
+<div data-controller="list-loading">
+  <section class="panel admin-filter-panel">
+    <div class="admin-filter-header">
+      <p class="admin-filter-title"><%= t("admin.filters.title") %></p>
+      <%= render "admin/shared/result_count",
+        count: @admin_records_count,
+        range_start: @admin_records_range_start,
+        range_end: @admin_records_range_end %>
     </div>
-    <div class="field">
-      <%= form.label :employee_id, t(".employee"), class: "sr-only" %>
-      <%= form.select :employee_id, [[t(".all_employees"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] }, selected: @selected_employee_id %>
-    </div>
-    <%= form.submit t("shared.filter"), class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } %>
-  <% end %>
-</section>
 
-<section class="panel flush-panel">
-  <table>
-    <thead>
-      <tr>
-        <th><%= t(".employee") %></th>
-        <th><%= t(".hours") %></th>
-        <th><%= t(".days") %></th>
-        <th><%= t(".corrections") %></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @report_rows.each do |row| %>
-        <tr>
-          <td><strong><%= employee_display_name(row[:employee]) %></strong></td>
-          <td><%= duration_text(row[:worked_seconds]) %></td>
-          <td><%= row[:days] %></td>
-          <td><%= row[:corrections] %></td>
-        </tr>
+    <%= form_with url: admin_reports_path, method: :get, class: "filter-bar admin-filter-form admin-report-filter-form" do |form| %>
+      <div class="field">
+        <%= form.label :month, t(".month"), class: "sr-only" %>
+        <%= form.month_field :month, value: @month.strftime("%Y-%m"), data: { action: "change->list-loading#filter" } %>
+      </div>
+      <div class="field">
+        <%= form.label :employee_id, t(".employee"), class: "sr-only" %>
+        <%= form.select :employee_id,
+          [[t(".all_employees"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] },
+          { selected: @selected_employee_id },
+          data: { action: "change->list-loading#filter" } %>
+      </div>
+      <%= button_tag type: :submit, class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } do %>
+        <%= icon "filter" %>
+        <span><%= t("shared.filter") %></span>
       <% end %>
-    </tbody>
-  </table>
+    <% end %>
+  </section>
 
-  <% if @report_rows.empty? %>
-    <div class="empty-state">
-      <p><%= t(".empty") %></p>
-    </div>
-  <% end %>
-</section>
+  <div data-list-loading-target="results">
+    <section class="panel flush-panel">
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th><%= t(".employee") %></th>
+              <th><%= t(".hours") %></th>
+              <th><%= t(".days") %></th>
+              <th><%= t(".corrections") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @report_rows.each do |row| %>
+              <tr>
+                <td><strong><%= employee_display_name(row[:employee]) %></strong></td>
+                <td><%= duration_text(row[:worked_seconds]) %></td>
+                <td><%= row[:days] %></td>
+                <td><%= row[:corrections] %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @report_rows.empty? %>
+        <div class="empty-state">
+          <p><%= t(".empty") %></p>
+        </div>
+      <% end %>
+    </section>
+
+    <%= render "admin/shared/pagination",
+      page: @admin_page,
+      total_pages: @admin_total_pages,
+      previous_page: @admin_previous_page,
+      next_page: @admin_next_page,
+      path: pagination_path %>
+  </div>
+
+  <%= render "admin/shared/list_loading" %>
+</div>

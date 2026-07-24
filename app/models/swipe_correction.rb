@@ -14,6 +14,10 @@ class SwipeCorrection < ApplicationRecord
   validates :status, :day, presence: true
   validate :single_pending_correction_per_day, if: :pending?
 
+  def self.filterable_statuses
+    statuses.keys
+  end
+
   def self.employee_request_day_range(reference_date: Time.zone.today)
     reference_date.prev_month.beginning_of_month..reference_date
   end
