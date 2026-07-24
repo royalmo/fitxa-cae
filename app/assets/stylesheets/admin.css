@@ -74,6 +74,9 @@ html[data-pwa="admin"],
   --bg-admin: #f5f5f5;
   --admin-sidebar-bg: #ffffff;
   --admin-header-bg: rgba(245, 245, 245, 0.94);
+  --admin-sidebar-width: 16rem;
+  --admin-sidebar-overlay: rgba(11, 11, 11, 0.38);
+  --admin-brand-badge-bg: var(--brand-red-soft);
 }
 
 .admin-auth-shell {
@@ -109,8 +112,28 @@ html[data-pwa="admin"],
   height: 2.65rem;
 }
 
+.admin-brand .brand-wordmark {
+  align-self: stretch;
+  align-content: center;
+  grid-template-rows: auto auto;
+  min-height: 2.65rem;
+}
+
 .admin-brand .brand-fitxa {
-  font-size: 1.8rem;
+  align-self: start;
+  font-size: 1.72rem;
+  transform: translateY(0.08rem);
+}
+
+.admin-brand .brand-badge {
+  align-self: end;
+  justify-self: end;
+  min-height: 0.82rem;
+  padding-inline: 0.32rem;
+  color: var(--text);
+  background: var(--admin-brand-badge-bg);
+  font-size: 0.7rem;
+  padding-top: 0.15rem;
 }
 
 .admin-auth-card .auth-panel .flash {
@@ -122,9 +145,15 @@ html[data-pwa="admin"],
 
 .admin-shell {
   display: grid;
-  grid-template-columns: 16rem minmax(0, 1fr);
+  grid-template-columns: var(--admin-sidebar-width) minmax(0, 1fr);
   min-height: 100vh;
   background: var(--bg-admin);
+}
+
+.admin-sidebar-backdrop,
+.admin-sidebar-toggle,
+.admin-sidebar-close {
+  display: none;
 }
 
 .admin-sidebar {
@@ -136,8 +165,17 @@ html[data-pwa="admin"],
   background: var(--admin-sidebar-bg);
 }
 
-.admin-brand {
+.admin-sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
   margin-bottom: 2rem;
+}
+
+.admin-brand {
+  align-items: stretch;
+  gap: 0.35rem;
 }
 
 .admin-nav {
@@ -170,6 +208,17 @@ html[data-pwa="admin"],
 
 .admin-header strong {
   display: block;
+}
+
+.admin-header-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.admin-header-copy {
+  min-width: 0;
 }
 
 .admin-profile,
@@ -526,24 +575,69 @@ html[data-pwa="admin"],
     display: block;
   }
 
+  html.is-admin-sidebar-open,
+  .admin-shell.is-admin-sidebar-open {
+    overflow: hidden;
+  }
+
+  .admin-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: var(--admin-sidebar-overlay);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 180ms ease, visibility 180ms ease;
+  }
+
+  .admin-shell.is-admin-sidebar-open .admin-sidebar-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+  }
+
   .admin-sidebar {
-    position: static;
-    height: auto;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    width: min(var(--admin-sidebar-width), calc(100vw - 3rem));
+    height: 100vh;
+    height: 100dvh;
     padding: 1rem;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
+    overflow-y: auto;
+    border-right: 2px solid var(--brand-red);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 180ms ease, visibility 0s linear 180ms;
+    box-shadow: 0 24px 60px rgba(11, 11, 11, 0.18);
+  }
+
+  .admin-shell.is-admin-sidebar-open .admin-sidebar {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 180ms ease;
   }
 
   .admin-brand {
-    margin-bottom: 1rem;
+    min-width: 0;
+  }
+
+  .admin-sidebar-toggle,
+  .admin-sidebar-close {
+    display: inline-flex;
   }
 
   .admin-nav {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .admin-nav .nav-item {
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .stat-grid {
@@ -558,6 +652,13 @@ html[data-pwa="admin"],
   .admin-report-filter-form {
     grid-template-columns: 1fr 1fr auto;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .admin-sidebar,
+    .admin-sidebar-backdrop {
+      transition: none;
+    }
+  }
 }
 
 @media (max-width: 680px) {
@@ -567,9 +668,12 @@ html[data-pwa="admin"],
 
   .admin-page-heading,
   .split-intro,
-  .request-row,
-  .admin-header {
+  .request-row {
     display: grid;
+  }
+
+  .admin-header {
+    flex-wrap: wrap;
   }
 
   .admin-grid,

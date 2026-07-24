@@ -76,10 +76,30 @@ body {
   flex-shrink: 0;
 }
 
+.brand-wordmark {
+  display: inline-grid;
+  align-items: start;
+}
+
 .brand-fitxa {
   color: var(--brand-red);
   font-size: 1.5rem;
   font-weight: 900;
+  line-height: 1;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0.8rem;
+  padding: 0 0.25rem;
+  border-radius: 3px;
+  color: var(--text);
+  background: var(--surface-hover-strong, #e5e7eb);
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0;
   line-height: 1;
 }
 

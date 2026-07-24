@@ -4,13 +4,29 @@
     <%= render "layouts/head", admin: true, manifest: false, theme_color: "#f5f5f5", stylesheets: %w[application admin brand], javascript_assets: %w[admin] %>
   </head>
 
-  <body class="admin-shell" data-controller="admin-theme submit-feedback">
+  <body class="admin-shell"
+    data-controller="admin-theme submit-feedback admin-sidebar"
+    data-admin-sidebar-open-class="is-admin-sidebar-open">
     <% manager_name = manager_display_name(@manager) %>
 
-    <aside class="admin-sidebar">
-      <%= render "layouts/brand_mark", path: admin_root_path, class: "admin-brand" %>
+    <button type="button"
+      class="admin-sidebar-backdrop"
+      aria-label="<%= t("admin.nav.close_menu") %>"
+      data-action="admin-sidebar#close"></button>
 
-      <nav class="admin-nav" aria-label="<%= t("admin.nav.label") %>">
+    <aside id="admin-sidebar" class="admin-sidebar" data-admin-sidebar-target="sidebar">
+      <div class="admin-sidebar-header">
+        <%= render "layouts/brand_mark", path: admin_root_path, class: "admin-brand", badge: t("admin.nav.admin_badge") %>
+        <button type="button"
+          class="icon-button admin-sidebar-close"
+          title="<%= t("admin.nav.close_menu") %>"
+          aria-label="<%= t("admin.nav.close_menu") %>"
+          data-action="admin-sidebar#close">
+          <%= icon "x" %>
+        </button>
+      </div>
+
+      <nav class="admin-nav" aria-label="<%= t("admin.nav.label") %>" data-action="click->admin-sidebar#close">
         <% [
           [admin_root_path, "layout-dashboard", t("admin.nav.dashboard"), true],
           [admin_employees_path, "users", t("admin.nav.employees"), false],
@@ -27,9 +43,21 @@
 
     <div class="admin-workspace">
       <header class="admin-header">
-        <div>
-          <p class="eyebrow"><%= t("admin.area") %></p>
-          <strong><%= manager_name %></strong>
+        <div class="admin-header-main">
+          <button type="button"
+            class="icon-button admin-sidebar-toggle"
+            aria-controls="admin-sidebar"
+            aria-expanded="false"
+            title="<%= t("admin.nav.open_menu") %>"
+            aria-label="<%= t("admin.nav.open_menu") %>"
+            data-admin-sidebar-target="button"
+            data-action="admin-sidebar#toggle">
+            <%= icon "menu" %>
+          </button>
+          <div class="admin-header-copy">
+            <p class="eyebrow"><%= t("admin.area") %></p>
+            <strong><%= manager_name %></strong>
+          </div>
         </div>
         <div class="admin-profile">
           <span><%= t("admin.role") %></span>

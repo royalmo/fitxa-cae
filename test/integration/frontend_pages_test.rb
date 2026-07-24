@@ -123,12 +123,18 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "html[data-pwa='admin'][data-theme-preference='light'][data-theme='light']"
     assert_select "body[data-controller~='admin-theme'][data-controller~='submit-feedback']"
+    assert_select "body[data-controller~='admin-sidebar'][data-admin-sidebar-open-class='is-admin-sidebar-open']"
     assert_select "meta[name='color-scheme'][content='light']"
     assert_select "title", text: "Resum | FitxaCAE Admin"
     assert_select "h1", text: "Resum operatiu"
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 1
     assert_select "script[src*='admin']", 1
+    assert_select "aside#admin-sidebar.admin-sidebar[data-admin-sidebar-target='sidebar'] nav.admin-nav"
+    assert_select ".admin-header nav.admin-nav", 0
+    assert_select ".admin-brand .brand-badge", text: "ADMIN"
+    assert_select "button.admin-sidebar-toggle[aria-controls='admin-sidebar'][aria-expanded='false'][aria-label='Obrir menú'] svg.icon"
+    assert_select "button.admin-sidebar-backdrop[aria-label='Tancar menú'][data-action='admin-sidebar#close']"
 
     get admin_employees_path
     assert_response :success

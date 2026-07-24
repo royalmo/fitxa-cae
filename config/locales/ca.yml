@@ -298,11 +298,14 @@ ca:
       employee_updated: "Treballador actualitzat."
       import_started: "Importació iniciada."
     nav:
+      admin_badge: "ADMIN"
       label: "Navegació de gestió"
+      close_menu: "Tancar menú"
       corrections: "Correccions"
       dashboard: "Resum"
       employees: "Treballadors"
       logout: "Tancar sessió"
+      open_menu: "Obrir menú"
       reports: "Informes"
     filters:
       title: "Filtres"
