@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="<%= I18n.locale %>" data-pwa="admin" data-theme-preference="light" data-theme="light">
   <head>
-    <%= render "layouts/head", admin: true, manifest: false, theme_color: "#f8f9fa", stylesheets: %w[admin_bootstrap admin] %>
+    <%= render "layouts/head", admin: true, manifest: false, theme_color: "#f8f9fa", stylesheets: %w[fonts admin_bootstrap admin] %>
     <%= javascript_include_tag "popper", "data-turbo-track": "reload" %>
     <%= javascript_include_tag "bootstrap", "data-turbo-track": "reload" %>
   </head>
 
-  <body class="admin-shell bg-body-tertiary" data-controller="admin-theme submit-feedback">
+  <body class="admin-shell bg-body-tertiary min-vh-100" data-controller="admin-theme submit-feedback">
     <% manager_name = manager_display_name(@manager) %>
     <% nav_items = [
       [admin_root_path, "layout-dashboard", t("admin.nav.dashboard"), true],
@@ -15,79 +15,94 @@
       [admin_reports_path, "chart-column", t("admin.nav.reports"), false]
     ] %>
 
-    <nav class="navbar bg-white border-bottom sticky-top shadow-sm">
+    <nav class="navbar navbar-expand-lg bg-body border-bottom sticky-top shadow-sm">
       <div class="container-fluid">
-        <button class="btn btn-outline-secondary d-lg-none"
+        <button class="navbar-toggler d-lg-none me-2"
           type="button"
           data-bs-toggle="offcanvas"
           data-bs-target="#adminSidebar"
           aria-controls="adminSidebar"
           aria-label="<%= t("admin.nav.open_menu") %>">
-          <%= icon "menu" %>
+          <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="d-flex align-items-center gap-2 d-lg-none">
-          <%= render "layouts/brand_mark", path: admin_root_path, class: "admin-brand", badge: t("admin.nav.admin_badge") %>
-        </div>
+        <%= render "layouts/brand_mark", path: admin_root_path, class: "navbar-brand admin-brand mb-0", badge: t("admin.nav.admin_badge") %>
 
-        <div class="ms-auto d-flex align-items-center gap-3">
-          <div class="text-end lh-sm">
-            <div class="small text-uppercase text-body-secondary fw-semibold"><%= t("admin.area") %></div>
-            <strong><%= manager_name %></strong>
-          </div>
-          <span class="badge text-bg-light border d-none d-sm-inline-flex"><%= t("admin.role") %></span>
-          <%= button_to admin_logout_path,
-            method: :delete,
-            form_class: "m-0",
-            class: "btn btn-outline-secondary btn-sm",
-            title: t("admin.nav.logout"),
-            aria: { label: t("admin.nav.logout") } do %>
-            <%= icon "log-out" %>
-          <% end %>
+        <div class="dropdown ms-auto">
+          <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+            <%= icon "circle-user" %>
+            <span class="d-none d-sm-inline"><%= manager_name %></span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow">
+            <li><h6 class="dropdown-header mb-0"><%= manager_name %></h6></li>
+            <li><span class="dropdown-item-text small text-body-secondary"><%= t("admin.area") %> · <%= t("admin.role") %></span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <%= button_to admin_logout_path,
+                method: :delete,
+                form_class: "m-0",
+                class: "dropdown-item d-flex align-items-center gap-2",
+                title: t("admin.nav.logout"),
+                aria: { label: t("admin.nav.logout") } do %>
+                <%= icon "log-out" %>
+                <span><%= t("admin.nav.logout") %></span>
+              <% end %>
+            </li>
+          </ul>
         </div>
       </div>
     </nav>
 
-    <div class="admin-layout d-lg-flex">
-      <aside class="admin-sidebar offcanvas-lg offcanvas-start bg-white border-end"
-        tabindex="-1"
-        id="adminSidebar"
-        aria-labelledby="adminSidebarLabel">
-        <div class="offcanvas-header border-bottom">
-          <h2 class="offcanvas-title h6 m-0" id="adminSidebarLabel">
-            <%= render "layouts/brand_mark", path: admin_root_path, class: "admin-brand", badge: t("admin.nav.admin_badge") %>
-          </h2>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="<%= t("admin.nav.close_menu") %>"></button>
-        </div>
-
-        <div class="offcanvas-body p-3">
-          <nav class="nav nav-pills flex-column gap-1 w-100" aria-label="<%= t("admin.nav.label") %>">
-            <% nav_items.each do |path, icon_name, label, exact| %>
-              <% target = path.to_s %>
-              <% active = exact ? request.path == target : request.path == target || request.path.start_with?("#{target}/") %>
-              <%= link_to path, class: class_names("nav-link d-flex align-items-center gap-2", "active": active) do %>
-                <%= icon icon_name %>
-                <span><%= label %></span>
-              <% end %>
-            <% end %>
-          </nav>
-        </div>
-      </aside>
-
-      <div class="admin-content flex-grow-1">
-        <div class="container-fluid py-3">
-          <% flash.each do |type, message| %>
-            <% alert_class = type.to_s == "alert" ? "alert-danger" : "alert-success" %>
-            <div class="alert <%= alert_class %> alert-dismissible fade show" role="alert">
-              <%= message %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="<%= t("shared.dismiss_flash") %>"></button>
+    <div class="container-fluid">
+      <div class="row flex-nowrap">
+        <div class="col-auto px-0">
+          <aside class="admin-sidebar offcanvas-lg offcanvas-start bg-body-tertiary border-end"
+            tabindex="-1"
+            id="adminSidebar"
+            aria-labelledby="adminSidebarLabel">
+            <div class="offcanvas-header border-bottom">
+              <h2 class="offcanvas-title h5" id="adminSidebarLabel"><%= t("admin.nav.label") %></h2>
+              <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="<%= t("admin.nav.close_menu") %>"></button>
             </div>
-          <% end %>
+
+            <div class="offcanvas-body d-flex flex-column p-0">
+              <nav class="p-3" aria-label="<%= t("admin.nav.label") %>">
+                <ul class="nav nav-pills flex-column mb-auto gap-1">
+                  <% nav_items.each do |path, icon_name, label, exact| %>
+                    <% target = path.to_s %>
+                    <% active = exact ? request.path == target : request.path == target || request.path.start_with?("#{target}/") %>
+                    <% link_classes = class_names("nav-link d-flex align-items-center gap-2", active ? "active" : "link-body-emphasis") %>
+                    <% link_options = { class: link_classes } %>
+                    <% link_options[:aria] = { current: "page" } if active %>
+                    <li class="nav-item">
+                      <%= link_to path, **link_options do %>
+                        <%= icon icon_name %>
+                        <span><%= label %></span>
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
+              </nav>
+            </div>
+          </aside>
         </div>
 
-        <main class="admin-main container-fluid pb-5">
-          <%= yield %>
-        </main>
+        <div class="col min-vh-100 px-0">
+          <main class="container-xl py-4">
+            <% flash.each do |type, message| %>
+              <% alert_class = type.to_s == "alert" ? "alert-danger" : "alert-success" %>
+              <div class="alert <%= alert_class %> alert-dismissible fade show" role="alert">
+                <%= message %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="<%= t("shared.dismiss_flash") %>"></button>
+              </div>
+            <% end %>
+
+            <%= yield %>
+          </main>
+        </div>
       </div>
     </div>
   </body>

@@ -5,12 +5,7 @@ html[data-pwa="admin"],
   --brand-red: #e30613;
   --brand-red-strong: #b90510;
   --brand-red-soft: rgba(227, 6, 19, 0.14);
-  --brand-red-faint: rgba(227, 6, 19, 0.08);
   --admin-sidebar-width: 17rem;
-  --bs-primary: var(--brand-red);
-  --bs-primary-rgb: 227, 6, 19;
-  --bs-link-color: var(--brand-red-strong);
-  --bs-link-hover-color: #8f030c;
 }
 
 .admin-auth-shell {
@@ -49,16 +44,16 @@ html[data-pwa="admin"],
   box-shadow: none;
 }
 
-.admin-shell {
-  min-height: 100vh;
-}
-
 .admin-shell .icon {
   width: 1rem;
   height: 1rem;
   flex: 0 0 auto;
   color: currentColor;
   vertical-align: -0.125em;
+}
+
+.admin-sidebar {
+  --bs-offcanvas-width: var(--admin-sidebar-width);
 }
 
 .admin-brand {
@@ -108,53 +103,9 @@ html[data-pwa="admin"],
   object-fit: contain;
 }
 
-.admin-sidebar {
-  --bs-offcanvas-width: var(--admin-sidebar-width);
-}
-
-.admin-sidebar .nav-link {
-  color: var(--bs-body-color);
-  font-weight: 600;
-}
-
-.admin-sidebar .nav-link:hover {
-  background: var(--bs-tertiary-bg);
-}
-
-.admin-sidebar .nav-link.active {
-  background: var(--brand-red);
-}
-
-.admin-content {
-  min-width: 0;
-}
-
-.admin-shell .btn-primary {
-  --bs-btn-bg: var(--brand-red);
-  --bs-btn-border-color: var(--brand-red);
-  --bs-btn-hover-bg: var(--brand-red-strong);
-  --bs-btn-hover-border-color: var(--brand-red-strong);
-  --bs-btn-active-bg: var(--brand-red-strong);
-  --bs-btn-active-border-color: var(--brand-red-strong);
-}
-
-.admin-main {
-  max-width: 82rem;
-}
-
-.admin-page-title-icon,
-.stat-card-icon,
-.panel-heading-icon {
-  color: var(--brand-red);
-}
-
 .stat-card-icon {
   width: 1.15rem;
   height: 1.15rem;
-}
-
-.admin-table-actions form {
-  margin: 0;
 }
 
 .admin-row-action {
@@ -166,45 +117,13 @@ html[data-pwa="admin"],
   padding: 0;
 }
 
-.admin-result-count {
-  margin: 0;
-}
-
 .admin-list-loading[hidden] {
   display: none !important;
 }
 
-.badge-active,
-.badge-approved,
-.badge-complete {
-  color: #0b0b0b;
-  background: var(--brand-red-faint);
-  border: 1px solid var(--brand-red-soft);
-}
-
-.badge-open,
-.badge-pending {
-  color: #0b0b0b;
-  background: var(--brand-red-soft);
-  border: 1px solid rgba(227, 6, 19, 0.22);
-}
-
-.badge-disabled,
-.badge-rejected {
-  color: #8f1d14;
-  background: #fee2e2;
-  border: 1px solid #f2b8b5;
-}
-
 @media (min-width: 992px) {
   .admin-sidebar {
-    position: sticky;
-    top: 3.5rem;
     width: var(--admin-sidebar-width);
     min-height: calc(100vh - 3.5rem);
-  }
-
-  .admin-sidebar .offcanvas-header {
-    display: flex;
   }
 }

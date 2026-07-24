@@ -3,7 +3,7 @@
 
 <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
   <div class="d-flex align-items-center gap-2">
-    <%= icon "users", class: "admin-page-title-icon" %>
+    <%= icon "users", class: "text-primary" %>
     <h1 class="h2 mb-0"><%= t(".heading") %></h1>
   </div>
   <%= link_to new_admin_employee_path, class: "btn btn-primary d-inline-flex align-items-center gap-2" do %>
@@ -57,7 +57,7 @@
   <div data-list-loading-target="results">
     <section class="card shadow-sm">
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 admin-table">
+        <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
               <th><%= t(".name") %></th>
@@ -82,7 +82,7 @@
                 <td><%= admin_last_clocking_text(employee, @last_swipes_by_employee_id) %></td>
                 <td><%= duration_text(@month_work_seconds_by_employee_id.fetch(employee.id, 0)) %></td>
                 <td>
-                  <span class="<%= class_names(badge_class(employee_status), "admin-status-badge rounded-pill") %>">
+                  <span class="<%= bootstrap_status_badge_class(employee_status) %>">
                     <%= icon admin_employee_status_icon(employee), class: "admin-badge-icon" %>
                     <span><%= status_text(employee_status) %></span>
                   </span>

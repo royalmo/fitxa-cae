@@ -17,6 +17,10 @@ module ApplicationHelper
     class_names("badge", "badge-#{status}")
   end
 
+  def bootstrap_status_badge_class(status)
+    class_names("badge rounded-pill d-inline-flex align-items-center gap-1", bootstrap_status_badge_variant(status))
+  end
+
   def status_text(status)
     t("statuses.#{status}")
   end
@@ -123,5 +127,18 @@ module ApplicationHelper
 
   def decoded_title(title)
     CGI.unescapeHTML(title.to_s)
+  end
+
+  def bootstrap_status_badge_variant(status)
+    case status.to_s
+    when "active", "approved", "complete"
+      "text-bg-success"
+    when "pending", "open"
+      "text-bg-warning"
+    when "rejected"
+      "text-bg-danger"
+    else
+      "text-bg-secondary"
+    end
   end
 end

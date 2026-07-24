@@ -1,1 +1,7 @@
-@use "bootstrap";
+@use "bootstrap" with (
+  $primary: #e30613,
+  $secondary: #6c757d,
+  $link-color: #b90510,
+  $link-hover-color: #8f030c,
+  $font-family-sans-serif: ("Liber Grotesque Family", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif)
+);

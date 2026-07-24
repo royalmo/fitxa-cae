@@ -1,13 +1,13 @@
 <% content_for :title, t(".title") %>
 
 <div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "upload", class: "admin-page-title-icon" %>
+  <%= icon "upload", class: "text-primary" %>
   <h1 class="h2 mb-0"><%= t(".heading") %></h1>
 </div>
 
 <section class="card shadow-sm">
   <div class="card-body">
-    <%= form_with url: admin_import_path, class: "admin-form" do |form| %>
+    <%= form_with url: admin_import_path do |form| %>
       <div class="mb-3">
         <%= form.label :file, t(".file"), class: "form-label" %>
         <%= form.file_field :file, accept: ".csv", class: "form-control" %>

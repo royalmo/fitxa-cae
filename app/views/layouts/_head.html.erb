@@ -22,7 +22,7 @@
 <link rel="icon" href="/icon.png" type="image/png" sizes="512x512">
 <link rel="apple-touch-icon" href="/icon.png">
 
-<% Array(local_assigns.fetch(:stylesheets, %w[application brand])).each do |stylesheet| %>
+<% Array(local_assigns.fetch(:stylesheets, %w[fonts application brand])).each do |stylesheet| %>
   <%= stylesheet_link_tag stylesheet, "data-turbo-track": "reload" %>
 <% end %>
 <%= javascript_importmap_tags local_assigns.fetch(:javascript, "application") %>

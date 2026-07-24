@@ -21,6 +21,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "body[data-controller~='employee-theme'][data-controller~='submit-feedback'][data-employee-theme-preference-value='system'][data-employee-theme-signed-in-value='true']"
     assert_select "meta[name='color-scheme'][content='light dark']"
     assert_match "localStorage.setItem(storageKey, preference)", response.body
+    assert_select "link[rel='stylesheet'][href*='fonts']", 1
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 0
     assert_select "script[src*='admin']", 0
@@ -126,14 +127,21 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "meta[name='color-scheme'][content='light']"
     assert_select "title", text: "Resum | FitxaCAE Admin"
     assert_select "h1", text: "Resum operatiu"
+    assert_select "link[rel='stylesheet'][href*='fonts']", 1
     assert_select "link[rel='stylesheet'][href*='admin_bootstrap']", 1
     assert_select "link[rel='stylesheet'][href$='admin.css'], link[rel='stylesheet'][href*='/admin-']", 1
     assert_select "link[rel='stylesheet'][href*='application']", 0
     assert_select "script[src*='popper']", 1
     assert_select "script[src*='bootstrap']", 1
-    assert_select "aside#adminSidebar.admin-sidebar.offcanvas-lg nav.nav-pills"
-    assert_select "button[data-bs-toggle='offcanvas'][data-bs-target='#adminSidebar'][aria-label='Obrir menú'] svg.icon"
-    assert_select ".admin-brand .brand-badge", text: "ADMIN"
+    assert_select "aside#adminSidebar.admin-sidebar.offcanvas-lg nav ul.nav.nav-pills"
+    assert_select "aside#adminSidebar a.nav-link.active[aria-current='page'][href='#{admin_root_path}']"
+    assert_select "aside#adminSidebar a.nav-link.link-body-emphasis[href='#{admin_employees_path}']"
+    assert_select "button.navbar-toggler[data-bs-toggle='offcanvas'][data-bs-target='#adminSidebar'][aria-label='Obrir menú'] .navbar-toggler-icon"
+    navbar_child_classes = css_select("nav.navbar > .container-fluid > *").map { |node| node["class"].to_s }
+    assert_includes navbar_child_classes.first, "navbar-toggler"
+    assert_includes navbar_child_classes.second, "admin-brand"
+    assert_select "nav.navbar .admin-brand .brand-badge", text: "ADMIN"
+    assert_select "aside#adminSidebar .admin-brand", 0
 
     get admin_employees_path
     assert_response :success

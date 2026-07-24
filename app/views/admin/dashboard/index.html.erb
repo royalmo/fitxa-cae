@@ -1,7 +1,7 @@
 <% content_for :title, t(".title") %>
 
 <div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "layout-dashboard", class: "admin-page-title-icon" %>
+  <%= icon "layout-dashboard", class: "text-primary" %>
   <h1 class="h2 mb-0"><%= t(".heading") %></h1>
 </div>
 
@@ -11,7 +11,7 @@
       <div class="card h-100 shadow-sm stat-card">
         <div class="card-body">
           <div class="d-flex align-items-center gap-2 text-body-secondary fw-semibold mb-2">
-            <%= icon stat[:icon], class: "stat-card-icon" %>
+            <%= icon stat[:icon], class: "stat-card-icon text-primary" %>
             <span><%= stat[:label] %></span>
           </div>
           <div class="display-6 fw-semibold"><%= stat[:value] %></div>
@@ -25,9 +25,9 @@
 <div class="row g-4">
   <div class="col-12 col-xl-7">
     <section class="card shadow-sm h-100">
-      <div class="card-header bg-white d-flex align-items-center justify-content-between">
+      <div class="card-header d-flex align-items-center justify-content-between">
         <h2 class="h5 mb-0 d-flex align-items-center gap-2">
-          <%= icon "clock", class: "panel-heading-icon" %>
+          <%= icon "clock", class: "text-primary" %>
           <span><%= t(".live_title") %></span>
         </h2>
         <%= link_to admin_employees_path, class: "btn btn-outline-secondary btn-sm", title: t("shared.view"), aria: { label: t("shared.view") } do %>
@@ -36,7 +36,7 @@
       </div>
 
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 admin-table">
+        <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
               <th><%= t(".employee") %></th>
@@ -66,9 +66,9 @@
 
   <div class="col-12 col-xl-5">
     <section class="card shadow-sm h-100">
-      <div class="card-header bg-white d-flex align-items-center justify-content-between">
+      <div class="card-header d-flex align-items-center justify-content-between">
         <h2 class="h5 mb-0 d-flex align-items-center gap-2">
-          <%= icon "square-pen", class: "panel-heading-icon" %>
+          <%= icon "square-pen", class: "text-primary" %>
           <span><%= t(".corrections_title") %></span>
         </h2>
         <%= link_to admin_corrections_path, class: "btn btn-outline-secondary btn-sm", title: t("shared.view"), aria: { label: t("shared.view") } do %>

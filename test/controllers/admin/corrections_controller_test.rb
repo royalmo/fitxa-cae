@@ -25,7 +25,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       text: "Mostrant 1-#{[ SwipeCorrection.count, 20 ].min} de #{SwipeCorrection.count}"
     assert_select "button.btn.admin-row-action[aria-label='Aprovar'][data-submitting-label='Aprovant...'] svg.icon"
     assert_select "button.btn.admin-row-action[aria-label='Rebutjar'][data-submitting-label='Rebutjant...'] svg.icon"
-    assert_select ".admin-status-badge svg.admin-badge-icon"
+    assert_select ".badge.text-bg-warning svg.admin-badge-icon"
   end
 
   test "filters corrections by status and employee" do

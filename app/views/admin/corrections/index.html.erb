@@ -2,7 +2,7 @@
 <% pagination_path = ->(page) { admin_corrections_path(request.query_parameters.except("page").merge(page: page)) } %>
 
 <div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "square-pen", class: "admin-page-title-icon" %>
+  <%= icon "square-pen", class: "text-primary" %>
   <h1 class="h2 mb-0"><%= t(".heading") %></h1>
 </div>
 
@@ -47,7 +47,7 @@
   <div data-list-loading-target="results">
     <section class="card shadow-sm">
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 admin-table">
+        <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
               <th><%= t(".employee") %></th>
@@ -69,7 +69,7 @@
                   <div class="small text-body-secondary"><%= correction_requested_text(correction) %></div>
                 </td>
                 <td>
-                  <span class="<%= class_names(badge_class(correction.status), "admin-status-badge rounded-pill") %>">
+                  <span class="<%= bootstrap_status_badge_class(correction.status) %>">
                     <%= icon correction_status_icon_name(correction.status), class: "admin-badge-icon" %>
                     <span><%= status_text(correction.status) %></span>
                   </span>
@@ -78,9 +78,10 @@
                 <td><%= l(correction.created_at, format: :short) %></td>
                 <td class="text-end">
                   <% if correction.pending? %>
-                    <div class="d-inline-flex gap-1 admin-table-actions">
+                    <div class="d-inline-flex gap-1">
                       <%= button_to approve_admin_correction_path(correction),
                         method: :post,
+                        form_class: "m-0",
                         class: "btn btn-sm btn-outline-success admin-row-action",
                         title: t("shared.approve"),
                         aria: { label: t("shared.approve") },
@@ -89,6 +90,7 @@
                       <% end %>
                       <%= button_to reject_admin_correction_path(correction),
                         method: :post,
+                        form_class: "m-0",
                         class: "btn btn-sm btn-outline-danger admin-row-action",
                         title: t("shared.reject"),
                         aria: { label: t("shared.reject") },

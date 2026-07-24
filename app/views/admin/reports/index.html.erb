@@ -2,7 +2,7 @@
 <% pagination_path = ->(page) { admin_reports_path(request.query_parameters.except("page").merge(page: page)) } %>
 
 <div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "chart-column", class: "admin-page-title-icon" %>
+  <%= icon "chart-column", class: "text-primary" %>
   <h1 class="h2 mb-0"><%= t(".heading") %></h1>
 </div>
 
@@ -43,7 +43,7 @@
   <div data-list-loading-target="results">
     <section class="card shadow-sm">
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 admin-table">
+        <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
               <th><%= t(".employee") %></th>

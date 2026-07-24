@@ -9,7 +9,7 @@
   </div>
 <% end %>
 
-<%= form_with model: [:admin, employee], class: "admin-form" do |form| %>
+<%= form_with model: [:admin, employee] do |form| %>
   <div class="row g-3">
     <div class="col-12 col-md-6">
       <%= form.label :first_name, t("admin.employees.form.first_name"), class: "form-label" %>
