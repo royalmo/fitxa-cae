@@ -4,8 +4,13 @@
 <meta name="application-name" content="<%= t("app.name") %>">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="<%= local_assigns.fetch(:theme_color, "#fff7f7") %>">
+<meta name="color-scheme" content="<%= local_assigns.fetch(:color_scheme, "light") %>">
 <%= csrf_meta_tags %>
 <%= csp_meta_tag %>
+
+<% if local_assigns[:employee_theme] %>
+  <%= render "layouts/employee_theme_bootstrap", **local_assigns[:employee_theme] %>
+<% end %>
 
 <%= yield :head %>
 

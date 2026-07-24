@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="<%= I18n.locale %>" data-pwa="admin">
+<html lang="<%= I18n.locale %>" data-pwa="admin" data-theme-preference="light" data-theme="light">
   <head>
     <%= render "layouts/head", admin: true, manifest: false, theme_color: "#f5f5f5", stylesheets: %w[application admin brand], javascript_assets: %w[admin] %>
   </head>
 
-  <body class="admin-shell" data-controller="submit-feedback">
+  <body class="admin-shell" data-controller="admin-theme submit-feedback">
     <% manager_name = manager_display_name(@manager) %>
 
     <aside class="admin-sidebar">

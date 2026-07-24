@@ -10,6 +10,8 @@ class Employee < ApplicationRecord
   LOGIN_CODE_LENGTH = LOGIN_CODE_RANDOM_DIGITS + 1
   LOGIN_CODE_CHECKSUM = "weighted_mod10_sum"
   LOGIN_CODE_CHECKSUM_WEIGHTS = [ 2, 1, 2, 1, 2, 1 ].freeze
+  THEME_PREFERENCES = %w[light dark system].freeze
+  DEFAULT_THEME_PREFERENCE = "system"
 
   before_validation :normalize_national_id_attribute
 
@@ -70,6 +72,16 @@ class Employee < ApplicationRecord
 
   def password_login_enabled?
     password_digest.present?
+  end
+
+  def theme_preference
+    settings["theme"].presence_in(THEME_PREFERENCES) || DEFAULT_THEME_PREFERENCE
+  end
+
+  def theme_preference=(theme_preference)
+    normalized_theme_preference = theme_preference.to_s.presence_in(THEME_PREFERENCES) || DEFAULT_THEME_PREFERENCE
+
+    self.settings = settings.merge("theme" => normalized_theme_preference)
   end
 
   def latest_swipe(at: Time.current, on: nil)

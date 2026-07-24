@@ -2,6 +2,11 @@
 <% password_error_messages = @account_error_context.to_s == "password" ? @employee.errors.full_messages : [] %>
 <% contact_error_messages = @account_error_context.to_s == "contact" ? @employee.errors.full_messages : [] %>
 <% password_panel_open = @password_panel_open || password_error_messages.any? || params.values_at(:password, :password_confirmation).any?(&:present?) %>
+<% account_theme_options = [
+  [ "light", "sun", t("employee.themes.light") ],
+  [ "dark", "moon", t("employee.themes.dark") ],
+  [ "system", "monitor", t("employee.themes.system") ]
+] %>
 
 <section class="page-intro">
   <div>
@@ -33,6 +38,7 @@
     <%= form_with url: account_contact_path,
       method: :patch,
       class: "stacked-form compact-form account-contact-form",
+      data: { turbo: false },
       html: { id: "account_contact_form" } do |form| %>
       <div class="field">
         <%= form.label :email, t(".email") %>
@@ -41,6 +47,23 @@
       <div class="field">
         <%= form.label :phone, t(".phone") %>
         <%= form.telephone_field :phone, value: @employee.phone, autocomplete: "tel" %>
+      </div>
+      <div class="account-theme-field">
+        <span id="account_theme_label" class="account-theme-label"><%= t(".theme") %>:</span>
+        <div class="account-theme-options" role="radiogroup" aria-labelledby="account_theme_label" data-action="change->employee-theme#choose">
+          <% account_theme_options.each do |preference, icon_name, label| %>
+            <% radio_id = "account_theme_#{preference}" %>
+            <label class="corrections-status-option account-theme-option" for="<%= radio_id %>">
+              <%= radio_button_tag :theme_preference,
+                preference,
+                @employee.theme_preference == preference,
+                id: radio_id,
+                autocomplete: "off" %>
+              <%= icon icon_name, class: "corrections-status-option-icon account-theme-option-icon" %>
+              <span><%= label %></span>
+            </label>
+          <% end %>
+        </div>
       </div>
     <% end %>
 

@@ -14,10 +14,12 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     get login_path
     assert_response :success
     assert_select "title", text: "Iniciar sessió | FitxaCAE"
+    assert_select "html[data-pwa='employee'][data-employee-signed-in='false'][data-employee-theme-preference='system'][data-theme-preference='system']"
     assert_select ".employee-auth-card .brand-mark"
     assert_select ".employee-auth-card .auth-panel", 1
     assert_select ".auth-methods", 0
-    assert_select "body[data-controller~='pwa-session'][data-controller~='submit-feedback']"
+    assert_select "body[data-controller~='employee-theme'][data-controller~='pwa-session'][data-controller~='submit-feedback'][data-employee-theme-preference-value='system'][data-employee-theme-signed-in-value='false']"
+    assert_match "localStorage.getItem(storageKey)", response.body
     assert_select ".employee-install-prompt .employee-install-button", text: /Instal·la FitxaCAE/
     assert_select ".employee-install-prompt .employee-install-button .icon"
     assert_select ".auth-tab-list", text: /Contrasenya/

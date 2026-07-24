@@ -61,7 +61,7 @@ class Employee::AccountsController < ApplicationController
   private
 
   def account_contact_params
-    params.permit(:email, :phone)
+    params.permit(:email, :phone, :theme_preference)
   end
 
   def account_password_params

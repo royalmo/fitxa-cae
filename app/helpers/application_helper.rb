@@ -1,7 +1,9 @@
 require "cgi"
 
 module ApplicationHelper
-  EMPLOYEE_TOPBAR_NAME_LIMIT = 20
+  EMPLOYEE_THEME_STORAGE_KEY = "fitxa-cae.employee.theme"
+  EMPLOYEE_LIGHT_THEME_COLOR = "#e30613"
+  EMPLOYEE_DARK_THEME_COLOR = "#121214"
 
   def nav_item_class(path, exact: nil)
     target = path.to_s
@@ -41,20 +43,8 @@ module ApplicationHelper
     employee&.full_name.presence || employee&.first_name.presence || t("employee.guest")
   end
 
-  def employee_topbar_name(employee)
-    name = employee_display_name(employee).squish
-    return name if name.length <= EMPLOYEE_TOPBAR_NAME_LIMIT
-
-    compact_words = []
-
-    name.split.each do |word|
-      candidate = [ *compact_words, word ].join(" ")
-      break if candidate.length > EMPLOYEE_TOPBAR_NAME_LIMIT
-
-      compact_words << word
-    end
-
-    compact_words.presence&.join(" ") || name.truncate(EMPLOYEE_TOPBAR_NAME_LIMIT, omission: "")
+  def employee_theme_preference(employee)
+    employee&.theme_preference || Employee::DEFAULT_THEME_PREFERENCE
   end
 
   def manager_display_name(manager)

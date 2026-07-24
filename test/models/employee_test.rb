@@ -6,6 +6,21 @@ class EmployeeTest < ActiveSupport::TestCase
 
     assert_predicate employee, :active?
     assert_equal({}, employee.settings)
+    assert_equal "system", employee.theme_preference
+  end
+
+  test "stores theme preference in settings" do
+    employee = create_employee
+
+    employee.theme_preference = "dark"
+
+    assert_equal "dark", employee.theme_preference
+    assert_equal "dark", employee.settings["theme"]
+
+    employee.theme_preference = "invalid"
+
+    assert_equal "system", employee.theme_preference
+    assert_equal "system", employee.settings["theme"]
   end
 
   test "supports optional secure password login" do

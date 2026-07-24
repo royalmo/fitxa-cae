@@ -553,6 +553,9 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-controller='list-loading']"
+    assert_select ".corrections-intro .correction-new-link[href='#{new_correction_path}']"
+    assert_select ".correction-new-link .correction-new-link-full", text: "Nova correcció"
+    assert_select ".correction-new-link .correction-new-link-short", text: "Nova"
     assert_select "form.corrections-filter-form"
     assert_select "fieldset.corrections-filter-panel > legend.sr-only", text: "Filtrar per"
     assert_select "fieldset.corrections-filter-panel > .corrections-filter-header > .corrections-filter-heading", text: "Filtrar per:"

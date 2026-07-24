@@ -48,7 +48,6 @@
 
 :root {
   --bg: #fff7f7;
-  --bg-admin: #f5f5f5;
   --surface: #ffffff;
   --surface-soft: rgba(227, 6, 19, 0.08);
   --line: rgba(227, 6, 19, 0.16);
@@ -56,11 +55,12 @@
   --text: #0b0b0b;
   --muted: #686868;
   --primary: #e30613;
-  --primary-strong: #e30613;
+  --primary-strong: #b90510;
   --danger: #e30613;
   --warning: #e30613;
   --info: #e30613;
   --brand-red: #e30613;
+  --brand-red-strong: #b90510;
   --brand-red-half: rgba(227, 6, 19, 0.5);
   --brand-red-soft: rgba(227, 6, 19, 0.14);
   --brand-red-faint: rgba(227, 6, 19, 0.08);
@@ -91,13 +91,11 @@ body {
   object-fit: contain;
 }
 
-.auth-header .brand-logo,
-.admin-brand .brand-logo {
+.auth-header .brand-logo {
   height: 2.65rem;
 }
 
-.auth-header .brand-fitxa,
-.admin-brand .brand-fitxa {
+.auth-header .brand-fitxa {
   font-size: 1.8rem;
 }
 
@@ -106,25 +104,13 @@ body {
 }
 
 .employee-topbar {
-  background: rgba(255, 255, 255, 0.94);
-}
-
-.admin-sidebar {
-  border-right: 2px solid var(--brand-red);
-  background: #ffffff;
-}
-
-.admin-header {
-  border-bottom: 2px solid var(--text);
-  background: rgba(245, 245, 245, 0.94);
+  background: var(--employee-topbar-bg);
 }
 
 .panel,
 .auth-panel,
-.stat-card,
-.fallback-card,
-.request-row {
-  border-color: rgba(11, 11, 11, 0.2);
+.fallback-card {
+  border-color: var(--line-strong);
 }
 
 .button,
@@ -134,8 +120,7 @@ input[type="submit"],
 .nav-item,
 .field input,
 .field select,
-.field textarea,
-.drop-zone input {
+.field textarea {
   border-radius: 4px;
 }
 
@@ -143,7 +128,7 @@ input[type="submit"],
 input[type="submit"],
 .mini-button,
 .primary-clock {
-  color: #ffffff;
+  color: var(--on-primary);
   border-color: transparent;
   background: var(--brand-red);
 }
@@ -152,8 +137,8 @@ input[type="submit"],
 input[type="submit"]:hover,
 .mini-button:hover,
 .primary-clock:hover {
-  color: #ffffff;
-  background: #b90510;
+  color: var(--on-primary);
+  background: var(--primary-strong);
 }
 
 .button-secondary,
@@ -161,7 +146,7 @@ input[type="submit"]:hover,
 .icon-button {
   color: var(--text);
   border-color: var(--muted);
-  background: #ffffff;
+  background: var(--field-bg);
 }
 
 .text-button {
@@ -169,7 +154,7 @@ input[type="submit"]:hover,
 }
 
 .nav-item.is-active {
-  color: #ffffff;
+  color: var(--on-primary);
   border: 1px solid var(--brand-red);
   background: var(--brand-red);
 }
@@ -180,32 +165,32 @@ input[type="submit"]:hover,
 
 .clock-card {
   border: 1px solid var(--text);
-  background: var(--text);
+  background: var(--clock-card-bg);
 }
 
 .primary-clock.danger,
 .danger {
-  color: #ffffff;
+  color: var(--on-primary);
   background: var(--brand-red);
 }
 
 .primary-clock.danger:hover,
 .danger:hover {
-  color: #ffffff;
-  background: #b90510;
+  color: var(--on-primary);
+  background: var(--primary-strong);
 }
 
 .flash {
   color: var(--text);
-  border-color: rgba(35, 115, 76, 0.28);
-  background: #f1f8f4;
+  border-color: var(--success-line);
+  background: var(--success-soft);
 }
 
 .flash-alert,
 .error-summary {
   border-color: var(--brand-red);
   color: var(--text);
-  background: #fff0ef;
+  background: var(--danger-tint);
 }
 
 .badge-active,
@@ -229,15 +214,10 @@ input[type="submit"]:hover,
 .badge-disabled,
 .badge-rejected {
   color: var(--text);
-  background: #ffd8d6;
+  background: var(--danger-soft);
 }
 
 .timeline-icon {
   color: var(--text);
   background: var(--brand-red-faint);
-}
-
-.drop-zone {
-  border-color: var(--text);
-  background: var(--surface-soft);
 }

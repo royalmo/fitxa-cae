@@ -6,6 +6,8 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "title", text: "Accés de gestió | FitxaCAE Admin"
+    assert_select "html[data-pwa='admin'][data-theme-preference='light'][data-theme='light']"
+    assert_select "meta[name='color-scheme'][content='light']"
     assert_no_match "&amp;#", response.body
     assert_select ".admin-auth-card .brand-mark"
     assert_select ".admin-auth-card .check-row", text: "Mantenir la sessió iniciada"
@@ -16,7 +18,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-auth-footer a[href='/'][target]", 0
     assert_match(/v#{Regexp.escape(Rails.configuration.x.app_version)}\s+·\s+Desenvolupat per/, response.body)
     assert_select "form[action='#{admin_login_path}']"
-    assert_select "body[data-controller~='submit-feedback']"
+    assert_select "body[data-controller~='admin-theme'][data-controller~='submit-feedback']"
     assert_select "input[type='submit'][data-submitting-label='Entrant...']"
     assert_select ".admin-auth-card .auth-panel .flash", 0
     assert_select ".admin-auth-shell > .flash", 0

@@ -5,16 +5,23 @@ const SUBMIT_SELECTOR = "button[type='submit'], input[type='submit']"
 export default class extends Controller {
   connect() {
     this.submitterStates = new WeakMap()
+    this.submitters = new Set()
     this.start = this.start.bind(this)
     this.end = this.end.bind(this)
+    this.nativeStart = this.nativeStart.bind(this)
+    this.restoreSubmitters = this.restoreSubmitters.bind(this)
 
+    document.addEventListener("submit", this.nativeStart)
     document.addEventListener("turbo:submit-start", this.start)
     document.addEventListener("turbo:submit-end", this.end)
+    document.addEventListener("turbo:before-cache", this.restoreSubmitters)
   }
 
   disconnect() {
+    document.removeEventListener("submit", this.nativeStart)
     document.removeEventListener("turbo:submit-start", this.start)
     document.removeEventListener("turbo:submit-end", this.end)
+    document.removeEventListener("turbo:before-cache", this.restoreSubmitters)
   }
 
   start(event) {
@@ -22,9 +29,14 @@ export default class extends Controller {
     this.disableSubmitter(this.submitterFor(event))
   }
 
-  end(event) {
-    if (event.detail.success) return
+  nativeStart(event) {
+    if (event.defaultPrevented || !this.turboDisabled(event.target)) return
 
+    this.dismissFlashes()
+    this.disableSubmitter(event.submitter || this.submitterForForm(event.target), { disable: true })
+  }
+
+  end(event) {
     this.restoreSubmitter(this.submitterFor(event))
   }
 
@@ -32,13 +44,21 @@ export default class extends Controller {
     return event.detail.formSubmission?.submitter || event.target.querySelector(SUBMIT_SELECTOR)
   }
 
-  disableSubmitter(submitter) {
+  submitterForForm(form) {
+    return Array.from(document.querySelectorAll(SUBMIT_SELECTOR)).find((submitter) => submitter.form === form)
+  }
+
+  turboDisabled(form) {
+    return form instanceof HTMLFormElement && form.closest("[data-turbo='false']")
+  }
+
+  disableSubmitter(submitter, { disable = false } = {}) {
     if (!submitter || submitter.dataset.submitFeedbackDisabled === "true") return
     if (this.submitterStates.has(submitter)) return
 
     const state = {
-      disabled: submitter.disabled,
-      ariaBusy: submitter.getAttribute("aria-busy")
+      ariaBusy: submitter.getAttribute("aria-busy"),
+      disabled: disable ? submitter.disabled : null
     }
 
     const submittingLabel = this.submittingLabel(submitter)
@@ -52,7 +72,8 @@ export default class extends Controller {
     }
 
     this.submitterStates.set(submitter, state)
-    submitter.disabled = true
+    this.submitters.add(submitter)
+    if (disable) submitter.disabled = true
     submitter.setAttribute("aria-busy", "true")
     submitter.classList.add("is-submitting")
   }
@@ -67,14 +88,19 @@ export default class extends Controller {
       submitter.innerHTML = state.html
     }
 
-    submitter.disabled = state.disabled
     if (state.ariaBusy === null) {
       submitter.removeAttribute("aria-busy")
     } else {
       submitter.setAttribute("aria-busy", state.ariaBusy)
     }
+    submitter.disabled = state.disabled ?? false
     submitter.classList.remove("is-submitting")
     this.submitterStates.delete(submitter)
+    this.submitters.delete(submitter)
+  }
+
+  restoreSubmitters() {
+    Array.from(this.submitters).forEach((submitter) => this.restoreSubmitter(submitter))
   }
 
   submittingLabel(submitter) {

@@ -1,0 +1,36 @@
+<%= javascript_tag nonce: true do %>
+(() => {
+  const root = document.documentElement
+  const storageKey = <%= raw ApplicationHelper::EMPLOYEE_THEME_STORAGE_KEY.to_json %>
+  const validPreferences = <%= raw Employee::THEME_PREFERENCES.to_json %>
+  const lightThemeColor = <%= raw ApplicationHelper::EMPLOYEE_LIGHT_THEME_COLOR.to_json %>
+  const darkThemeColor = <%= raw ApplicationHelper::EMPLOYEE_DARK_THEME_COLOR.to_json %>
+  const signedIn = <%= signed_in ? "true" : "false" %>
+  const validPreference = (preference) => validPreferences.includes(preference)
+  let preference = <%= raw preference.to_json %>
+
+  if (signedIn) {
+    preference = validPreference(preference) ? preference : "system"
+
+    try {
+      localStorage.setItem(storageKey, preference)
+    } catch (_error) {}
+  } else {
+    try {
+      const storedPreference = localStorage.getItem(storageKey)
+      preference = validPreference(storedPreference) ? storedPreference : preference
+    } catch (_error) {}
+
+    preference = validPreference(preference) ? preference : "system"
+  }
+
+  const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+  const theme = preference === "dark" || (preference === "system" && systemDark) ? "dark" : "light"
+  const themeColor = document.querySelector("meta[name='theme-color']")
+
+  root.dataset.employeeThemePreference = preference
+  root.dataset.themePreference = preference
+  root.dataset.theme = theme
+  if (themeColor) themeColor.setAttribute("content", theme === "dark" ? darkThemeColor : lightThemeColor)
+})()
+<% end %>

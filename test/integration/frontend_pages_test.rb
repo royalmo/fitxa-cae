@@ -17,7 +17,10 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".today-punch-button .today-punch-duration-number.is-hours[data-punch-timer-target='hours']", text: "0"
     assert_select ".today-punch-button .today-punch-duration-number[data-punch-timer-target='minutes']", text: "00"
     assert_select ".today-punch-button .today-punch-duration-number[data-punch-timer-target='seconds']", text: "00"
-    assert_select "body[data-controller~='submit-feedback']"
+    assert_select "html[data-pwa='employee'][data-employee-signed-in='true'][data-employee-theme-preference='system'][data-theme-preference='system']"
+    assert_select "body[data-controller~='employee-theme'][data-controller~='submit-feedback'][data-employee-theme-preference-value='system'][data-employee-theme-signed-in-value='true']"
+    assert_select "meta[name='color-scheme'][content='light dark']"
+    assert_match "localStorage.setItem(storageKey, preference)", response.body
     assert_select "link[rel='stylesheet'][href*='application']", 1
     assert_select "link[rel='stylesheet'][href*='admin']", 0
     assert_select "script[src*='admin']", 0
@@ -73,15 +76,25 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".account-hr-contact-form button[data-submitting-label='Enviant...']"
   end
 
-  test "employee topbar name links to account and trims long names" do
+  test "employee layout uses persisted theme preference" do
+    employee = create_employee(password: "1234", settings: { "theme" => "dark" })
+    log_in_employee(employee)
+
+    get root_path
+
+    assert_response :success
+    assert_select "html[data-employee-signed-in='true'][data-employee-theme-preference='dark'][data-theme-preference='dark'][data-theme='dark']"
+    assert_select "body[data-controller~='employee-theme'][data-employee-theme-preference-value='dark'][data-employee-theme-signed-in-value='true']"
+  end
+
+  test "employee topbar name links to account and shows full names" do
     employee = create_employee(first_name: "Maria", last_name: "Rodriguez Casals", password: "1234")
     log_in_employee(employee)
 
     get root_path
 
     assert_response :success
-    assert_select ".employee-topbar a.employee-chip[href='#{account_path}'][title='Maria Rodriguez Casals'] span", text: "Maria Rodriguez"
-    assert_select ".employee-topbar a.employee-chip", text: /Casals/, count: 0
+    assert_select ".employee-topbar a.employee-chip[href='#{account_path}'][title='Maria Rodriguez Casals'] span", text: "Maria Rodriguez Casals"
   end
 
   test "employee topbar links to admin when employee has a linked manager" do
@@ -108,7 +121,9 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get admin_root_path
     assert_response :success
-    assert_select "body[data-controller~='submit-feedback']"
+    assert_select "html[data-pwa='admin'][data-theme-preference='light'][data-theme='light']"
+    assert_select "body[data-controller~='admin-theme'][data-controller~='submit-feedback']"
+    assert_select "meta[name='color-scheme'][content='light']"
     assert_select "title", text: "Resum | FitxaCAE Admin"
     assert_select "h1", text: "Resum operatiu"
     assert_select "link[rel='stylesheet'][href*='application']", 1

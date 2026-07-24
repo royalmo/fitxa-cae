@@ -88,6 +88,10 @@ ca:
 
   employee:
     guest: "Treballador"
+    themes:
+      light: "Clar"
+      dark: "Fosc"
+      system: "Predeterminat"
     sessions:
       install_prompt: "Instal·la FitxaCAE"
       flash:
@@ -292,6 +296,7 @@ ca:
         national_id: "DNI/NIE"
         email: "Correu"
         phone: "Telèfon"
+        theme: "Tema"
         new_password: "Nova contrasenya"
         password_confirmation: "Repeteix la contrasenya"
         save: "Desar canvis"

@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<html lang="<%= I18n.locale %>" data-pwa="employee">
+<% employee = current_employee || @employee %>
+<% employee_theme_setting = employee_theme_preference(employee) %>
+<% employee_theme_attribute = employee_theme_setting.in?(%w[light dark]) ? %( data-theme="#{employee_theme_setting}") : "" %>
+<html lang="<%= I18n.locale %>"
+  data-pwa="employee"
+  data-employee-signed-in="<%= employee_signed_in? %>"
+  data-employee-theme-preference="<%= employee_theme_setting %>"
+  data-theme-preference="<%= employee_theme_setting %>"<%= raw employee_theme_attribute %>>
   <head>
-    <%= render "layouts/head", manifest: true, theme_color: "#e30613" %>
+    <%= render "layouts/head",
+      manifest: true,
+      theme_color: ApplicationHelper::EMPLOYEE_LIGHT_THEME_COLOR,
+      color_scheme: "light dark",
+      employee_theme: {
+        preference: employee_theme_setting,
+        signed_in: employee_signed_in?
+      } %>
   </head>
 
-  <body class="employee-shell" data-controller="submit-feedback">
-    <% employee = current_employee || @employee %>
-    <% employee_name = employee_topbar_name(employee) %>
+  <body class="employee-shell"
+    data-controller="employee-theme submit-feedback"
+    data-employee-theme-preference-value="<%= employee_theme_setting %>"
+    data-employee-theme-signed-in-value="<%= employee_signed_in? %>">
     <% full_employee_name = employee_display_name(employee) %>
 
     <header class="employee-topbar">
@@ -15,7 +30,7 @@
 
         <div class="employee-topbar-actions">
           <%= link_to account_path, class: "employee-chip", title: full_employee_name do %>
-            <span><%= employee_name %></span>
+            <span><%= full_employee_name %></span>
           <% end %>
 
           <% if employee_signed_in? %>

@@ -26,13 +26,21 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".account-layout"
     assert_select ".account-layout .panel", 0
     assert_select ".account-layout h2", 0
-    assert_select "form.account-contact-form[action='#{account_contact_path}']"
+    assert_select "form.account-contact-form[action='#{account_contact_path}'][data-turbo='false']"
     assert_select ".account-actions-row"
     assert_select "details.account-password-panel > summary.account-password-summary", text: "Canviar contrasenya"
     assert_select "details.account-password-panel > summary .account-summary-icon-down"
     assert_select "details.account-password-panel > summary .account-summary-icon-up"
     assert_select "details.account-password-panel form.account-password-form[action='#{account_password_path}']"
     assert_select "details.account-password-panel form.account-password-form input[name='current_password']", 0
+    assert_select ".account-theme-field"
+    assert_select ".account-theme-label", text: "Tema:"
+    assert_select ".account-theme-options[role='radiogroup'][aria-labelledby='account_theme_label'][data-action='change->employee-theme#choose']"
+    assert_equal [ "Clar", "Fosc", "Predeterminat" ], css_select(".account-theme-option").map { |label| label.text.squish }
+    assert_select ".account-theme-option .account-theme-option-icon", 3
+    assert_select "input#account_theme_light[name='theme_preference'][value='light']", 1
+    assert_select "input#account_theme_dark[name='theme_preference'][value='dark']", 1
+    assert_select "input#account_theme_system[name='theme_preference'][value='system'][checked]", 1
     assert_select ".account-save-button.account-primary-button[form='account_contact_form'][data-submitting-label='Desant...']", text: "Desar canvis"
     assert_select ".account-password-form .account-primary-button[data-submitting-label='Canviant...']", text: "Canviar contrasenya"
     assert_select "hr.account-divider + section.account-hr-contact#human_resources_contact"
@@ -50,6 +58,7 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     patch account_contact_path, params: {
       email: "new@example.test",
       phone: "+34 611 222 333",
+      theme_preference: "dark",
       current_password: "bad",
       password: "5678",
       password_confirmation: "5678"
@@ -59,6 +68,7 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     employee.reload
     assert_equal "new@example.test", employee.email
     assert_equal "+34 611 222 333", employee.phone
+    assert_equal "dark", employee.theme_preference
     assert employee.authenticate("1234")
     assert_not employee.authenticate("5678")
 
@@ -67,6 +77,39 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".employee-page-flash.flash-notice .flash-icon"
     assert_select ".employee-page-flash > span", text: I18n.t("employee.flash.account_updated")
     assert_select ".employee-page-flash .flash-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
+  end
+
+  test "updates theme preference more than once" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    patch account_contact_path, params: {
+      email: "dark@example.test",
+      phone: "+34 611 222 333",
+      theme_preference: "dark"
+    }
+
+    assert_redirected_to account_path
+    assert_equal "dark", employee.reload.theme_preference
+
+    follow_redirect!
+    assert_select "html[data-employee-theme-preference='dark'][data-theme-preference='dark'][data-theme='dark']"
+    assert_select "body[data-employee-theme-preference-value='dark'][data-employee-theme-signed-in-value='true']"
+    assert_select "input#account_theme_dark[name='theme_preference'][value='dark'][checked]", 1
+
+    patch account_contact_path, params: {
+      email: "light@example.test",
+      phone: "+34 611 222 333",
+      theme_preference: "light"
+    }
+
+    assert_redirected_to account_path
+    assert_equal "light", employee.reload.theme_preference
+
+    follow_redirect!
+    assert_select "html[data-employee-theme-preference='light'][data-theme-preference='light'][data-theme='light']"
+    assert_select "body[data-employee-theme-preference-value='light'][data-employee-theme-signed-in-value='true']"
+    assert_select "input#account_theme_light[name='theme_preference'][value='light'][checked]", 1
   end
 
   test "changes an existing password without current password" do

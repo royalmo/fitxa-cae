@@ -1,10 +1,25 @@
 <!DOCTYPE html>
-<html lang="<%= I18n.locale %>" data-pwa="employee">
+<% employee_theme_setting = Employee::DEFAULT_THEME_PREFERENCE %>
+<html lang="<%= I18n.locale %>"
+  data-pwa="employee"
+  data-employee-signed-in="false"
+  data-employee-theme-preference="<%= employee_theme_setting %>"
+  data-theme-preference="<%= employee_theme_setting %>">
   <head>
-    <%= render "layouts/head", manifest: true, theme_color: "#e30613" %>
+    <%= render "layouts/head",
+      manifest: true,
+      theme_color: ApplicationHelper::EMPLOYEE_LIGHT_THEME_COLOR,
+      color_scheme: "light dark",
+      employee_theme: {
+        preference: employee_theme_setting,
+        signed_in: false
+      } %>
   </head>
 
-  <body class="employee-shell employee-auth-shell auth-shell" data-controller="pwa-session submit-feedback">
+  <body class="employee-shell employee-auth-shell auth-shell"
+    data-controller="employee-theme pwa-session submit-feedback"
+    data-employee-theme-preference-value="<%= employee_theme_setting %>"
+    data-employee-theme-signed-in-value="false">
     <main class="auth-main">
       <%= yield %>
     </main>
