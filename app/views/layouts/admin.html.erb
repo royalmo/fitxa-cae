@@ -1,79 +1,94 @@
 <!DOCTYPE html>
 <html lang="<%= I18n.locale %>" data-pwa="admin" data-theme-preference="light" data-theme="light">
   <head>
-    <%= render "layouts/head", admin: true, manifest: false, theme_color: "#f5f5f5", stylesheets: %w[application admin brand], javascript_assets: %w[admin] %>
+    <%= render "layouts/head", admin: true, manifest: false, theme_color: "#f8f9fa", stylesheets: %w[admin_bootstrap admin] %>
+    <%= javascript_include_tag "popper", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "bootstrap", "data-turbo-track": "reload" %>
   </head>
 
-  <body class="admin-shell"
-    data-controller="admin-theme submit-feedback admin-sidebar"
-    data-admin-sidebar-open-class="is-admin-sidebar-open">
+  <body class="admin-shell bg-body-tertiary" data-controller="admin-theme submit-feedback">
     <% manager_name = manager_display_name(@manager) %>
+    <% nav_items = [
+      [admin_root_path, "layout-dashboard", t("admin.nav.dashboard"), true],
+      [admin_employees_path, "users", t("admin.nav.employees"), false],
+      [admin_corrections_path, "square-pen", t("admin.nav.corrections"), false],
+      [admin_reports_path, "chart-column", t("admin.nav.reports"), false]
+    ] %>
 
-    <button type="button"
-      class="admin-sidebar-backdrop"
-      aria-label="<%= t("admin.nav.close_menu") %>"
-      data-action="admin-sidebar#close"></button>
-
-    <aside id="admin-sidebar" class="admin-sidebar" data-admin-sidebar-target="sidebar">
-      <div class="admin-sidebar-header">
-        <%= render "layouts/brand_mark", path: admin_root_path, class: "admin-brand", badge: t("admin.nav.admin_badge") %>
-        <button type="button"
-          class="icon-button admin-sidebar-close"
-          title="<%= t("admin.nav.close_menu") %>"
-          aria-label="<%= t("admin.nav.close_menu") %>"
-          data-action="admin-sidebar#close">
-          <%= icon "x" %>
+    <nav class="navbar bg-white border-bottom sticky-top shadow-sm">
+      <div class="container-fluid">
+        <button class="btn btn-outline-secondary d-lg-none"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#adminSidebar"
+          aria-controls="adminSidebar"
+          aria-label="<%= t("admin.nav.open_menu") %>">
+          <%= icon "menu" %>
         </button>
-      </div>
 
-      <nav class="admin-nav" aria-label="<%= t("admin.nav.label") %>" data-action="click->admin-sidebar#close">
-        <% [
-          [admin_root_path, "layout-dashboard", t("admin.nav.dashboard"), true],
-          [admin_employees_path, "users", t("admin.nav.employees"), false],
-          [admin_corrections_path, "square-pen", t("admin.nav.corrections"), false],
-          [admin_reports_path, "chart-column", t("admin.nav.reports"), false]
-        ].each do |path, icon_name, label, exact| %>
-          <%= link_to path, class: nav_item_class(path, exact: exact) do %>
-            <%= icon icon_name %>
-            <span><%= label %></span>
-          <% end %>
-        <% end %>
-      </nav>
-    </aside>
+        <div class="d-flex align-items-center gap-2 d-lg-none">
+          <%= render "layouts/brand_mark", path: admin_root_path, class: "admin-brand", badge: t("admin.nav.admin_badge") %>
+        </div>
 
-    <div class="admin-workspace">
-      <header class="admin-header">
-        <div class="admin-header-main">
-          <button type="button"
-            class="icon-button admin-sidebar-toggle"
-            aria-controls="admin-sidebar"
-            aria-expanded="false"
-            title="<%= t("admin.nav.open_menu") %>"
-            aria-label="<%= t("admin.nav.open_menu") %>"
-            data-admin-sidebar-target="button"
-            data-action="admin-sidebar#toggle">
-            <%= icon "menu" %>
-          </button>
-          <div class="admin-header-copy">
-            <p class="eyebrow"><%= t("admin.area") %></p>
+        <div class="ms-auto d-flex align-items-center gap-3">
+          <div class="text-end lh-sm">
+            <div class="small text-uppercase text-body-secondary fw-semibold"><%= t("admin.area") %></div>
             <strong><%= manager_name %></strong>
           </div>
-        </div>
-        <div class="admin-profile">
-          <span><%= t("admin.role") %></span>
-          <%= button_to admin_logout_path, method: :delete, form_class: "topbar-form", class: "icon-button", title: t("admin.nav.logout"), aria: { label: t("admin.nav.logout") } do %>
+          <span class="badge text-bg-light border d-none d-sm-inline-flex"><%= t("admin.role") %></span>
+          <%= button_to admin_logout_path,
+            method: :delete,
+            form_class: "m-0",
+            class: "btn btn-outline-secondary btn-sm",
+            title: t("admin.nav.logout"),
+            aria: { label: t("admin.nav.logout") } do %>
             <%= icon "log-out" %>
           <% end %>
         </div>
-      </header>
+      </div>
+    </nav>
 
-      <% flash.each do |type, message| %>
-        <div class="flash flash-<%= type %>"><%= message %></div>
-      <% end %>
+    <div class="admin-layout d-lg-flex">
+      <aside class="admin-sidebar offcanvas-lg offcanvas-start bg-white border-end"
+        tabindex="-1"
+        id="adminSidebar"
+        aria-labelledby="adminSidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h2 class="offcanvas-title h6 m-0" id="adminSidebarLabel">
+            <%= render "layouts/brand_mark", path: admin_root_path, class: "admin-brand", badge: t("admin.nav.admin_badge") %>
+          </h2>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="<%= t("admin.nav.close_menu") %>"></button>
+        </div>
 
-      <main class="admin-main">
-        <%= yield %>
-      </main>
+        <div class="offcanvas-body p-3">
+          <nav class="nav nav-pills flex-column gap-1 w-100" aria-label="<%= t("admin.nav.label") %>">
+            <% nav_items.each do |path, icon_name, label, exact| %>
+              <% target = path.to_s %>
+              <% active = exact ? request.path == target : request.path == target || request.path.start_with?("#{target}/") %>
+              <%= link_to path, class: class_names("nav-link d-flex align-items-center gap-2", "active": active) do %>
+                <%= icon icon_name %>
+                <span><%= label %></span>
+              <% end %>
+            <% end %>
+          </nav>
+        </div>
+      </aside>
+
+      <div class="admin-content flex-grow-1">
+        <div class="container-fluid py-3">
+          <% flash.each do |type, message| %>
+            <% alert_class = type.to_s == "alert" ? "alert-danger" : "alert-success" %>
+            <div class="alert <%= alert_class %> alert-dismissible fade show" role="alert">
+              <%= message %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="<%= t("shared.dismiss_flash") %>"></button>
+            </div>
+          <% end %>
+        </div>
+
+        <main class="admin-main container-fluid pb-5">
+          <%= yield %>
+        </main>
+      </div>
     </div>
   </body>
 </html>

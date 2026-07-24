@@ -23,8 +23,8 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='list-loading']"
     assert_select ".admin-result-count[data-list-loading-target='results']",
       text: "Mostrant 1-#{[ SwipeCorrection.count, 20 ].min} de #{SwipeCorrection.count}"
-    assert_select "button.icon-button.admin-row-action[aria-label='Aprovar'][data-submitting-label='Aprovant...'] svg.icon"
-    assert_select "button.icon-button.admin-row-action[aria-label='Rebutjar'][data-submitting-label='Rebutjant...'] svg.icon"
+    assert_select "button.btn.admin-row-action[aria-label='Aprovar'][data-submitting-label='Aprovant...'] svg.icon"
+    assert_select "button.btn.admin-row-action[aria-label='Rebutjar'][data-submitting-label='Rebutjant...'] svg.icon"
     assert_select ".admin-status-badge svg.admin-badge-icon"
   end
 

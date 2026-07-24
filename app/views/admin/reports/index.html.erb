@@ -1,44 +1,50 @@
 <% content_for :title, t(".title") %>
 <% pagination_path = ->(page) { admin_reports_path(request.query_parameters.except("page").merge(page: page)) } %>
 
-<section class="admin-page-heading">
-  <h1 class="admin-page-title"><%= icon "chart-column", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
-</section>
+<div class="d-flex align-items-center gap-2 mb-4">
+  <%= icon "chart-column", class: "admin-page-title-icon" %>
+  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+</div>
 
 <div data-controller="list-loading">
-  <section class="panel admin-filter-panel">
-    <div class="admin-filter-header">
-      <p class="admin-filter-title"><%= t("admin.filters.title") %></p>
-      <%= render "admin/shared/result_count",
-        count: @admin_records_count,
-        range_start: @admin_records_range_start,
-        range_end: @admin_records_range_end %>
-    </div>
+  <section class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+        <h2 class="h6 mb-0"><%= t("admin.filters.title") %></h2>
+        <%= render "admin/shared/result_count",
+          count: @admin_records_count,
+          range_start: @admin_records_range_start,
+          range_end: @admin_records_range_end %>
+      </div>
 
-    <%= form_with url: admin_reports_path, method: :get, class: "filter-bar admin-filter-form admin-report-filter-form" do |form| %>
-      <div class="field">
-        <%= form.label :month, t(".month"), class: "sr-only" %>
-        <%= form.month_field :month, value: @month.strftime("%Y-%m"), data: { action: "change->list-loading#filter" } %>
-      </div>
-      <div class="field">
-        <%= form.label :employee_id, t(".employee"), class: "sr-only" %>
-        <%= form.select :employee_id,
-          [[t(".all_employees"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] },
-          { selected: @selected_employee_id },
-          data: { action: "change->list-loading#filter" } %>
-      </div>
-      <%= button_tag type: :submit, class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } do %>
-        <%= icon "filter" %>
-        <span><%= t("shared.filter") %></span>
+      <%= form_with url: admin_reports_path, method: :get, class: "row g-2 align-items-end" do |form| %>
+        <div class="col-12 col-md-4">
+          <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
+          <%= form.month_field :month, value: @month.strftime("%Y-%m"), class: "form-control", data: { action: "change->list-loading#filter" } %>
+        </div>
+        <div class="col-12 col-md-6">
+          <%= form.label :employee_id, t(".employee"), class: "form-label visually-hidden" %>
+          <%= form.select :employee_id,
+            [[t(".all_employees"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] },
+            { selected: @selected_employee_id },
+            class: "form-select",
+            data: { action: "change->list-loading#filter" } %>
+        </div>
+        <div class="col-12 col-md-auto">
+          <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
+            <%= icon "filter" %>
+            <span><%= t("shared.filter") %></span>
+          <% end %>
+        </div>
       <% end %>
-    <% end %>
+    </div>
   </section>
 
   <div data-list-loading-target="results">
-    <section class="panel flush-panel">
-      <div class="table-wrap">
-        <table class="admin-table">
-          <thead>
+    <section class="card shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 admin-table">
+          <thead class="table-light">
             <tr>
               <th><%= t(".employee") %></th>
               <th><%= t(".hours") %></th>
@@ -60,8 +66,8 @@
       </div>
 
       <% if @report_rows.empty? %>
-        <div class="empty-state">
-          <p><%= t(".empty") %></p>
+        <div class="card-body text-center text-body-secondary">
+          <%= t(".empty") %>
         </div>
       <% end %>
     </section>

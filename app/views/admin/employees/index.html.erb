@@ -1,55 +1,64 @@
 <% content_for :title, t(".title") %>
 <% pagination_path = ->(page) { admin_employees_path(request.query_parameters.except("page").merge(page: page)) } %>
 
-<section class="admin-page-heading split-intro">
-  <h1 class="admin-page-title"><%= icon "users", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
-  <%= link_to new_admin_employee_path, class: "button button-primary" do %>
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <%= icon "users", class: "admin-page-title-icon" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+  <%= link_to new_admin_employee_path, class: "btn btn-primary d-inline-flex align-items-center gap-2" do %>
     <%= icon "user-plus" %>
     <span><%= t(".new_employee") %></span>
   <% end %>
-</section>
+</div>
 
 <div data-controller="list-loading">
-  <section class="panel admin-filter-panel">
-    <div class="admin-filter-header">
-      <p class="admin-filter-title"><%= t("admin.filters.title") %></p>
-      <%= render "admin/shared/result_count",
-        count: @admin_records_count,
-        range_start: @admin_records_range_start,
-        range_end: @admin_records_range_end %>
-    </div>
+  <section class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+        <h2 class="h6 mb-0"><%= t("admin.filters.title") %></h2>
+        <%= render "admin/shared/result_count",
+          count: @admin_records_count,
+          range_start: @admin_records_range_start,
+          range_end: @admin_records_range_end %>
+      </div>
 
-    <%= form_with url: admin_employees_path, method: :get, class: "filter-bar admin-filter-form" do |form| %>
-      <div class="field">
-        <%= form.label :q, t("shared.search"), class: "sr-only" %>
-        <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder") %>
-      </div>
-      <div class="field">
-        <%= form.label :tag_id, t(".tags"), class: "sr-only" %>
-        <%= form.select :tag_id,
-          [[t(".all_tags"), ""]] + @tags.map { |tag| [tag.name, tag.id] },
-          { selected: params[:tag_id] },
-          data: { action: "change->list-loading#filter" } %>
-      </div>
-      <div class="field">
-        <%= form.label :status, t(".status"), class: "sr-only" %>
-        <%= form.select :status,
-          [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]],
-          { selected: params[:status] },
-          data: { action: "change->list-loading#filter" } %>
-      </div>
-      <%= button_tag type: :submit, class: "button button-secondary", data: { submitting_label: t("shared.submitting.filtering") } do %>
-        <%= icon "filter" %>
-        <span><%= t("shared.filter") %></span>
+      <%= form_with url: admin_employees_path, method: :get, class: "row g-2 align-items-end" do |form| %>
+        <div class="col-12 col-lg-5">
+          <%= form.label :q, t("shared.search"), class: "form-label visually-hidden" %>
+          <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder"), class: "form-control" %>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <%= form.label :tag_id, t(".tags"), class: "form-label visually-hidden" %>
+          <%= form.select :tag_id,
+            [[t(".all_tags"), ""]] + @tags.map { |tag| [tag.name, tag.id] },
+            { selected: params[:tag_id] },
+            class: "form-select",
+            data: { action: "change->list-loading#filter" } %>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+          <%= form.label :status, t(".status"), class: "form-label visually-hidden" %>
+          <%= form.select :status,
+            [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]],
+            { selected: params[:status] },
+            class: "form-select",
+            data: { action: "change->list-loading#filter" } %>
+        </div>
+        <div class="col-12 col-lg-auto">
+          <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
+            <%= icon "filter" %>
+            <span><%= t("shared.filter") %></span>
+          <% end %>
+        </div>
       <% end %>
-    <% end %>
+    </div>
   </section>
 
   <div data-list-loading-target="results">
-    <section class="panel flush-panel">
-      <div class="table-wrap">
-        <table class="admin-table">
-          <thead>
+    <section class="card shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 admin-table">
+          <thead class="table-light">
             <tr>
               <th><%= t(".name") %></th>
               <th><%= t(".national_id") %></th>
@@ -57,7 +66,7 @@
               <th><%= t(".last_clocking") %></th>
               <th><%= t(".month_hours") %></th>
               <th><%= t(".status") %></th>
-              <th class="admin-action-column"><%= t("shared.actions") %></th>
+              <th class="text-end"><%= t("shared.actions") %></th>
             </tr>
           </thead>
           <tbody>
@@ -65,26 +74,22 @@
               <% employee_status = admin_employee_status(employee) %>
               <tr>
                 <td>
-                  <div class="person-cell">
-                    <div>
-                      <strong><%= employee_display_name(employee) %></strong>
-                      <small><%= [employee.email, employee.phone].compact_blank.join(" · ").presence || t(".no_contact") %></small>
-                    </div>
-                  </div>
+                  <strong><%= employee_display_name(employee) %></strong>
+                  <div class="small text-body-secondary"><%= [employee.email, employee.phone].compact_blank.join(" · ").presence || t(".no_contact") %></div>
                 </td>
                 <td><%= employee.national_id %></td>
                 <td><%= admin_employee_tags(employee) %></td>
                 <td><%= admin_last_clocking_text(employee, @last_swipes_by_employee_id) %></td>
                 <td><%= duration_text(@month_work_seconds_by_employee_id.fetch(employee.id, 0)) %></td>
                 <td>
-                  <span class="<%= class_names(badge_class(employee_status), "admin-status-badge") %>">
+                  <span class="<%= class_names(badge_class(employee_status), "admin-status-badge rounded-pill") %>">
                     <%= icon admin_employee_status_icon(employee), class: "admin-badge-icon" %>
                     <span><%= status_text(employee_status) %></span>
                   </span>
                 </td>
-                <td class="admin-action-cell">
+                <td class="text-end">
                   <%= link_to edit_admin_employee_path(employee),
-                    class: "icon-button admin-row-action",
+                    class: "btn btn-sm btn-outline-secondary admin-row-action",
                     title: t("shared.edit"),
                     aria: { label: t("shared.edit") } do %>
                     <%= icon "pencil" %>
@@ -97,8 +102,8 @@
       </div>
 
       <% if @employees.empty? %>
-        <div class="empty-state">
-          <p><%= t(".empty") %></p>
+        <div class="card-body text-center text-body-secondary">
+          <%= t(".empty") %>
         </div>
       <% end %>
     </section>

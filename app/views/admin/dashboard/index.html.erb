@@ -1,82 +1,100 @@
 <% content_for :title, t(".title") %>
 
-<section class="admin-page-heading">
-  <h1 class="admin-page-title"><%= icon "layout-dashboard", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
-</section>
+<div class="d-flex align-items-center gap-2 mb-4">
+  <%= icon "layout-dashboard", class: "admin-page-title-icon" %>
+  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+</div>
 
-<section class="stat-grid">
+<div class="row g-3 mb-4">
   <% @stats.each do |stat| %>
-    <article class="stat-card">
-      <span class="stat-card-label"><%= icon stat[:icon], class: "stat-card-icon" %><span><%= stat[:label] %></span></span>
-      <strong><%= stat[:value] %></strong>
-      <small><%= stat[:detail] %></small>
-    </article>
-  <% end %>
-</section>
-
-<div class="admin-grid">
-  <section class="panel flush-panel">
-    <div class="panel-heading padded-heading">
-      <h2><%= icon "clock", class: "panel-heading-icon" %><span><%= t(".live_title") %></span></h2>
-      <%= link_to admin_employees_path, class: "icon-button admin-panel-link", title: t("shared.view"), aria: { label: t("shared.view") } do %>
-        <%= icon "arrow-right" %>
-      <% end %>
-    </div>
-
-    <div class="table-wrap">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th><%= t(".employee") %></th>
-            <th><%= t(".tags") %></th>
-            <th><%= t(".last_clocking") %></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @recent_swipes.each do |swipe| %>
-            <tr>
-              <td>
-                <div class="person-cell">
-                  <span><%= employee_display_name(swipe.employee) %></span>
-                </div>
-              </td>
-              <td><%= swipe.employee.tags.any? ? swipe.employee.tags.map(&:name).join(", ") : t(".no_tags") %></td>
-              <td><%= clocking_kind_text(swipe.kind) %> · <%= l(swipe.swipe_at, format: :short) %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-
-    <% if @recent_swipes.empty? %>
-      <div class="empty-state">
-        <p><%= t(".no_recent_swipes") %></p>
-      </div>
-    <% end %>
-  </section>
-
-  <section class="panel">
-    <div class="panel-heading">
-      <h2><%= icon "square-pen", class: "panel-heading-icon" %><span><%= t(".corrections_title") %></span></h2>
-      <%= link_to admin_corrections_path, class: "icon-button admin-panel-link", title: t("shared.view"), aria: { label: t("shared.view") } do %>
-        <%= icon "arrow-right" %>
-      <% end %>
-    </div>
-
-    <div class="request-list compact-list">
-      <% @pending_corrections.each do |correction| %>
-        <article class="request-row">
-          <div>
-            <strong><%= employee_display_name(correction.employee) %></strong>
-            <span><%= correction_requested_text(correction) %></span>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card h-100 shadow-sm stat-card">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 text-body-secondary fw-semibold mb-2">
+            <%= icon stat[:icon], class: "stat-card-icon" %>
+            <span><%= stat[:label] %></span>
           </div>
-          <small><%= l(correction.created_at, format: :short) %></small>
-        </article>
-      <% end %>
+          <div class="display-6 fw-semibold"><%= stat[:value] %></div>
+          <div class="small text-primary fw-semibold"><%= stat[:detail] %></div>
+        </div>
+      </div>
     </div>
+  <% end %>
+</div>
 
-    <% if @pending_corrections.empty? %>
-      <p class="muted"><%= t(".no_pending_corrections") %></p>
-    <% end %>
-  </section>
+<div class="row g-4">
+  <div class="col-12 col-xl-7">
+    <section class="card shadow-sm h-100">
+      <div class="card-header bg-white d-flex align-items-center justify-content-between">
+        <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+          <%= icon "clock", class: "panel-heading-icon" %>
+          <span><%= t(".live_title") %></span>
+        </h2>
+        <%= link_to admin_employees_path, class: "btn btn-outline-secondary btn-sm", title: t("shared.view"), aria: { label: t("shared.view") } do %>
+          <%= icon "arrow-right" %>
+        <% end %>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 admin-table">
+          <thead class="table-light">
+            <tr>
+              <th><%= t(".employee") %></th>
+              <th><%= t(".tags") %></th>
+              <th><%= t(".last_clocking") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @recent_swipes.each do |swipe| %>
+              <tr>
+                <td><strong><%= employee_display_name(swipe.employee) %></strong></td>
+                <td><%= swipe.employee.tags.any? ? swipe.employee.tags.map(&:name).join(", ") : t(".no_tags") %></td>
+                <td><%= clocking_kind_text(swipe.kind) %> · <%= l(swipe.swipe_at, format: :short) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @recent_swipes.empty? %>
+        <div class="card-body text-center text-body-secondary">
+          <%= t(".no_recent_swipes") %>
+        </div>
+      <% end %>
+    </section>
+  </div>
+
+  <div class="col-12 col-xl-5">
+    <section class="card shadow-sm h-100">
+      <div class="card-header bg-white d-flex align-items-center justify-content-between">
+        <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+          <%= icon "square-pen", class: "panel-heading-icon" %>
+          <span><%= t(".corrections_title") %></span>
+        </h2>
+        <%= link_to admin_corrections_path, class: "btn btn-outline-secondary btn-sm", title: t("shared.view"), aria: { label: t("shared.view") } do %>
+          <%= icon "arrow-right" %>
+        <% end %>
+      </div>
+
+      <div class="list-group list-group-flush">
+        <% @pending_corrections.each do |correction| %>
+          <article class="list-group-item">
+            <div class="d-flex justify-content-between gap-3">
+              <div>
+                <strong><%= employee_display_name(correction.employee) %></strong>
+                <div class="small text-body-secondary"><%= correction_requested_text(correction) %></div>
+              </div>
+              <small class="text-body-secondary text-nowrap"><%= l(correction.created_at, format: :short) %></small>
+            </div>
+          </article>
+        <% end %>
+      </div>
+
+      <% if @pending_corrections.empty? %>
+        <div class="card-body text-body-secondary">
+          <%= t(".no_pending_corrections") %>
+        </div>
+      <% end %>
+    </section>
+  </div>
 </div>

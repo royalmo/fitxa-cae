@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-const ADMIN_THEME_COLOR = "#f5f5f5"
+const ADMIN_THEME_COLOR = "#f8f9fa"
 
 export default class extends Controller {
   connect() {

@@ -1,26 +1,29 @@
 <% content_for :title, t(".title") %>
 
-<section class="admin-page-heading split-intro">
-  <h1 class="admin-page-title"><%= icon "upload", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
-</section>
+<div class="d-flex align-items-center gap-2 mb-4">
+  <%= icon "upload", class: "admin-page-title-icon" %>
+  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+</div>
 
-<section class="panel">
-  <%= form_with url: admin_import_path, class: "stacked-form admin-form" do |form| %>
-    <div class="drop-zone">
-      <%= form.label :file, t(".file") %>
-      <%= form.file_field :file, accept: ".csv" %>
-      <p><%= t(".columns") %></p>
-    </div>
+<section class="card shadow-sm">
+  <div class="card-body">
+    <%= form_with url: admin_import_path, class: "admin-form" do |form| %>
+      <div class="mb-3">
+        <%= form.label :file, t(".file"), class: "form-label" %>
+        <%= form.file_field :file, accept: ".csv", class: "form-control" %>
+        <div class="form-text"><%= t(".columns") %></div>
+      </div>
 
-    <div class="form-actions">
-      <%= link_to admin_employees_path, class: "button button-secondary" do %>
-        <%= icon "x" %>
-        <span><%= t("shared.cancel") %></span>
-      <% end %>
-      <%= button_tag type: :submit, class: "button button-primary", data: { submitting_label: t("shared.submitting.importing") } do %>
-        <%= icon "upload" %>
-        <span><%= t(".submit") %></span>
-      <% end %>
-    </div>
-  <% end %>
+      <div class="d-flex flex-wrap gap-2">
+        <%= link_to admin_employees_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
+          <%= icon "x" %>
+          <span><%= t("shared.cancel") %></span>
+        <% end %>
+        <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.importing") } do %>
+          <%= icon "upload" %>
+          <span><%= t(".submit") %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 </section>

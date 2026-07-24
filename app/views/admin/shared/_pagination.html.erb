@@ -1,29 +1,37 @@
 <% if total_pages > 1 %>
-  <nav class="admin-pagination" aria-label="<%= t("admin.pagination.label") %>">
-    <% if previous_page %>
-      <%= link_to path.call(previous_page), class: "admin-page-link", data: { action: "click->list-loading#navigate" } do %>
-        <%= icon "chevron-left" %>
-        <span><%= t("admin.pagination.previous_page") %></span>
-      <% end %>
-    <% else %>
-      <span class="admin-page-link is-disabled">
-        <%= icon "chevron-left" %>
-        <span><%= t("admin.pagination.previous_page") %></span>
-      </span>
-    <% end %>
+  <nav class="mt-3" aria-label="<%= t("admin.pagination.label") %>">
+    <ul class="pagination justify-content-center mb-0">
+      <li class="page-item <%= "disabled" unless previous_page %>">
+        <% if previous_page %>
+          <%= link_to path.call(previous_page), class: "page-link admin-page-link", data: { action: "click->list-loading#navigate" } do %>
+            <%= icon "chevron-left" %>
+            <span><%= t("admin.pagination.previous_page") %></span>
+          <% end %>
+        <% else %>
+          <span class="page-link admin-page-link">
+            <%= icon "chevron-left" %>
+            <span><%= t("admin.pagination.previous_page") %></span>
+          </span>
+        <% end %>
+      </li>
 
-    <span class="admin-page-status"><%= t("admin.pagination.page_status", page: page, total_pages: total_pages) %></span>
+      <li class="page-item disabled">
+        <span class="page-link admin-page-status"><%= t("admin.pagination.page_status", page: page, total_pages: total_pages) %></span>
+      </li>
 
-    <% if next_page %>
-      <%= link_to path.call(next_page), class: "admin-page-link", data: { action: "click->list-loading#navigate" } do %>
-        <span><%= t("admin.pagination.next_page") %></span>
-        <%= icon "chevron-right" %>
-      <% end %>
-    <% else %>
-      <span class="admin-page-link is-disabled">
-        <span><%= t("admin.pagination.next_page") %></span>
-        <%= icon "chevron-right" %>
-      </span>
-    <% end %>
+      <li class="page-item <%= "disabled" unless next_page %>">
+        <% if next_page %>
+          <%= link_to path.call(next_page), class: "page-link admin-page-link", data: { action: "click->list-loading#navigate" } do %>
+            <span><%= t("admin.pagination.next_page") %></span>
+            <%= icon "chevron-right" %>
+          <% end %>
+        <% else %>
+          <span class="page-link admin-page-link">
+            <span><%= t("admin.pagination.next_page") %></span>
+            <%= icon "chevron-right" %>
+          </span>
+        <% end %>
+      </li>
+    </ul>
   </nav>
 <% end %>

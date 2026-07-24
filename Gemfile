@@ -70,3 +70,8 @@ end
 
 # Rails view helper for Lucide icons without app-local SVG source files.
 gem "lucide-rails", "~> 0.7.4"
+
+# Bootstrap source assets for the logged-in admin layout.
+gem "bootstrap", "~> 5.3"
+# Builds the admin Bootstrap Sass entrypoint into Propshaft-served CSS.
+gem "dartsass-rails", "~> 0.5.1"

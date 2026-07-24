@@ -1,9 +1,12 @@
 <% content_for :title, t(".title") %>
 
-<section class="admin-page-heading">
-  <h1 class="admin-page-title"><%= icon "user-plus", class: "admin-page-title-icon" %><span><%= t(".heading") %></span></h1>
-</section>
+<div class="d-flex align-items-center gap-2 mb-4">
+  <%= icon "user-plus", class: "admin-page-title-icon" %>
+  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+</div>
 
-<section class="panel">
-  <%= render "form", employee: @employee %>
+<section class="card shadow-sm">
+  <div class="card-body">
+    <%= render "form", employee: @employee %>
+  </div>
 </section>
