@@ -455,8 +455,29 @@ ca:
         title: "Calendaris"
         heading: "Calendaris"
         employee: "Treballador"
+        employee_search_placeholder: "Cerca per nom, DNI, correu o telèfon"
         year: "Any"
-        empty: "No hi ha treballadors."
+        previous_year: "Any anterior"
+        next_year: "Any següent"
+        loading: "Carregant calendari..."
+        empty: "Selecciona una treballadora per veure el calendari."
+        no_employee_results: "Cap treballadora trobada."
+        correct: "Corregir"
+        create_swipes: "Crear"
+        review: "Revisar"
+        legend:
+          swipes: "Fitxatges"
+          pending: "Pendent"
+          odd: "Erroni"
+        day_reasons:
+          empty: "Sense fitxatges."
+          swipes:
+            one: "1 fitxatge, %{duration} treballats."
+            other: "%{count} fitxatges, %{duration} treballats."
+          pending_correction: "Hi ha una correcció pendent de validació."
+          odd_swipes:
+            one: "Nombre imparell de fitxatges."
+            other: "Nombre imparell de fitxatges."
         weekdays: ["Dl", "Dt", "Dc", "Dj", "Dv", "Ds", "Dg"]
         swipes_count:
           one: "1 fitxatge"

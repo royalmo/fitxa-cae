@@ -47,10 +47,8 @@ class Admin::DashboardController < Admin::BaseController
   end
 
   def present_employee_count
-    employee_ids = Employee.active.ids
-
     Swipe.kept
-      .where(employee_id: employee_ids, swipe_at: ..Time.current)
+      .where(swipe_at: ..Time.current)
       .order(swipe_at: :desc, id: :desc)
       .group_by(&:employee_id)
       .values

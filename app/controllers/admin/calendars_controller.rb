@@ -1,15 +1,23 @@
 class Admin::CalendarsController < Admin::BaseController
+  EMPLOYEE_SEARCH_LIMIT = 8
+
   def index
-    @employees = Employee.order(:last_name, :first_name, :id)
     @selected_employee = selected_employee
     @year = selected_year
     @calendar_months = @selected_employee ? calendar_months_for(@selected_employee) : []
   end
 
+  def employee_search
+    render partial: "employee_results", locals: {
+      employees: employee_search_results,
+      selected_employee_id: params[:selected_employee_id].presence
+    }
+  end
+
   private
 
   def selected_employee
-    @employees.find_by(id: params[:employee_id].presence) || @employees.first
+    Employee.find_by(id: params[:employee_id].presence) if params[:employee_id].present?
   end
 
   def selected_year
@@ -39,8 +47,11 @@ class Admin::CalendarsController < Admin::BaseController
 
         {
           date: date,
-          status: calendar_day_status(day_swipes, day_corrections),
+          status: calendar_day_status(date, day_swipes, day_corrections),
           swipes_count: day_swipes.count,
+          worked_seconds: Swipe.paired_work_seconds(day_swipes),
+          future: date.future?,
+          clickable: !date.future?,
           correction: day_corrections.first
         }
       end
@@ -53,11 +64,38 @@ class Admin::CalendarsController < Admin::BaseController
     first_day.wday.zero? ? 6 : first_day.wday - 1
   end
 
-  def calendar_day_status(swipes, corrections)
-    return :danger if swipes.count.odd?
+  def calendar_day_status(date, swipes, corrections)
     return :warning if corrections.any?
+    return :danger if date.past? && swipes.count.odd?
     return :"success_#{[ swipes.count, 4 ].min}" if swipes.any?
 
     :empty
+  end
+
+  def employee_search_results
+    employees = Employee.order(:last_name, :first_name, :id)
+    query = params[:q].to_s.strip
+    return employees.limit(EMPLOYEE_SEARCH_LIMIT) if query.blank?
+
+    normalized_query = query.downcase
+    compact_query = normalized_query.gsub(/[ .\-()]/, "")
+    national_id_query = Employee.normalize_national_id(query).downcase
+
+    employees
+      .where(
+        <<~SQL.squish,
+          LOWER(COALESCE(first_name, '')) LIKE :query
+          OR LOWER(COALESCE(last_name, '')) LIKE :query
+          OR LOWER(COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')) LIKE :query
+          OR LOWER(COALESCE(national_id, '')) LIKE :national_id_query
+          OR LOWER(COALESCE(email, '')) LIKE :query
+          OR LOWER(COALESCE(phone, '')) LIKE :query
+          OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(COALESCE(phone, '')), ' ', ''), '-', ''), '.', ''), '(', ''), ')', '') LIKE :compact_query
+        SQL
+        query: "%#{ActiveRecord::Base.sanitize_sql_like(normalized_query)}%",
+        national_id_query: "%#{ActiveRecord::Base.sanitize_sql_like(national_id_query)}%",
+        compact_query: compact_query.present? ? "%#{ActiveRecord::Base.sanitize_sql_like(compact_query)}%" : ""
+      )
+      .limit(EMPLOYEE_SEARCH_LIMIT)
   end
 end

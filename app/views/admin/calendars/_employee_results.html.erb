@@ -1,0 +1,20 @@
+<% if employees.any? %>
+  <% employees.each do |employee| %>
+    <% selected = employee.id.to_s == selected_employee_id.to_s %>
+    <button
+      type="button"
+      class="<%= class_names("list-group-item list-group-item-action admin-employee-search-result", "active": selected) %>"
+      data-action="employee-search#select"
+      data-employee-search-id-param="<%= employee.id %>"
+      data-employee-search-label-param="<%= employee_display_name(employee) %>"
+      role="option"
+      aria-selected="<%= selected %>">
+      <strong><%= employee_display_name(employee) %></strong>
+      <span class="text-body-secondary">- <%= employee.national_id %></span>
+    </button>
+  <% end %>
+<% else %>
+  <div class="list-group-item text-body-secondary">
+    <%= t("admin.calendars.index.no_employee_results") %>
+  </div>
+<% end %>

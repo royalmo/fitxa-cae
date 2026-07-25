@@ -1,41 +1,93 @@
 <% content_for :title, t(".title") %>
 
-<div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "calendar-days", class: "text-primary" %>
-  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <%= icon "calendar-days", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+  <ul class="admin-calendar-legend list-unstyled d-flex align-items-center gap-2 mb-0 small text-body-secondary">
+    <li><span class="admin-calendar-legend-swatch is-success" aria-hidden="true"></span><%= t(".legend.swipes") %></li>
+    <li><span class="admin-calendar-legend-swatch is-warning" aria-hidden="true"></span><%= t(".legend.pending") %></li>
+    <li><span class="admin-calendar-legend-swatch is-danger" aria-hidden="true"></span><%= t(".legend.odd") %></li>
+  </ul>
 </div>
 
 <div data-controller="list-loading">
-  <section class="card shadow-sm mb-3">
-    <div class="card-body">
-      <h2 class="h6 mb-3"><%= t("admin.filters.title") %></h2>
+  <%= form_with url: admin_calendars_path,
+    method: :get,
+    class: "admin-calendar-controls d-flex flex-nowrap align-items-center gap-2 mb-4",
+    data: {
+      controller: "calendar-controls",
+      action: "submit->list-loading#showLoading"
+    } do |form| %>
+    <%= form.hidden_field :year,
+      value: @year,
+      data: { calendar_controls_target: "year" } %>
 
-      <%= form_with url: admin_calendars_path, method: :get, class: "row g-2 align-items-end" do |form| %>
-        <div class="col-12 col-lg-6">
-          <%= form.label :employee_id, t(".employee"), class: "form-label visually-hidden" %>
-          <%= form.select :employee_id,
-            @employees.map { |employee| [employee_display_name(employee), employee.id] },
-            { selected: @selected_employee&.id },
-            class: "form-select",
-            data: { action: "change->list-loading#filter" } %>
+    <div class="admin-calendar-search flex-grow-1">
+      <%= form.label :employee_query, t(".employee"), class: "form-label visually-hidden" %>
+      <div
+        class="admin-employee-search position-relative"
+        data-controller="employee-search"
+        data-employee-search-url-value="<%= employee_search_admin_calendars_path %>">
+        <%= form.hidden_field :employee_id,
+          value: (@selected_employee&.id).to_s,
+          data: { employee_search_target: "employeeId" } %>
+        <div class="input-group">
+          <span class="input-group-text"><%= icon "search" %></span>
+          <%= text_field_tag :employee_query,
+            @selected_employee ? employee_display_name(@selected_employee) : nil,
+            class: "form-control",
+            placeholder: t(".employee_search_placeholder"),
+            autocomplete: "off",
+            role: "combobox",
+            aria: {
+              autocomplete: "list",
+              controls: "admin-calendar-employee-results",
+              expanded: "false"
+            },
+            data: {
+              employee_search_target: "input",
+              action: "input->employee-search#search focus->employee-search#search keydown->employee-search#keydown"
+            } %>
         </div>
-        <div class="col-12 col-sm-6 col-lg-2">
-          <%= form.label :year, t(".year"), class: "form-label visually-hidden" %>
-          <%= form.number_field :year, value: @year, min: 2000, max: 2100, class: "form-control", data: { action: "change->list-loading#filter" } %>
-        </div>
-        <div class="col-12 col-sm-auto">
-          <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
-            <%= icon "filter" %>
-            <span><%= t("shared.filter") %></span>
-          <% end %>
-        </div>
+        <div
+          id="admin-calendar-employee-results"
+          class="admin-employee-search-results list-group shadow-sm"
+          data-employee-search-target="results"
+          role="listbox"
+          hidden></div>
+      </div>
+    </div>
+
+    <div class="admin-calendar-year-control input-group flex-nowrap">
+      <%= button_tag type: :button,
+        class: "btn btn-outline-secondary",
+        title: t(".previous_year"),
+        aria: { label: t(".previous_year") },
+        data: {
+          action: "calendar-controls#changeYear",
+          calendar_controls_delta_param: -1
+        } do %>
+        <%= icon "chevron-left" %>
+      <% end %>
+      <span class="input-group-text admin-calendar-year-value" aria-live="polite"><%= @year %></span>
+      <%= button_tag type: :button,
+        class: "btn btn-outline-secondary",
+        title: t(".next_year"),
+        aria: { label: t(".next_year") },
+        data: {
+          action: "calendar-controls#changeYear",
+          calendar_controls_delta_param: 1
+        } do %>
+        <%= icon "chevron-right" %>
       <% end %>
     </div>
-  </section>
+  <% end %>
 
   <div data-list-loading-target="results">
     <% if @selected_employee %>
-      <div class="row g-3">
+      <div class="row g-3" data-controller="bootstrap-popover">
         <% @calendar_months.each do |month| %>
           <div class="col-12 col-md-6 col-xl-4">
             <section class="card shadow-sm h-100">
@@ -50,11 +102,23 @@
 
                   <% month[:days].each do |day| %>
                     <% if day %>
-                      <%= link_to day[:date].day,
-                        admin_correction_day_path(@selected_employee, day[:date], day[:correction]),
-                        class: admin_calendar_day_class(day),
-                        title: admin_calendar_day_title(day),
-                        aria: { label: admin_calendar_day_title(day) } %>
+                      <% if day[:clickable] %>
+                        <%= button_tag day[:date].day,
+                          type: :button,
+                          class: admin_calendar_day_class(day),
+                          data: {
+                            bs_toggle: "popover",
+                            bs_html: "true",
+                            bs_title: admin_calendar_day_popover_title(day),
+                            bs_content: admin_calendar_day_popover_content(@selected_employee, day),
+                            bootstrap_popover_target: "trigger"
+                          },
+                          aria: { label: admin_calendar_day_title(day) } %>
+                      <% else %>
+                        <span class="<%= admin_calendar_day_class(day) %>" aria-label="<%= admin_calendar_day_title(day) %>">
+                          <%= day[:date].day %>
+                        </span>
+                      <% end %>
                     <% else %>
                       <span class="admin-calendar-spacer" aria-hidden="true"></span>
                     <% end %>
@@ -66,13 +130,12 @@
         <% end %>
       </div>
     <% else %>
-      <section class="card shadow-sm">
-        <div class="card-body text-center text-body-secondary">
-          <%= t(".empty") %>
-        </div>
+      <section class="admin-calendar-empty text-center text-body-secondary" aria-live="polite">
+        <%= icon "search" %>
+        <p class="small mb-0"><%= t(".empty") %></p>
       </section>
     <% end %>
   </div>
 
-  <%= render "admin/shared/list_loading" %>
+  <%= render "admin/shared/list_loading", large: true, label: t(".loading") %>
 </div>

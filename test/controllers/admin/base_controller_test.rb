@@ -35,7 +35,7 @@ class Admin::BaseControllerTest < ActionDispatch::IntegrationTest
       text: "99+"
   end
 
-  test "shows working indicator when linked active employee is clocked in" do
+  test "shows working indicator when linked employee is clocked in" do
     employee = create_employee
     manager = create_manager(employee: employee)
     employee.swipes.create!(
@@ -51,6 +51,17 @@ class Admin::BaseControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a.admin-topbar-employee-button.is-working[href='#{root_path}'] .admin-topbar-working-dot"
+  end
+
+  test "does not show employee shortcut for linked inactive employee" do
+    employee = create_employee(active: false)
+    manager = create_manager(employee: employee)
+    log_in_manager(manager)
+
+    get admin_root_path
+
+    assert_response :success
+    assert_select "a.admin-topbar-employee-button[href='#{root_path}']", false
   end
 
   test "working indicator uses pending correction adjusted clock state" do

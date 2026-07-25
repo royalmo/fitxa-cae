@@ -218,7 +218,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get admin_calendars_path
     assert_response :success
     assert_select "title", text: "Calendaris | FitxaCAE Admin"
-    assert_select ".admin-calendar-grid"
+    assert_select "[data-controller='employee-search']"
+    assert_select ".admin-calendar-grid", 0
 
     get admin_classifications_path
     assert_response :success

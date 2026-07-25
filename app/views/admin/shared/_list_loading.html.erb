@@ -1,4 +1,5 @@
-<div class="admin-list-loading py-5 text-center text-body-secondary" data-list-loading-target="loading" role="status" aria-live="polite" hidden>
-  <div class="spinner-border spinner-border-sm me-2" aria-hidden="true"></div>
-  <span><%= t("admin.pagination.loading") %></span>
+<% large = local_assigns.fetch(:large, false) %>
+<div class="<%= class_names("admin-list-loading py-5 text-center text-body-secondary", "admin-list-loading-lg": large) %>" data-list-loading-target="loading" role="status" aria-live="polite" hidden>
+  <div class="<%= class_names("spinner-border", large ? "admin-list-loading-spinner" : "spinner-border-sm me-2") %>" aria-hidden="true"></div>
+  <span class="<%= class_names("admin-list-loading-label", "d-block": large) %>"><%= local_assigns.fetch(:label, t("admin.pagination.loading")) %></span>
 </div>
