@@ -133,6 +133,27 @@ html[data-pwa="admin"],
   --bs-offcanvas-width: var(--admin-sidebar-width);
 }
 
+.admin-sidebar-link {
+  color: var(--bs-body-color);
+  border-radius: var(--bs-border-radius-sm);
+}
+
+.admin-sidebar-link:hover,
+.admin-sidebar-link:focus-visible {
+  color: var(--bs-body-color);
+  background: var(--bs-tertiary-bg);
+}
+
+.admin-sidebar .admin-sidebar-link.active {
+  color: var(--brand-red-strong);
+  background: var(--brand-red-soft);
+  font-weight: 700;
+}
+
+.admin-sidebar-footer .admin-sidebar-link {
+  text-align: left;
+}
+
 .admin-brand {
   display: inline-flex;
   align-items: stretch;
@@ -415,6 +436,10 @@ button.admin-calendar-day:hover {
 @media (min-width: 992px) {
   .admin-sidebar {
     width: var(--admin-sidebar-width);
+    min-height: calc(100vh - 3.5rem);
+  }
+
+  .admin-sidebar .offcanvas-body {
     min-height: calc(100vh - 3.5rem);
   }
 }

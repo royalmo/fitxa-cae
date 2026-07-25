@@ -8,6 +8,8 @@
 
   <body class="admin-shell bg-body-tertiary min-vh-100" data-controller="admin-theme submit-feedback">
     <% manager_name = manager_display_name(@manager) %>
+    <% manager_first_name = @manager&.first_name.presence || manager_name %>
+    <% account_active = request.path.start_with?(admin_account_path) %>
     <% nav_items = [
       [admin_root_path, "house", t("admin.nav.home"), true],
       [admin_employees_path, "users", t("admin.nav.employees"), false],
@@ -94,7 +96,7 @@
                   <% nav_items.each do |path, icon_name, label, exact| %>
                     <% target = path.to_s %>
                     <% active = exact ? request.path == target : request.path == target || request.path.start_with?("#{target}/") %>
-                    <% link_classes = class_names("nav-link d-flex align-items-center gap-2", active ? "active" : "link-body-emphasis") %>
+                    <% link_classes = class_names("nav-link admin-sidebar-link d-flex align-items-center gap-2 px-2 py-2", active ? "active" : "link-body-emphasis") %>
                     <% link_options = { class: link_classes } %>
                     <% link_options[:aria] = { current: "page" } if active %>
                     <li class="nav-item">
@@ -106,6 +108,26 @@
                   <% end %>
                 </ul>
               </nav>
+
+              <div class="admin-sidebar-footer mt-auto border-top p-3">
+                <% account_link_options = {
+                  class: class_names("nav-link admin-sidebar-link d-flex align-items-center gap-2 px-2 py-2", account_active ? "active" : "link-body-emphasis")
+                } %>
+                <% account_link_options[:aria] = { current: "page" } if account_active %>
+                <%= link_to admin_account_path,
+                  **account_link_options do %>
+                  <%= icon "circle-user" %>
+                  <span><%= manager_first_name %></span>
+                <% end %>
+
+                <%= button_to admin_logout_path,
+                  method: :delete,
+                  form_class: "m-0",
+                  class: "nav-link admin-sidebar-link link-body-emphasis d-flex align-items-center gap-2 px-2 py-2 w-100" do %>
+                  <%= icon "log-out" %>
+                  <span><%= t("admin.nav.logout") %></span>
+                <% end %>
+              </div>
             </div>
           </aside>
         </div>

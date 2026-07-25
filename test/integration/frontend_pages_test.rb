@@ -160,8 +160,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "nav.navbar form[action='#{admin_logout_path}'] button.admin-topbar-button[aria-label='Tancar sessió'] svg.icon"
     assert_select "aside#adminSidebar.admin-sidebar.offcanvas-lg nav ul.nav.nav-pills"
     assert_select "aside#adminSidebar a.nav-link.active[aria-current='page'][href='#{admin_root_path}']"
-    assert_select "aside#adminSidebar a.nav-link.link-body-emphasis[href='#{admin_employees_path}']"
-    nav_labels = css_select("aside#adminSidebar a.nav-link span").map { |node| node.text.squish }
+    assert_select "aside#adminSidebar a.admin-sidebar-link.link-body-emphasis[href='#{admin_employees_path}']"
+    nav_labels = css_select("aside#adminSidebar nav a.nav-link span").map { |node| node.text.squish }
     assert_equal [
       "Inici",
       "Personal",
@@ -179,6 +179,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_includes navbar_child_classes.second, "admin-brand"
     assert_select "nav.navbar .admin-brand .brand-badge", text: "ADMIN"
     assert_select "aside#adminSidebar .admin-brand", 0
+    assert_select "aside#adminSidebar .admin-sidebar-footer a[href='#{admin_account_path}']", text: "Laia"
+    assert_select "aside#adminSidebar .admin-sidebar-footer form[action='#{admin_logout_path}'] button", text: "Tancar sessió"
 
     get admin_employees_path
     assert_response :success
@@ -240,6 +242,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Compte | FitxaCAE Admin"
     assert_select "form[action='#{admin_account_profile_path}']"
+    assert_select "aside#adminSidebar .admin-sidebar-footer a.admin-sidebar-link.active[aria-current='page'][href='#{admin_account_path}']", text: "Laia"
   end
 
   test "no-op actions redirect to their list screens" do
