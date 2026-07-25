@@ -106,7 +106,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_match(/expires=.*31 Jul 2026/i, response.headers["Set-Cookie"])
+    assert_match(/expires=.*31 Jul 2026/i, Array(response.headers["Set-Cookie"]).join("\n"))
   end
 
   test "remembered installed pwa sessions last one year" do
@@ -121,7 +121,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_match(/expires=.*1 Jul 2027/i, response.headers["Set-Cookie"])
+    assert_match(/expires=.*1 Jul 2027/i, Array(response.headers["Set-Cookie"]).join("\n"))
   end
 
   test "email code login sends and verifies a code" do

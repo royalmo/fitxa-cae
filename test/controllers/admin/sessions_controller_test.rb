@@ -67,7 +67,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_match(/expires=.*31 Jul 2026/i, response.headers["Set-Cookie"])
+    assert_match(/expires=.*31 Jul 2026/i, Array(response.headers["Set-Cookie"]).join("\n"))
   end
 
   test "rejects invalid credentials and inactive managers" do
