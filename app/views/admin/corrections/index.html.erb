@@ -1,9 +1,15 @@
 <% content_for :title, t(".title") %>
 <% pagination_path = ->(page) { admin_corrections_path(request.query_parameters.except("page").merge(page: page)) } %>
 
-<div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "square-pen", class: "text-primary" %>
-  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <%= icon "square-pen", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+  <%= link_to new_admin_correction_path, class: "btn btn-primary d-inline-flex align-items-center gap-2" do %>
+    <%= icon "plus" %>
+    <span><%= t(".new_correction") %></span>
+  <% end %>
 </div>
 
 <div data-controller="list-loading">
@@ -77,8 +83,20 @@
                 <td><%= correction.validator ? manager_display_name(correction.validator) : "—" %></td>
                 <td><%= l(correction.created_at, format: :short) %></td>
                 <td class="text-end">
-                  <% if correction.pending? %>
-                    <div class="d-inline-flex gap-1">
+                  <div class="d-inline-flex gap-1">
+                    <%= link_to admin_correction_path(correction),
+                      class: "btn btn-sm btn-outline-secondary admin-row-action",
+                      title: t("shared.view"),
+                      aria: { label: t("shared.view") } do %>
+                      <%= icon "eye" %>
+                    <% end %>
+                    <%= link_to edit_admin_correction_path(correction),
+                      class: "btn btn-sm btn-outline-secondary admin-row-action",
+                      title: t("shared.edit"),
+                      aria: { label: t("shared.edit") } do %>
+                      <%= icon "pencil" %>
+                    <% end %>
+                    <% if correction.pending? %>
                       <%= button_to approve_admin_correction_path(correction),
                         method: :post,
                         form_class: "m-0",
@@ -97,10 +115,8 @@
                         data: { submitting_label: t("shared.submitting.rejecting") } do %>
                         <%= icon "x" %>
                       <% end %>
-                    </div>
-                  <% else %>
-                    <span class="text-body-secondary">—</span>
-                  <% end %>
+                    <% end %>
+                  </div>
                 </td>
               </tr>
             <% end %>

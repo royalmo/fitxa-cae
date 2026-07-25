@@ -1,0 +1,93 @@
+<% invalidated_swipe_ids = Array(correction.details&.fetch("invalidated_swipe_ids", nil)).map(&:to_s) %>
+<% form_url = correction.persisted? ? admin_correction_path(correction) : admin_corrections_path %>
+
+<% if correction.errors.any? %>
+  <div class="alert alert-danger error-summary">
+    <strong><%= t("admin.corrections.form.error_title") %></strong>
+    <ul class="mb-0 mt-2">
+      <% correction.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%= form_with model: correction, url: form_url do |form| %>
+  <section class="card shadow-sm">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-12 col-lg-7">
+          <%= form.label :employee_id, t("admin.corrections.form.employee"), class: "form-label" %>
+          <%= form.select :employee_id,
+            @employees.map { |employee| [employee_display_name(employee), employee.id] },
+            { selected: correction.employee_id, include_blank: t("admin.corrections.form.select_employee") },
+            class: "form-select" %>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <%= form.label :day, t("admin.corrections.form.day"), class: "form-label" %>
+          <%= form.date_field :day, value: correction.day&.iso8601, class: "form-control" %>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row g-4">
+        <div class="col-12 col-xl-5">
+          <h2 class="h6"><%= t("admin.corrections.form.existing_swipes") %></h2>
+          <% if @day_swipes.any? %>
+            <div class="list-group">
+              <% @day_swipes.each do |swipe| %>
+                <label class="list-group-item d-flex align-items-center gap-2">
+                  <%= check_box_tag "swipe_correction[invalidated_swipe_ids][]", swipe.id, invalidated_swipe_ids.include?(swipe.id.to_s), class: "form-check-input m-0" %>
+                  <%= icon clocking_icon_name(swipe.kind), title: clocking_kind_text(swipe.kind) %>
+                  <span><%= clocking_kind_text(swipe.kind) %> · <%= l(swipe.swipe_at, format: :hour_minute) %></span>
+                  <span class="ms-auto small text-body-secondary"><%= t("admin.corrections.form.invalidate") %></span>
+                </label>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-body-secondary mb-0"><%= t("admin.corrections.form.no_existing_swipes") %></p>
+          <% end %>
+        </div>
+
+        <div class="col-12 col-xl-7">
+          <h2 class="h6"><%= t("admin.corrections.form.requested_swipes") %></h2>
+          <div class="vstack gap-2">
+            <% @requested_swipe_rows.each_with_index do |requested_swipe, index| %>
+              <div class="row g-2 align-items-center">
+                <div class="col-12 col-sm-6">
+                  <%= select_tag "swipe_correction[requested_swipes][#{index}][kind]",
+                    options_for_select([[t("admin.corrections.form.no_requested_swipe"), ""]] + Swipe.kinds.keys.map { |kind| [clocking_kind_text(kind), kind] }, requested_swipe["kind"]),
+                    class: "form-select",
+                    aria: { label: t("admin.corrections.form.kind") } %>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <%= time_field_tag "swipe_correction[requested_swipes][#{index}][hour]",
+                    requested_swipe["hour"],
+                    class: "form-control",
+                    aria: { label: t("admin.corrections.form.hour") } %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <%= form.label :requester_comments, t("admin.corrections.form.note"), class: "form-label" %>
+        <%= form.text_area :requester_comments, rows: 3, class: "form-control" %>
+      </div>
+    </div>
+  </section>
+
+  <div class="d-flex flex-wrap gap-2 mt-4">
+    <%= link_to admin_corrections_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
+      <%= icon "x" %>
+      <span><%= t("shared.cancel") %></span>
+    <% end %>
+    <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.saving") } do %>
+      <%= icon "save" %>
+      <span><%= t("shared.save") %></span>
+    <% end %>
+  </div>
+<% end %>

@@ -131,11 +131,11 @@ module ApplicationHelper
 
   def bootstrap_status_badge_variant(status)
     case status.to_s
-    when "active", "approved", "complete"
+    when "active", "approved", "complete", "corrected"
       "text-bg-success"
     when "pending", "open"
       "text-bg-warning"
-    when "rejected"
+    when "rejected", "odd"
       "text-bg-danger"
     else
       "text-bg-secondary"

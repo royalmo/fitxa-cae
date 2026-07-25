@@ -49,7 +49,12 @@ ca:
   statuses:
     active: "Actiu"
     approved: "Aprovat"
+    complete: "Complet"
+    corrected: "Corregit"
     disabled: "Inactiu"
+    empty: "Buit"
+    odd: "Senar"
+    open: "Obert"
     pending: "Pendent"
     rejected: "Rebutjat"
 
@@ -293,20 +298,31 @@ ca:
     flash:
       correction_already_reviewed: "Aquesta correcció ja està revisada."
       correction_approved: "Correcció aprovada."
+      correction_created: "Correcció creada."
       correction_rejected: "Correcció rebutjada."
+      correction_updated: "Correcció actualitzada."
+      classification_created: "Classificació creada."
+      classification_updated: "Classificació actualitzada."
       employee_created: "Treballador creat."
       employee_updated: "Treballador actualitzat."
       import_started: "Importació iniciada."
+      manager_created: "Responsable creat."
+      manager_updated: "Responsable actualitzat."
     nav:
       admin_badge: "ADMIN"
+      audit_actions: "Activitat"
+      calendars: "Calendaris"
+      classifications: "Classificació"
       label: "Navegació"
       close_menu: "Tancar menú"
       corrections: "Correccions"
-      dashboard: "Resum"
-      employees: "Treballadors"
+      employees: "Personal"
+      home: "Inici"
       logout: "Tancar sessió"
+      managers: "Responsables"
       open_menu: "Obrir menú"
       reports: "Informes"
+      swipes: "Fitxatges"
     filters:
       title: "Filtres"
     pagination:
@@ -353,8 +369,8 @@ ca:
           employees: "Treballadors"
     employees:
       index:
-        title: "Treballadors"
-        heading: "Treballadors"
+        title: "Personal"
+        heading: "Personal"
         new_employee: "Nou treballador"
         search_placeholder: "Nom, DNI/NIE o correu"
         tags: "Etiquetes"
@@ -395,18 +411,100 @@ ca:
     reports:
       index:
         title: "Informes"
-        heading: "Informes de fitxatges"
-        month: "Mes"
+        heading: "Informes"
+        empty: "Pàgina pendent."
+    swipes:
+      index:
+        title: "Fitxatges"
+        heading: "Fitxatges"
         employee: "Treballador"
-        all_employees: "Tots els treballadors"
-        hours: "Hores registrades"
-        days: "Dies"
-        corrections: "Correccions"
-        empty: "No hi ha treballadors per a aquest filtre."
+        month: "Mes"
+        date: "Data"
+        hours: "Hores"
+        swipes: "Fitxatges"
+        status: "Estat"
+        empty: "No hi ha treballadors."
+        empty_day: "Sense fitxatges"
+        edit_day: "Editar el %{date}"
+    calendars:
+      index:
+        title: "Calendaris"
+        heading: "Calendaris"
+        employee: "Treballador"
+        year: "Any"
+        empty: "No hi ha treballadors."
+        weekdays: ["Dl", "Dt", "Dc", "Dj", "Dv", "Ds", "Dg"]
+        swipes_count:
+          one: "1 fitxatge"
+          other: "%{count} fitxatges"
+    classifications:
+      index:
+        title: "Classificació"
+        heading: "Classificació"
+        new_classification: "Nova classificació"
+        search_placeholder: "Nom"
+        all_statuses: "Tots"
+        name: "Nom"
+        color: "Color"
+        status: "Estat"
+        empty: "No hi ha classificacions amb aquests filtres."
+      form:
+        error_title: "Revisa la classificació"
+        name: "Nom"
+        color: "Color"
+        status: "Estat"
+      new:
+        title: "Nova classificació"
+        heading: "Nova classificació"
+      edit:
+        title: "Editar classificació"
+        heading: "Editar classificació"
+    audit_actions:
+      index:
+        title: "Activitat"
+        heading: "Activitat"
+        export: "Exportar"
+        kind: "Tipus"
+        kind_placeholder: "Tipus d'acció"
+        created_at: "Data"
+        author: "Autor"
+        recipient: "Destinatari"
+        extra_info: "Detall"
+        empty: "No hi ha activitat registrada."
+    managers:
+      index:
+        title: "Responsables"
+        heading: "Responsables"
+        new_manager: "Nou responsable"
+        search_placeholder: "Nom o correu"
+        all_statuses: "Tots"
+        name: "Nom"
+        email: "Correu"
+        employee: "Treballador vinculat"
+        status: "Estat"
+        no_email: "Sense correu"
+        no_employee: "Sense treballador vinculat"
+        empty: "No hi ha responsables amb aquests filtres."
+      form:
+        error_title: "Revisa el responsable"
+        first_name: "Nom"
+        last_name: "Cognoms"
+        email: "Correu"
+        password: "Contrasenya"
+        employee: "Treballador vinculat"
+        no_employee: "Sense treballador vinculat"
+        status: "Estat"
+      new:
+        title: "Nou responsable"
+        heading: "Nou responsable"
+      edit:
+        title: "Editar responsable"
+        heading: "Editar responsable"
     corrections:
       index:
         title: "Correccions"
         heading: "Correccions"
+        new_correction: "Nova correcció"
         employee: "Treballador"
         all_employees: "Tots els treballadors"
         date: "Data"
@@ -416,6 +514,36 @@ ca:
         validator: "Validador"
         age: "Antiguitat"
         empty: "No hi ha correccions registrades."
+      show:
+        title: "Correcció"
+        heading: "Correcció"
+        back_to_list: "Tornar"
+        request: "Petició"
+        validator: "Validador"
+        not_reviewed: "Sense revisar"
+        created_at: "Creada"
+        changes: "Canvis"
+        no_changes: "Sense canvis."
+      new:
+        title: "Nova correcció"
+        heading: "Nova correcció"
+      edit:
+        title: "Editar correcció"
+        heading: "Editar correcció"
+      form:
+        error_title: "Revisa la correcció"
+        invalid: "Indica un treballador i una data vàlids."
+        employee: "Treballador"
+        select_employee: "Selecciona un treballador"
+        day: "Dia"
+        existing_swipes: "Fitxatges existents"
+        invalidate: "Invalidar"
+        no_existing_swipes: "No hi ha fitxatges per aquest dia."
+        requested_swipes: "Fitxatges sol·licitats"
+        no_requested_swipe: "Sense fitxatge"
+        kind: "Tipus"
+        hour: "Hora"
+        note: "Comentari"
       review:
         approved: "Aprovada des de gestió."
         rejected: "Rebutjada des de gestió."

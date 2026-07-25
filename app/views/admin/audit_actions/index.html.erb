@@ -1,0 +1,84 @@
+<% content_for :title, t(".title") %>
+<% pagination_path = ->(page) { admin_audit_actions_path(request.query_parameters.except("page").merge(page: page)) } %>
+
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <%= icon "activity", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+  <%= link_to export_admin_audit_actions_path(request.query_parameters), class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
+    <%= icon "download" %>
+    <span><%= t(".export") %></span>
+  <% end %>
+</div>
+
+<div data-controller="list-loading">
+  <section class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+        <h2 class="h6 mb-0"><%= t("admin.filters.title") %></h2>
+        <%= render "admin/shared/result_count",
+          count: @admin_records_count,
+          range_start: @admin_records_range_start,
+          range_end: @admin_records_range_end %>
+      </div>
+
+      <%= form_with url: admin_audit_actions_path, method: :get, class: "row g-2 align-items-end" do |form| %>
+        <div class="col-12 col-lg-6">
+          <%= form.label :kind, t(".kind"), class: "form-label visually-hidden" %>
+          <%= form.search_field :kind, value: params[:kind], placeholder: t(".kind_placeholder"), class: "form-control" %>
+        </div>
+        <div class="col-12 col-sm-auto">
+          <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
+            <%= icon "filter" %>
+            <span><%= t("shared.filter") %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <div data-list-loading-target="results">
+    <section class="card shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th><%= t(".created_at") %></th>
+              <th><%= t(".kind") %></th>
+              <th><%= t(".author") %></th>
+              <th><%= t(".recipient") %></th>
+              <th><%= t(".extra_info") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @audit_actions.each do |audit_action| %>
+              <tr>
+                <td class="text-nowrap"><%= l(audit_action.created_at, format: :short) %></td>
+                <td><code><%= audit_action.kind %></code></td>
+                <td><%= admin_audit_subject_text(audit_action.author) %></td>
+                <td><%= admin_audit_subject_text(audit_action.recipient) %></td>
+                <td><%= audit_action.extra_info.presence || "—" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @audit_actions.empty? %>
+        <div class="card-body text-center text-body-secondary">
+          <%= t(".empty") %>
+        </div>
+      <% end %>
+    </section>
+
+    <%= render "admin/shared/pagination",
+      page: @admin_page,
+      total_pages: @admin_total_pages,
+      previous_page: @admin_previous_page,
+      next_page: @admin_next_page,
+      path: pagination_path %>
+  </div>
+
+  <%= render "admin/shared/list_loading" %>
+</div>

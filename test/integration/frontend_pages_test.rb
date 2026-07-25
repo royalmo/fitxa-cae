@@ -119,6 +119,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
   test "admin pages render" do
     log_in_manager
+    create_employee(first_name: "Nora", last_name: "Vidal")
 
     get admin_root_path
     assert_response :success
@@ -136,6 +137,18 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "aside#adminSidebar.admin-sidebar.offcanvas-lg nav ul.nav.nav-pills"
     assert_select "aside#adminSidebar a.nav-link.active[aria-current='page'][href='#{admin_root_path}']"
     assert_select "aside#adminSidebar a.nav-link.link-body-emphasis[href='#{admin_employees_path}']"
+    nav_labels = css_select("aside#adminSidebar a.nav-link span").map { |node| node.text.squish }
+    assert_equal [
+      "Inici",
+      "Personal",
+      "Fitxatges",
+      "Correccions",
+      "Informes",
+      "Calendaris",
+      "Classificació",
+      "Activitat",
+      "Responsables"
+    ], nav_labels
     assert_select "button.navbar-toggler[data-bs-toggle='offcanvas'][data-bs-target='#adminSidebar'][aria-label='Obrir menú'] .navbar-toggler-icon"
     navbar_child_classes = css_select("nav.navbar > .container-fluid > *").map { |node| node["class"].to_s }
     assert_includes navbar_child_classes.first, "navbar-toggler"
@@ -145,8 +158,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get admin_employees_path
     assert_response :success
-    assert_select "title", text: "Treballadors | FitxaCAE Admin"
-    assert_select "h1", text: "Treballadors"
+    assert_select "title", text: "Personal | FitxaCAE Admin"
+    assert_select "h1", text: "Personal"
     assert_select "table"
     assert_select "button.btn[type='submit'][data-submitting-label='Filtrant...']"
     assert_no_match "Horari", response.body
@@ -161,16 +174,42 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get admin_reports_path
     assert_response :success
     assert_select "title", text: "Informes | FitxaCAE Admin"
-    assert_select "h1", text: "Informes de fitxatges"
+    assert_select "h1", text: "Informes"
     assert_select "a[href='#']", 0
     assert_no_match "Balanç", response.body
     assert_no_match "Incidències", response.body
+
+    get admin_swipes_path
+    assert_response :success
+    assert_select "title", text: "Fitxatges | FitxaCAE Admin"
+    assert_select "table"
+    assert_select "button[type='submit'][data-submitting-label='Filtrant...']"
 
     get admin_corrections_path
     assert_response :success
     assert_select "title", text: "Correccions | FitxaCAE Admin"
     assert_select "table"
     assert_select "button[type='submit'][data-submitting-label='Filtrant...']"
+
+    get admin_calendars_path
+    assert_response :success
+    assert_select "title", text: "Calendaris | FitxaCAE Admin"
+    assert_select ".admin-calendar-grid"
+
+    get admin_classifications_path
+    assert_response :success
+    assert_select "title", text: "Classificació | FitxaCAE Admin"
+    assert_select "table"
+
+    get admin_audit_actions_path
+    assert_response :success
+    assert_select "title", text: "Activitat | FitxaCAE Admin"
+    assert_select "table"
+
+    get admin_managers_path
+    assert_response :success
+    assert_select "title", text: "Responsables | FitxaCAE Admin"
+    assert_select "table"
   end
 
   test "no-op actions redirect to their list screens" do

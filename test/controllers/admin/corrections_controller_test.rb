@@ -53,6 +53,64 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#employee_id option[selected][value='#{visible_employee.id}']"
   end
 
+  test "creates a manager correction with requested swipes" do
+    manager = create_manager
+    log_in_manager(manager)
+    employee = create_employee
+
+    assert_difference "SwipeCorrection.count", 1 do
+      post admin_corrections_path, params: {
+        swipe_correction: {
+          employee_id: employee.id,
+          day: "2026-07-04",
+          requester_comments: "Alta manual",
+          requested_swipes: {
+            "0" => { kind: "entry", hour: "08:00" },
+            "1" => { kind: "exit", hour: "16:30" }
+          }
+        }
+      }
+    end
+
+    correction = SwipeCorrection.order(:created_at).last
+    assert_redirected_to admin_correction_path(correction)
+    assert_equal manager, correction.requester
+    assert_equal "Alta manual", correction.requester_comments
+    assert_equal [
+      { "kind" => "entry", "hour" => "08:00:00" },
+      { "kind" => "exit", "hour" => "16:30:00" }
+    ], correction.details.fetch("requested_swipes")
+  end
+
+  test "updates a correction and selected swipes to invalidate" do
+    log_in_manager
+    employee = create_employee
+    swipe = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 4, 8, 45), metadata: "employee_portal")
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 4)
+    )
+
+    patch admin_correction_path(correction), params: {
+      swipe_correction: {
+        employee_id: employee.id,
+        day: "2026-07-04",
+        requester_comments: "Revisat",
+        invalidated_swipe_ids: [ swipe.id ],
+        requested_swipes: {
+          "0" => { kind: "entry", hour: "08:00" }
+        }
+      }
+    }
+
+    assert_redirected_to admin_correction_path(correction)
+    correction.reload
+    assert_equal "Revisat", correction.requester_comments
+    assert_equal [ swipe.id.to_s ], correction.details.fetch("invalidated_swipe_ids")
+    assert_equal [ { "kind" => "entry", "hour" => "08:00:00" } ], correction.details.fetch("requested_swipes")
+  end
+
   test "approves a pending correction and applies requested swipes" do
     manager = create_manager
     log_in_manager(manager)

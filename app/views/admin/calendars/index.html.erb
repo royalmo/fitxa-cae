@@ -1,0 +1,78 @@
+<% content_for :title, t(".title") %>
+
+<div class="d-flex align-items-center gap-2 mb-4">
+  <%= icon "calendar-days", class: "text-primary" %>
+  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+</div>
+
+<div data-controller="list-loading">
+  <section class="card shadow-sm mb-3">
+    <div class="card-body">
+      <h2 class="h6 mb-3"><%= t("admin.filters.title") %></h2>
+
+      <%= form_with url: admin_calendars_path, method: :get, class: "row g-2 align-items-end" do |form| %>
+        <div class="col-12 col-lg-6">
+          <%= form.label :employee_id, t(".employee"), class: "form-label visually-hidden" %>
+          <%= form.select :employee_id,
+            @employees.map { |employee| [employee_display_name(employee), employee.id] },
+            { selected: @selected_employee&.id },
+            class: "form-select",
+            data: { action: "change->list-loading#filter" } %>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+          <%= form.label :year, t(".year"), class: "form-label visually-hidden" %>
+          <%= form.number_field :year, value: @year, min: 2000, max: 2100, class: "form-control", data: { action: "change->list-loading#filter" } %>
+        </div>
+        <div class="col-12 col-sm-auto">
+          <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
+            <%= icon "filter" %>
+            <span><%= t("shared.filter") %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <div data-list-loading-target="results">
+    <% if @selected_employee %>
+      <div class="row g-3">
+        <% @calendar_months.each do |month| %>
+          <div class="col-12 col-md-6 col-xl-4">
+            <section class="card shadow-sm h-100">
+              <div class="card-header bg-body">
+                <h2 class="h6 mb-0"><%= l(month[:month], format: :month_year) %></h2>
+              </div>
+              <div class="card-body">
+                <div class="admin-calendar-grid">
+                  <% t(".weekdays").each do |weekday| %>
+                    <span class="admin-calendar-weekday"><%= weekday %></span>
+                  <% end %>
+
+                  <% month[:days].each do |day| %>
+                    <% if day %>
+                      <%= link_to day[:date].day,
+                        admin_correction_day_path(@selected_employee, day[:date], day[:correction]),
+                        class: admin_calendar_day_class(day),
+                        title: admin_calendar_day_title(day),
+                        aria: { label: admin_calendar_day_title(day) } %>
+                    <% else %>
+                      <span class="admin-calendar-spacer" aria-hidden="true"></span>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            </section>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <section class="card shadow-sm">
+        <div class="card-body text-center text-body-secondary">
+          <%= t(".empty") %>
+        </div>
+      </section>
+    <% end %>
+  </div>
+
+  <%= render "admin/shared/list_loading" %>
+</div>

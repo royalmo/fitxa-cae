@@ -49,7 +49,15 @@ html[data-pwa="admin"],
   height: 1rem;
   flex: 0 0 auto;
   color: currentColor;
+  translate: 0 -0.1em;
   vertical-align: -0.125em;
+}
+
+.admin-shell main .d-flex:has(> h1) > .icon {
+  width: 2rem;
+  height: 2rem;
+  color: #000 !important;
+  translate: 0 -0.2em;
 }
 
 .admin-sidebar {
@@ -115,6 +123,88 @@ html[data-pwa="admin"],
   width: 2rem;
   height: 2rem;
   padding: 0;
+}
+
+.admin-badge-icon {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.admin-color-swatch {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 50%;
+  background: var(--admin-swatch-color);
+  vertical-align: -0.15rem;
+}
+
+.admin-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.admin-calendar-weekday {
+  color: var(--bs-secondary-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.admin-calendar-day,
+.admin-calendar-spacer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  aspect-ratio: 1;
+  border-radius: var(--bs-border-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-calendar-day {
+  color: var(--bs-body-color);
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+}
+
+.admin-calendar-day:hover {
+  color: var(--bs-body-color);
+  border-color: var(--bs-primary);
+}
+
+.admin-calendar-day.is-success-1 {
+  background: #d1e7dd;
+}
+
+.admin-calendar-day.is-success-2 {
+  background: #a3cfbb;
+}
+
+.admin-calendar-day.is-success-3 {
+  color: #0a3622;
+  background: #75b798;
+}
+
+.admin-calendar-day.is-success-4 {
+  color: #fff;
+  background: #198754;
+  border-color: #198754;
+}
+
+.admin-calendar-day.is-warning {
+  background: #fff3cd;
+  border-color: #ffda6a;
+}
+
+.admin-calendar-day.is-danger {
+  color: #fff;
+  background: #dc3545;
+  border-color: #dc3545;
 }
 
 .admin-list-loading[hidden] {

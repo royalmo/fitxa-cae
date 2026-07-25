@@ -1,0 +1,104 @@
+<% content_for :title, t(".title") %>
+<% pagination_path = ->(page) { admin_managers_path(request.query_parameters.except("page").merge(page: page)) } %>
+
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <%= icon "user-cog", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+  <%= link_to new_admin_manager_path, class: "btn btn-primary d-inline-flex align-items-center gap-2" do %>
+    <%= icon "plus" %>
+    <span><%= t(".new_manager") %></span>
+  <% end %>
+</div>
+
+<div data-controller="list-loading">
+  <section class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+        <h2 class="h6 mb-0"><%= t("admin.filters.title") %></h2>
+        <%= render "admin/shared/result_count",
+          count: @admin_records_count,
+          range_start: @admin_records_range_start,
+          range_end: @admin_records_range_end %>
+      </div>
+
+      <%= form_with url: admin_managers_path, method: :get, class: "row g-2 align-items-end" do |form| %>
+        <div class="col-12 col-lg-6">
+          <%= form.label :q, t("shared.search"), class: "form-label visually-hidden" %>
+          <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder"), class: "form-control" %>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <%= form.label :status, t(".status"), class: "form-label visually-hidden" %>
+          <%= form.select :status,
+            [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]],
+            { selected: params[:status] },
+            class: "form-select",
+            data: { action: "change->list-loading#filter" } %>
+        </div>
+        <div class="col-12 col-sm-auto">
+          <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
+            <%= icon "filter" %>
+            <span><%= t("shared.filter") %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <div data-list-loading-target="results">
+    <section class="card shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th><%= t(".name") %></th>
+              <th><%= t(".email") %></th>
+              <th><%= t(".employee") %></th>
+              <th><%= t(".status") %></th>
+              <th class="text-end"><%= t("shared.actions") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @managers.each do |manager| %>
+              <% manager_status = admin_manager_status(manager) %>
+              <tr>
+                <td><strong><%= manager_display_name(manager) %></strong></td>
+                <td><%= manager.email.presence || t(".no_email") %></td>
+                <td><%= manager.employee ? employee_display_name(manager.employee) : t(".no_employee") %></td>
+                <td>
+                  <span class="<%= bootstrap_status_badge_class(manager_status) %>">
+                    <%= status_text(manager_status) %>
+                  </span>
+                </td>
+                <td class="text-end">
+                  <%= link_to edit_admin_manager_path(manager),
+                    class: "btn btn-sm btn-outline-secondary admin-row-action",
+                    title: t("shared.edit"),
+                    aria: { label: t("shared.edit") } do %>
+                    <%= icon "pencil" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @managers.empty? %>
+        <div class="card-body text-center text-body-secondary">
+          <%= t(".empty") %>
+        </div>
+      <% end %>
+    </section>
+
+    <%= render "admin/shared/pagination",
+      page: @admin_page,
+      total_pages: @admin_total_pages,
+      previous_page: @admin_previous_page,
+      next_page: @admin_next_page,
+      path: pagination_path %>
+  </div>
+
+  <%= render "admin/shared/list_loading" %>
+</div>

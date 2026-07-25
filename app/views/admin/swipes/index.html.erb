@@ -1,0 +1,100 @@
+<% content_for :title, t(".title") %>
+
+<div class="d-flex align-items-center gap-2 mb-4">
+  <%= icon "clock", class: "text-primary" %>
+  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+</div>
+
+<div data-controller="list-loading">
+  <section class="card shadow-sm mb-3">
+    <div class="card-body">
+      <h2 class="h6 mb-3"><%= t("admin.filters.title") %></h2>
+
+      <%= form_with url: admin_swipes_path, method: :get, class: "row g-2 align-items-end" do |form| %>
+        <div class="col-12 col-lg-6">
+          <%= form.label :employee_id, t(".employee"), class: "form-label visually-hidden" %>
+          <%= form.select :employee_id,
+            @employees.map { |employee| [employee_display_name(employee), employee.id] },
+            { selected: @selected_employee&.id },
+            class: "form-select",
+            data: { action: "change->list-loading#filter" } %>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
+          <%= form.month_field :month, value: @month.strftime("%Y-%m"), class: "form-control", data: { action: "change->list-loading#filter" } %>
+        </div>
+        <div class="col-12 col-sm-auto">
+          <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
+            <%= icon "filter" %>
+            <span><%= t("shared.filter") %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <div data-list-loading-target="results">
+    <section class="card shadow-sm">
+      <% if @selected_employee %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th><%= t(".date") %></th>
+                <th><%= t(".hours") %></th>
+                <th><%= t(".swipes") %></th>
+                <th><%= t(".status") %></th>
+                <th class="text-end"><%= t("shared.actions") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @clocking_days.each do |day| %>
+                <tr>
+                  <td class="text-nowrap"><%= l(day[:date], format: :weekday_day_month) %></td>
+                  <td class="text-nowrap"><%= duration_text(day[:worked_seconds]) %></td>
+                  <td>
+                    <% if day[:swipes].any? %>
+                      <div class="d-flex flex-column gap-1">
+                        <% clocking_swipe_rows(day[:swipes]).each do |row| %>
+                          <div class="d-flex flex-wrap gap-1">
+                            <% [row[:entry], row[:exit]].compact.each do |swipe| %>
+                              <span class="<%= class_names("badge text-bg-light border d-inline-flex align-items-center gap-1", "text-decoration-line-through": clocking_swipe_pending_invalidated?(swipe), "text-primary": clocking_swipe_pending_requested?(swipe)) %>">
+                                <%= icon clocking_icon_name(swipe.kind) %>
+                                <span><%= l(swipe.swipe_at, format: :hour_minute) %></span>
+                              </span>
+                            <% end %>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% else %>
+                      <span class="text-body-secondary"><%= t(".empty_day") %></span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <span class="<%= bootstrap_status_badge_class(day[:status]) %>">
+                      <%= admin_clocking_status_text(day[:status]) %>
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <%= link_to admin_correction_day_path(@selected_employee, day[:date], day[:correction]),
+                      class: "btn btn-sm btn-outline-secondary admin-row-action",
+                      title: t(".edit_day", date: l(day[:date], format: :short)),
+                      aria: { label: t(".edit_day", date: l(day[:date], format: :short)) } do %>
+                      <%= icon "pencil" %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="card-body text-center text-body-secondary">
+          <%= t(".empty") %>
+        </div>
+      <% end %>
+    </section>
+  </div>
+
+  <%= render "admin/shared/list_loading" %>
+</div>

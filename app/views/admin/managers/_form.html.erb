@@ -1,0 +1,59 @@
+<% form_url = manager.persisted? ? admin_manager_path(manager) : admin_managers_path %>
+
+<% if manager.errors.any? %>
+  <div class="alert alert-danger error-summary">
+    <strong><%= t("admin.managers.form.error_title") %></strong>
+    <ul class="mb-0 mt-2">
+      <% manager.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%= form_with model: manager, url: form_url do |form| %>
+  <section class="card shadow-sm">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <%= form.label :first_name, t("admin.managers.form.first_name"), class: "form-label" %>
+          <%= form.text_field :first_name, autocomplete: "given-name", class: "form-control" %>
+        </div>
+        <div class="col-12 col-md-6">
+          <%= form.label :last_name, t("admin.managers.form.last_name"), class: "form-label" %>
+          <%= form.text_field :last_name, autocomplete: "family-name", class: "form-control" %>
+        </div>
+        <div class="col-12 col-md-6">
+          <%= form.label :email, t("admin.managers.form.email"), class: "form-label" %>
+          <%= form.email_field :email, autocomplete: "email", class: "form-control" %>
+        </div>
+        <div class="col-12 col-md-6">
+          <%= form.label :password, t("admin.managers.form.password"), class: "form-label" %>
+          <%= form.password_field :password, autocomplete: "new-password", class: "form-control" %>
+        </div>
+        <div class="col-12 col-md-8">
+          <%= form.label :employee_id, t("admin.managers.form.employee"), class: "form-label" %>
+          <%= form.select :employee_id,
+            [[t("admin.managers.form.no_employee"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] },
+            {},
+            class: "form-select" %>
+        </div>
+        <div class="col-12 col-md-4">
+          <%= form.label :active, t("admin.managers.form.status"), class: "form-label" %>
+          <%= form.select :active, [[status_text(:active), true], [status_text(:disabled), false]], {}, class: "form-select" %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="d-flex flex-wrap gap-2 mt-4">
+    <%= link_to admin_managers_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
+      <%= icon "x" %>
+      <span><%= t("shared.cancel") %></span>
+    <% end %>
+    <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.saving") } do %>
+      <%= icon "save" %>
+      <span><%= t("shared.save") %></span>
+    <% end %>
+  </div>
+<% end %>

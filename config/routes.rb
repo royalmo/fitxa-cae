@@ -40,9 +40,16 @@ Rails.application.routes.draw do
 
     resources :employees, only: %i[index new create edit update]
     resource :import, controller: "imports", only: %i[new create]
+    resources :swipes, only: %i[index]
+    resources :calendars, only: %i[index]
+    resources :classifications, only: %i[index new create edit update]
+    resources :audit_actions, path: "activity", only: %i[index] do
+      get :export, on: :collection
+    end
+    resources :managers, only: %i[index new create edit update]
     resources :reports, only: %i[index]
 
-    resources :corrections, only: %i[index] do
+    resources :corrections, only: %i[index show new create edit update] do
       member do
         post :approve
         post :reject
