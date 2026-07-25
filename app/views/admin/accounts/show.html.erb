@@ -1,0 +1,94 @@
+<% content_for :title, t(".title") %>
+<% profile_error_messages = @account_error_context.to_s == "profile" ? @manager.errors.full_messages : [] %>
+<% password_error_messages = @account_error_context.to_s == "password" ? @manager.errors.full_messages : [] %>
+
+<div class="d-flex align-items-center gap-2 mb-4">
+  <%= icon "circle-user", class: "text-primary" %>
+  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+</div>
+
+<div class="row g-4">
+  <div class="col-12 col-xl-7">
+    <section class="card shadow-sm">
+      <div class="card-header bg-body">
+        <h2 class="h5 mb-0"><%= t(".profile") %></h2>
+      </div>
+      <div class="card-body">
+        <% if profile_error_messages.any? %>
+          <div class="alert alert-danger error-summary">
+            <strong><%= t(".error_title") %></strong>
+            <ul class="mb-0 mt-2">
+              <% profile_error_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%= form_with model: @manager, url: admin_account_profile_path, method: :patch do |form| %>
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <%= form.label :first_name, t(".first_name"), class: "form-label" %>
+              <%= form.text_field :first_name, autocomplete: "given-name", class: "form-control" %>
+            </div>
+            <div class="col-12 col-md-6">
+              <%= form.label :last_name, t(".last_name"), class: "form-label" %>
+              <%= form.text_field :last_name, autocomplete: "family-name", class: "form-control" %>
+            </div>
+            <div class="col-12">
+              <%= form.label :email, t(".email"), class: "form-label" %>
+              <%= form.email_field :email, autocomplete: "email", class: "form-control" %>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end mt-4">
+            <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.saving") } do %>
+              <%= icon "save" %>
+              <span><%= t(".save") %></span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-12 col-xl-5">
+    <section class="card shadow-sm">
+      <div class="card-header bg-body">
+        <h2 class="h5 mb-0"><%= t(".password") %></h2>
+      </div>
+      <div class="card-body">
+        <% if password_error_messages.any? %>
+          <div class="alert alert-danger error-summary">
+            <strong><%= t(".error_title") %></strong>
+            <ul class="mb-0 mt-2">
+              <% password_error_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%= form_with model: @manager, url: admin_account_password_path, method: :patch do |form| %>
+          <div class="vstack gap-3">
+            <div>
+              <%= form.label :password, t(".new_password"), class: "form-label" %>
+              <%= form.password_field :password, autocomplete: "new-password", class: "form-control" %>
+            </div>
+            <div>
+              <%= form.label :password_confirmation, t(".password_confirmation"), class: "form-label" %>
+              <%= form.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end mt-4">
+            <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.changing") } do %>
+              <%= icon "save" %>
+              <span><%= t(".change_password") %></span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  </div>
+</div>

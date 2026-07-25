@@ -117,9 +117,28 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_login_path
   end
 
+  test "employee topbar hides admin link when linked manager is inactive" do
+    employee = create_employee(password: "1234")
+    create_manager(employee: employee, active: false)
+    log_in_employee(employee)
+
+    get root_path
+
+    assert_response :success
+    assert_select ".employee-topbar .employee-admin-button", 0
+  end
+
   test "admin pages render" do
-    log_in_manager
-    create_employee(first_name: "Nora", last_name: "Vidal")
+    employee = create_employee(first_name: "Nora", last_name: "Vidal")
+    manager = create_manager(employee: employee)
+    employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.current
+    )
+    log_in_manager(manager)
+    pending_corrections_count = SwipeCorrection.pending.count
+    pending_corrections_label = I18n.t("admin.topbar.pending_corrections", count: pending_corrections_count)
 
     get admin_root_path
     assert_response :success
@@ -134,6 +153,11 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='stylesheet'][href*='application']", 0
     assert_select "script[src*='popper']", 1
     assert_select "script[src*='bootstrap']", 1
+    assert_select "nav.navbar a.admin-topbar-corrections-button[href='#{admin_corrections_path(status: "pending")}'][aria-label='#{pending_corrections_label}'] .admin-topbar-count-badge", text: pending_corrections_count.to_s
+    assert_select "nav.navbar a.admin-topbar-corrections-button", text: /Correccions/, count: 0
+    assert_select "nav.navbar a.admin-topbar-employee-button[href='#{root_path}'][aria-label='Anar a la part de treballador'] svg.icon"
+    assert_select "nav.navbar a.admin-topbar-button[href='#{admin_account_path}'][aria-label='Compte']", text: /Laia Riera/
+    assert_select "nav.navbar form[action='#{admin_logout_path}'] button.admin-topbar-button[aria-label='Tancar sessió'] svg.icon"
     assert_select "aside#adminSidebar.admin-sidebar.offcanvas-lg nav ul.nav.nav-pills"
     assert_select "aside#adminSidebar a.nav-link.active[aria-current='page'][href='#{admin_root_path}']"
     assert_select "aside#adminSidebar a.nav-link.link-body-emphasis[href='#{admin_employees_path}']"
@@ -210,6 +234,11 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Responsables | FitxaCAE Admin"
     assert_select "table"
+
+    get admin_account_path
+    assert_response :success
+    assert_select "title", text: "Compte | FitxaCAE Admin"
+    assert_select "form[action='#{admin_account_profile_path}']"
   end
 
   test "no-op actions redirect to their list screens" do

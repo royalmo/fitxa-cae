@@ -38,6 +38,9 @@ Rails.application.routes.draw do
 
     root "dashboard#index"
 
+    resource :account, controller: "accounts", only: %i[show]
+    patch "account/profile" => "accounts#update_profile", as: :account_profile
+    patch "account/password" => "accounts#update_password", as: :account_password
     resources :employees, only: %i[index new create edit update]
     resource :import, controller: "imports", only: %i[new create]
     resources :swipes, only: %i[index]

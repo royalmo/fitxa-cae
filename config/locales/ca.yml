@@ -303,6 +303,7 @@ ca:
       correction_updated: "Correcció actualitzada."
       classification_created: "Classificació creada."
       classification_updated: "Classificació actualitzada."
+      account_updated: "Compte actualitzat."
       employee_created: "Treballador creat."
       employee_updated: "Treballador actualitzat."
       import_started: "Importació iniciada."
@@ -323,6 +324,12 @@ ca:
       open_menu: "Obrir menú"
       reports: "Informes"
       swipes: "Fitxatges"
+    topbar:
+      account: "Compte"
+      employee_side: "Anar a la part de treballador"
+      pending_corrections:
+        one: "1 correcció pendent"
+        other: "%{count} correccions pendents"
     filters:
       title: "Filtres"
     pagination:
@@ -347,6 +354,23 @@ ca:
         invalid: "Correu o contrasenya incorrectes."
       destroy:
         signed_out: "Sessió de gestió tancada."
+    accounts:
+      show:
+        title: "Compte"
+        heading: "Compte"
+        profile: "Dades personals"
+        password: "Contrasenya"
+        error_title: "Revisa els canvis"
+        first_name: "Nom"
+        last_name: "Cognoms"
+        email: "Correu"
+        save: "Desar canvis"
+        new_password: "Nova contrasenya"
+        password_confirmation: "Repeteix la contrasenya"
+        change_password: "Canviar contrasenya"
+      update_password:
+        password_confirmation_invalid: "La confirmació de la contrasenya no coincideix."
+        password_blank: "Indica la nova contrasenya."
     dashboard:
       index:
         title: "Resum"

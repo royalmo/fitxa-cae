@@ -60,6 +60,75 @@ html[data-pwa="admin"],
   translate: 0 -0.2em;
 }
 
+.admin-topbar-button {
+  min-height: 2.375rem;
+  color: var(--bs-body-color);
+  background: transparent;
+  border-color: transparent;
+}
+
+.admin-topbar-button:hover,
+.admin-topbar-button:focus-visible {
+  color: var(--bs-body-color);
+  background: var(--bs-tertiary-bg);
+  border-color: var(--bs-border-color);
+}
+
+.admin-topbar-icon-button {
+  position: relative;
+  width: 2.375rem;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.admin-topbar-count-badge {
+  position: absolute !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  right: -0.4rem;
+  top: 1rem !important;
+  min-width: 1.45rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  font-size: 0.58rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.admin-topbar-working-dot {
+  position: absolute;
+  right: 0.42rem;
+  bottom: 0.42rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #198754;
+  box-shadow: 0 0 0 0.16rem rgba(25, 135, 84, 0.2), 0 0 0.7rem rgba(25, 135, 84, 0.7);
+  animation: admin-topbar-working-glow 1.8s ease-in-out infinite;
+}
+
+@keyframes admin-topbar-working-glow {
+  0%,
+  100% {
+    opacity: 0.82;
+    transform: scale(0.88);
+    box-shadow: 0 0 0 0.12rem rgba(25, 135, 84, 0.16), 0 0 0.45rem rgba(25, 135, 84, 0.45);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 0.18rem rgba(25, 135, 84, 0.24), 0 0 0.85rem rgba(25, 135, 84, 0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-topbar-working-dot {
+    animation: none;
+  }
+}
+
 .admin-sidebar {
   --bs-offcanvas-width: var(--admin-sidebar-width);
 }

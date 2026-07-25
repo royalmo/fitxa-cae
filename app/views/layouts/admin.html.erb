@@ -33,30 +33,45 @@
 
         <%= render "layouts/brand_mark", path: admin_root_path, class: "navbar-brand admin-brand mb-0", badge: t("admin.nav.admin_badge") %>
 
-        <div class="dropdown ms-auto">
-          <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false">
+        <div class="admin-topbar-actions ms-auto d-flex align-items-center gap-2">
+          <%= link_to admin_corrections_path(status: "pending"),
+            class: "btn admin-topbar-button admin-topbar-icon-button admin-topbar-corrections-button d-inline-flex align-items-center justify-content-center",
+            title: t("admin.topbar.pending_corrections", count: @admin_pending_corrections_count),
+            aria: { label: t("admin.topbar.pending_corrections", count: @admin_pending_corrections_count) } do %>
+            <%= icon "square-pen" %>
+            <span class="<%= class_names("admin-topbar-count-badge badge rounded-pill", @admin_pending_corrections_count.positive? ? "text-bg-primary" : "text-bg-secondary") %>">
+              <%= @admin_pending_corrections_badge %>
+            </span>
+          <% end %>
+
+          <% if @admin_employee_shortcut %>
+            <%= link_to root_path,
+              class: class_names("btn admin-topbar-button admin-topbar-icon-button admin-topbar-employee-button d-inline-flex align-items-center justify-content-center", "is-working": @admin_employee_shortcut_working),
+              title: t("admin.topbar.employee_side"),
+              aria: { label: t("admin.topbar.employee_side") } do %>
+              <%= icon "clock" %>
+              <% if @admin_employee_shortcut_working %>
+                <span class="admin-topbar-working-dot" aria-hidden="true"></span>
+              <% end %>
+            <% end %>
+          <% end %>
+
+          <%= link_to admin_account_path,
+            class: "btn admin-topbar-button d-inline-flex align-items-center gap-2",
+            title: t("admin.topbar.account"),
+            aria: { label: t("admin.topbar.account") } do %>
             <%= icon "circle-user" %>
             <span class="d-none d-sm-inline"><%= manager_name %></span>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end shadow">
-            <li><h6 class="dropdown-header mb-0"><%= manager_name %></h6></li>
-            <li><span class="dropdown-item-text small text-body-secondary"><%= t("admin.area") %> · <%= t("admin.role") %></span></li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <%= button_to admin_logout_path,
-                method: :delete,
-                form_class: "m-0",
-                class: "dropdown-item d-flex align-items-center gap-2",
-                title: t("admin.nav.logout"),
-                aria: { label: t("admin.nav.logout") } do %>
-                <%= icon "log-out" %>
-                <span><%= t("admin.nav.logout") %></span>
-              <% end %>
-            </li>
-          </ul>
+          <% end %>
+
+          <%= button_to admin_logout_path,
+            method: :delete,
+            form_class: "m-0",
+            class: "btn admin-topbar-button admin-topbar-icon-button d-inline-flex align-items-center justify-content-center",
+            title: t("admin.nav.logout"),
+            aria: { label: t("admin.nav.logout") } do %>
+            <%= icon "log-out" %>
+          <% end %>
         </div>
       </div>
     </nav>

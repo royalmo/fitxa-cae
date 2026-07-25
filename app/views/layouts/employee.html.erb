@@ -34,7 +34,7 @@
           <% end %>
 
           <% if employee_signed_in? %>
-            <% if current_employee.manager.present? %>
+            <% if current_employee.manager&.active? %>
               <%= link_to admin_root_path, class: "employee-admin-button", title: t("employee.nav.admin"), aria: { label: t("employee.nav.admin") } do %>
                 <%= icon "hammer" %>
               <% end %>
