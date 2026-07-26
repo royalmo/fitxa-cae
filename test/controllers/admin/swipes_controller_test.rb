@@ -14,6 +14,7 @@ class Admin::SwipesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", text: "Fitxatges"
+    assert_select "h2", text: "Filtres", count: 0
     assert_select "#employee_id option[selected][value='#{employee.id}']"
     assert_select "input[type='month'][value='2026-07']"
     assert_select "tbody tr", count: 31

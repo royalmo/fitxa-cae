@@ -14,7 +14,9 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "Marta Serra", response.body
     assert_no_match "Pau Vila", response.body
+    assert_select "h2", text: "Filtres", count: 0
     assert_select ".admin-result-count[data-list-loading-target='results']", text: "Mostrant 1-1 de 1"
+    assert_select ".text-center .admin-result-count", text: "Mostrant 1-1 de 1"
     assert_select "a.btn.admin-row-action[href='#{edit_admin_manager_path(visible)}'][aria-label='Editar'] svg.icon"
   end
 

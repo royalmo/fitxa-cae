@@ -17,7 +17,10 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_match "nora@example.test", response.body
     assert_match "office", response.body
     assert_select "[data-controller='list-loading']"
+    assert_select "h2", text: "Filtres", count: 0
     assert_select ".admin-result-count[data-list-loading-target='results']",
+      text: "Mostrant 1-#{[ Employee.count, 20 ].min} de #{Employee.count}"
+    assert_select ".text-center .admin-result-count",
       text: "Mostrant 1-#{[ Employee.count, 20 ].min} de #{Employee.count}"
     assert_select "button[type='submit'][data-submitting-label='Filtrant...'] svg.icon"
     assert_select "a.btn.admin-row-action[href='#{edit_admin_employee_path(employee)}'][aria-label='Editar'] svg.icon"

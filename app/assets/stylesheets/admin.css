@@ -8,6 +8,10 @@ html[data-pwa="admin"],
   --admin-sidebar-width: 17rem;
 }
 
+html[data-pwa="admin"] .turbo-progress-bar {
+  background: var(--bs-primary, var(--brand-red));
+}
+
 .admin-auth-shell {
   display: grid;
   grid-template-rows: 1fr auto;

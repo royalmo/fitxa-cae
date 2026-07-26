@@ -6,32 +6,31 @@
 </div>
 
 <div data-controller="list-loading">
-  <section class="card shadow-sm mb-3">
-    <div class="card-body">
-      <h2 class="h6 mb-3"><%= t("admin.filters.title") %></h2>
-
-      <%= form_with url: admin_swipes_path, method: :get, class: "row g-2 align-items-end" do |form| %>
-        <div class="col-12 col-lg-6">
-          <%= form.label :employee_id, t(".employee"), class: "form-label visually-hidden" %>
-          <%= form.select :employee_id,
-            @employees.map { |employee| [employee_display_name(employee), employee.id] },
-            { selected: @selected_employee&.id },
-            class: "form-select",
-            data: { action: "change->list-loading#filter" } %>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-          <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
-          <%= form.month_field :month, value: @month.strftime("%Y-%m"), class: "form-control", data: { action: "change->list-loading#filter" } %>
-        </div>
-        <div class="col-12 col-sm-auto">
-          <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
-            <%= icon "filter" %>
-            <span><%= t("shared.filter") %></span>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
-  </section>
+  <div class="mb-3">
+    <%= form_with url: admin_swipes_path,
+      method: :get,
+      class: "row g-2 align-items-end",
+      data: { action: "submit->list-loading#showLoading" } do |form| %>
+      <div class="col-12 col-lg-6">
+        <%= form.label :employee_id, t(".employee"), class: "form-label visually-hidden" %>
+        <%= form.select :employee_id,
+          @employees.map { |employee| [employee_display_name(employee), employee.id] },
+          { selected: @selected_employee&.id },
+          class: "form-select",
+          data: { action: "change->list-loading#filter" } %>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3">
+        <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
+        <%= form.month_field :month, value: @month.strftime("%Y-%m"), class: "form-control", data: { action: "change->list-loading#filter" } %>
+      </div>
+      <div class="col-12 col-sm-auto">
+        <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
+          <%= icon "filter" %>
+          <span><%= t("shared.filter") %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 
   <div data-list-loading-target="results">
     <section class="card shadow-sm">

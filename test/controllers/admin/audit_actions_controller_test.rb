@@ -20,7 +20,9 @@ class Admin::AuditActionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "employee.updated", response.body
     assert_match "Iu Bosch", response.body
+    assert_select "h2", text: "Filtres", count: 0
     assert_select ".admin-result-count[data-list-loading-target='results']", text: "Mostrant 1-1 de 1"
+    assert_select ".text-center .admin-result-count", text: "Mostrant 1-1 de 1"
     assert_select "a[href='#{export_admin_audit_actions_path(kind: "employee.updated")}'] svg.icon"
   end
 

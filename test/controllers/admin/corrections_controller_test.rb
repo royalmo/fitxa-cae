@@ -21,7 +21,10 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Correcció de fitxatge", response.body
     assert_match "Sortida 17:00", response.body
     assert_select "[data-controller='list-loading']"
+    assert_select "h2", text: "Filtres", count: 0
     assert_select ".admin-result-count[data-list-loading-target='results']",
+      text: "Mostrant 1-#{[ SwipeCorrection.count, 20 ].min} de #{SwipeCorrection.count}"
+    assert_select ".text-center .admin-result-count",
       text: "Mostrant 1-#{[ SwipeCorrection.count, 20 ].min} de #{SwipeCorrection.count}"
     assert_select "button.btn.admin-row-action[aria-label='Aprovar'][data-submitting-label='Aprovant...'] svg.icon"
     assert_select "button.btn.admin-row-action[aria-label='Rebutjar'][data-submitting-label='Rebutjant...'] svg.icon"
