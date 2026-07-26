@@ -47,7 +47,7 @@ Rails.application.routes.draw do
     resources :calendars, only: %i[index] do
       get :employee_search, on: :collection
     end
-    resources :classifications, only: %i[index new create edit update]
+    resources :tags, only: %i[index new create edit update]
     resources :audit_actions, path: "activity", only: %i[index] do
       get :export, on: :collection
     end

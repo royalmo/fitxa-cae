@@ -16,7 +16,7 @@ class Admin::AccountsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "title", text: "Compte | FitxaCAE Admin"
-    assert_select "h1", text: "Compte"
+    assert_select "h1", text: "Compte de responsable"
     assert_select "form[action='#{admin_account_profile_path}']"
     assert_select "form[action='#{admin_account_password_path}']"
     assert_select "button[type='submit'][data-submitting-label='Desant...']"

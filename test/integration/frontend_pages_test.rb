@@ -179,7 +179,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_includes navbar_child_classes.second, "admin-brand"
     assert_select "nav.navbar .admin-brand .brand-badge", text: "ADMIN"
     assert_select "aside#adminSidebar .admin-brand", 0
-    assert_select "aside#adminSidebar .admin-sidebar-footer a[href='#{admin_account_path}']", text: "Laia"
+    assert_select "aside#adminSidebar .admin-sidebar-footer a[href='#{admin_account_path}']", text: "Laia Riera"
     assert_select "aside#adminSidebar .admin-sidebar-footer form[action='#{admin_logout_path}'] button", text: "Tancar sessió"
 
     get admin_employees_path
@@ -223,7 +223,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='employee-search']"
     assert_select ".admin-calendar-grid", 0
 
-    get admin_classifications_path
+    get admin_tags_path
     assert_response :success
     assert_select "title", text: "Classificació | FitxaCAE Admin"
     assert_select "table"
@@ -242,7 +242,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Compte | FitxaCAE Admin"
     assert_select "form[action='#{admin_account_profile_path}']"
-    assert_select "aside#adminSidebar .admin-sidebar-footer a.admin-sidebar-link.active[aria-current='page'][href='#{admin_account_path}']", text: "Laia"
+    assert_select "aside#adminSidebar .admin-sidebar-footer a.admin-sidebar-link.active[aria-current='page'][href='#{admin_account_path}']", text: "Laia Riera"
   end
 
   test "no-op actions redirect to their list screens" do

@@ -1,8 +1,8 @@
 <% content_for :title, t(".title") %>
 
 <div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "pencil", class: "text-primary" %>
+  <%= icon "plus", class: "text-primary" %>
   <h1 class="h2 mb-0"><%= t(".heading") %></h1>
 </div>
 
-<%= render "form", classification: @classification %>
+<%= render "form", tag: @tag %>

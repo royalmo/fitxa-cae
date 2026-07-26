@@ -1,30 +1,30 @@
-<% form_url = classification.persisted? ? admin_classification_path(classification) : admin_classifications_path %>
+<% form_url = tag.persisted? ? admin_tag_path(tag) : admin_tags_path %>
 
-<% if classification.errors.any? %>
+<% if tag.errors.any? %>
   <div class="alert alert-danger error-summary">
-    <strong><%= t("admin.classifications.form.error_title") %></strong>
+    <strong><%= t("admin.tags.form.error_title") %></strong>
     <ul class="mb-0 mt-2">
-      <% classification.errors.full_messages.each do |message| %>
+      <% tag.errors.full_messages.each do |message| %>
         <li><%= message %></li>
       <% end %>
     </ul>
   </div>
 <% end %>
 
-<%= form_with model: classification, url: form_url do |form| %>
+<%= form_with model: tag, url: form_url do |form| %>
   <section class="card shadow-sm">
     <div class="card-body">
       <div class="row g-3">
         <div class="col-12 col-md-6">
-          <%= form.label :name, t("admin.classifications.form.name"), class: "form-label" %>
+          <%= form.label :name, t("admin.tags.form.name"), class: "form-label" %>
           <%= form.text_field :name, class: "form-control" %>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
-          <%= form.label :color, t("admin.classifications.form.color"), class: "form-label" %>
+          <%= form.label :color, t("admin.tags.form.color"), class: "form-label" %>
           <%= form.color_field :color, class: "form-control form-control-color" %>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
-          <%= form.label :active, t("admin.classifications.form.status"), class: "form-label" %>
+          <%= form.label :active, t("admin.tags.form.status"), class: "form-label" %>
           <%= form.select :active, [[status_text(:active), true], [status_text(:disabled), false]], {}, class: "form-select" %>
         </div>
       </div>
@@ -32,7 +32,7 @@
   </section>
 
   <div class="d-flex flex-wrap gap-2 mt-4">
-    <%= link_to admin_classifications_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
+    <%= link_to admin_tags_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
       <%= icon "x" %>
       <span><%= t("shared.cancel") %></span>
     <% end %>

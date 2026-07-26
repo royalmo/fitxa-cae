@@ -8,7 +8,6 @@
 
   <body class="admin-shell bg-body-tertiary min-vh-100" data-controller="admin-theme submit-feedback">
     <% manager_name = manager_display_name(@manager) %>
-    <% manager_first_name = @manager&.first_name.presence || manager_name %>
     <% account_active = request.path.start_with?(admin_account_path) %>
     <% nav_items = [
       [admin_root_path, "house", t("admin.nav.home"), true],
@@ -17,7 +16,7 @@
       [admin_corrections_path, "square-pen", t("admin.nav.corrections"), false],
       [admin_reports_path, "chart-column", t("admin.nav.reports"), false],
       [admin_calendars_path, "calendar-days", t("admin.nav.calendars"), false],
-      [admin_classifications_path, "tags", t("admin.nav.classifications"), false],
+      [admin_tags_path, "tags", t("admin.nav.tags"), false],
       [admin_audit_actions_path, "activity", t("admin.nav.audit_actions"), false],
       [admin_managers_path, "user-cog", t("admin.nav.managers"), false]
     ] %>
@@ -78,8 +77,8 @@
       </div>
     </nav>
 
-    <div class="container-fluid">
-      <div class="row flex-nowrap">
+    <div class="container-fluid admin-layout-container">
+      <div class="row flex-nowrap admin-layout-row">
         <div class="col-auto px-0">
           <aside class="admin-sidebar offcanvas-lg offcanvas-start bg-body-tertiary border-end"
             tabindex="-1"
@@ -117,7 +116,7 @@
                 <%= link_to admin_account_path,
                   **account_link_options do %>
                   <%= icon "circle-user" %>
-                  <span><%= manager_first_name %></span>
+                  <span><%= manager_name %></span>
                 <% end %>
 
                 <%= button_to admin_logout_path,
@@ -132,7 +131,7 @@
           </aside>
         </div>
 
-        <div class="col min-vh-100 px-0">
+        <div class="col min-vh-100 px-0 admin-main-column">
           <main class="container-xl py-4">
             <% flash.each do |type, message| %>
               <% alert_class = type.to_s == "alert" ? "alert-danger" : "alert-success" %>

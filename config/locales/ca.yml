@@ -301,8 +301,8 @@ ca:
       correction_created: "Correcció creada."
       correction_rejected: "Correcció rebutjada."
       correction_updated: "Correcció actualitzada."
-      classification_created: "Classificació creada."
-      classification_updated: "Classificació actualitzada."
+      tag_created: "Etiqueta creada."
+      tag_updated: "Etiqueta actualitzada."
       account_updated: "Compte actualitzat."
       employee_created: "Treballador creat."
       employee_updated: "Treballador actualitzat."
@@ -313,7 +313,7 @@ ca:
       admin_badge: "ADMIN"
       audit_actions: "Activitat"
       calendars: "Calendaris"
-      classifications: "Classificació"
+      tags: "Classificació"
       label: "Navegació"
       close_menu: "Tancar menú"
       corrections: "Correccions"
@@ -357,7 +357,7 @@ ca:
     accounts:
       show:
         title: "Compte"
-        heading: "Compte"
+        heading: "Compte de responsable"
         profile: "Dades personals"
         password: "Contrasenya"
         error_title: "Revisa els canvis"
@@ -482,28 +482,28 @@ ca:
         swipes_count:
           one: "1 fitxatge"
           other: "%{count} fitxatges"
-    classifications:
+    tags:
       index:
         title: "Classificació"
         heading: "Classificació"
-        new_classification: "Nova classificació"
+        new_tag: "Nova etiqueta"
         search_placeholder: "Nom"
         all_statuses: "Tots"
         name: "Nom"
         color: "Color"
         status: "Estat"
-        empty: "No hi ha classificacions amb aquests filtres."
+        empty: "No hi ha etiquetes amb aquests filtres."
       form:
-        error_title: "Revisa la classificació"
+        error_title: "Revisa l'etiqueta"
         name: "Nom"
         color: "Color"
         status: "Estat"
       new:
-        title: "Nova classificació"
-        heading: "Nova classificació"
+        title: "Nova etiqueta"
+        heading: "Nova etiqueta"
       edit:
-        title: "Editar classificació"
-        heading: "Editar classificació"
+        title: "Editar etiqueta"
+        heading: "Editar etiqueta"
     audit_actions:
       index:
         title: "Activitat"
