@@ -1,0 +1,36 @@
+<% modal_id = admin_manager_activation_modal_id(manager) %>
+<% modal_label_id = "#{modal_id}_label" %>
+<% target_active = action.to_sym == :activate %>
+<% manager_name = manager_display_name(manager) %>
+
+<div class="modal fade" id="<%= modal_id %>" tabindex="-1" aria-labelledby="<%= modal_label_id %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="<%= modal_label_id %>">
+          <%= t("admin.managers.activation.#{action}.title") %>
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">
+          <%= t("admin.managers.activation.#{action}.body", name: manager_name) %>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <%= t("shared.cancel") %>
+        </button>
+
+        <%= form_with url: activation_admin_manager_path(manager), method: :patch, class: "m-0" do %>
+          <%= hidden_field_tag "manager[active]", target_active.to_s %>
+          <%= button_tag type: :submit,
+            class: admin_manager_activation_submit_class(action),
+            data: { submitting_label: t("shared.submitting.saving") } do %>
+            <%= t("admin.managers.activation.#{action}.confirm") %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

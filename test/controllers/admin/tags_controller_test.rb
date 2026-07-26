@@ -162,7 +162,7 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select "#tag_form_modal_new[data-bootstrap-modal-show-value='true']" do
-      assert_select ".error-summary li", text: "Nom no està disponible"
+      assert_select ".error-summary li", text: "Nom ja està assignat a una altra etiqueta"
     end
   end
 

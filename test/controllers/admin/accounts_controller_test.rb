@@ -18,23 +18,27 @@ class Admin::AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Compte | FitxaCAE Admin"
     assert_select "h1", text: "Compte de responsable"
     assert_select "form[action='#{admin_account_profile_path}']"
+    assert_select "input[name='manager[first_name]'][disabled='disabled'][title='Edita aquests camps des de la pàgina de responsables']"
+    assert_select "input[name='manager[last_name]'][disabled='disabled'][title='Edita aquests camps des de la pàgina de responsables']"
+    assert_select "input[name='manager[email]']:not([disabled])"
     assert_select "form[action='#{admin_account_password_path}']"
     assert_select "button[type='submit'][data-submitting-label='Desant...']"
     assert_select "button[type='submit'][data-submitting-label='Canviant...']"
   end
 
-  test "updates profile information" do
+  test "updates profile email only" do
     patch admin_account_profile_path, params: {
       manager: {
         first_name: "Lia",
-        last_name: "Riera",
+        last_name: "Costa",
         email: "LIA.RIERA@EXAMPLE.TEST"
       }
     }
 
     assert_redirected_to admin_account_path
     @manager.reload
-    assert_equal "Lia", @manager.first_name
+    assert_equal "Laia", @manager.first_name
+    assert_equal "Riera", @manager.last_name
     assert_equal "lia.riera@example.test", @manager.email
   end
 

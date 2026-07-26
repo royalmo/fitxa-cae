@@ -41,19 +41,20 @@ Rails.application.routes.draw do
     resource :account, controller: "accounts", only: %i[show]
     patch "account/profile" => "accounts#update_profile", as: :account_profile
     patch "account/password" => "accounts#update_password", as: :account_password
+    get "employee-search" => "employee_search#index", as: :employee_search
     resources :employees, only: %i[index new create edit update]
     resource :import, controller: "imports", only: %i[new create]
     resources :swipes, only: %i[index]
-    resources :calendars, only: %i[index] do
-      get :employee_search, on: :collection
-    end
+    resources :calendars, only: %i[index]
     resources :tags, only: %i[index create update] do
       patch :activation, on: :member
     end
     resources :audit_actions, path: "activity", only: %i[index] do
       get :export, on: :collection
     end
-    resources :managers, only: %i[index new create edit update]
+    resources :managers, only: %i[index new create edit update] do
+      patch :activation, on: :member
+    end
     resources :reports, only: %i[index]
 
     resources :corrections, only: %i[index show new create edit update] do

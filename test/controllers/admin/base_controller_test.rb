@@ -64,6 +64,19 @@ class Admin::BaseControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.admin-topbar-employee-button[href='#{root_path}']", false
   end
 
+  test "records manager last request after admin requests" do
+    manager = create_manager
+    log_in_manager(manager)
+    accessed_at = Time.zone.local(2026, 7, 26, 12, 30)
+
+    travel_to accessed_at do
+      get admin_root_path
+    end
+
+    assert_response :success
+    assert_equal accessed_at.to_i, manager.reload.last_request_at.to_i
+  end
+
   test "working indicator uses pending correction adjusted clock state" do
     employee = create_employee
     manager = create_manager(employee: employee)

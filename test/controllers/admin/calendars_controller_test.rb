@@ -13,6 +13,7 @@ class Admin::CalendarsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name='employee_id'][value='']", 1
     assert_select "input[name='employee_query'][placeholder='Cerca per nom, DNI, correu o telèfon']", 1
+    assert_select ".admin-employee-search[data-employee-search-url-value='#{admin_employee_search_path}']"
     assert_select ".admin-calendar-legend li", text: "Fitxatges"
     assert_select ".admin-calendar-legend li", text: "Pendent"
     assert_select ".admin-calendar-legend li", text: "Erroni"
@@ -119,7 +120,7 @@ class Admin::CalendarsControllerTest < ActionDispatch::IntegrationTest
       phone: "+34 600 333 444"
     )
 
-    get employee_search_admin_calendars_path, params: { q: "Mireia" }
+    get admin_employee_search_path, params: { q: "Mireia" }
 
     assert_response :success
     assert_select ".admin-employee-search-result[data-employee-search-id-param='#{employee.id}']",
@@ -128,12 +129,12 @@ class Admin::CalendarsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match employee.email, response.body
     assert_no_match employee.phone, response.body
 
-    get employee_search_admin_calendars_path, params: { q: employee.national_id.delete_suffix(employee.national_id.last) }
+    get admin_employee_search_path, params: { q: employee.national_id.delete_suffix(employee.national_id.last) }
 
     assert_response :success
     assert_select ".admin-employee-search-result[data-employee-search-id-param='#{employee.id}']"
 
-    get employee_search_admin_calendars_path, params: { q: "600111222" }
+    get admin_employee_search_path, params: { q: "600111222" }
 
     assert_response :success
     assert_select ".admin-employee-search-result[data-employee-search-id-param='#{employee.id}']",
@@ -142,7 +143,7 @@ class Admin::CalendarsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match employee.email, response.body
     assert_no_match employee.phone, response.body
 
-    get employee_search_admin_calendars_path, params: { q: employee.email }
+    get admin_employee_search_path, params: { q: employee.email }
 
     assert_response :success
     assert_select ".admin-employee-search-result[data-employee-search-id-param='#{employee.id}']"

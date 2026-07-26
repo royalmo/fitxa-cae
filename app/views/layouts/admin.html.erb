@@ -7,7 +7,7 @@
   </head>
 
   <body class="admin-shell bg-body-tertiary min-vh-100" data-controller="admin-theme submit-feedback">
-    <% manager_name = manager_display_name(@manager) %>
+    <% manager_name = manager_display_name(@admin_current_manager) %>
     <% account_active = request.path.start_with?(admin_account_path) %>
     <% nav_items = [
       [admin_root_path, "house", t("admin.nav.home"), true],

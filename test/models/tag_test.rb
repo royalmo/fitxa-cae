@@ -30,6 +30,7 @@ class TagTest < ActiveSupport::TestCase
 
     assert_not duplicate.valid?
     assert_model_error duplicate, :name, :taken
+    assert_equal "Nom ja està assignat a una altra etiqueta", duplicate.errors.full_messages_for(:name).first
   end
 
   test "enforces unique names in the database" do

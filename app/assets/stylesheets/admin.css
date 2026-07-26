@@ -251,9 +251,72 @@ html[data-pwa="admin"] .turbo-progress-bar {
   height: 0.85rem;
 }
 
-.admin-tag-row.is-inactive {
+.admin-tag-row.is-inactive,
+.admin-manager-row.is-inactive {
   --bs-table-color: var(--bs-secondary-color);
   --bs-table-bg: rgba(var(--bs-secondary-bg-rgb), 0.45);
+}
+
+.admin-manager-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.admin-manager-status-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.admin-manager-status-icon.is-active {
+  color: #2f7d58;
+}
+
+.admin-manager-status-icon.is-inactive {
+  color: var(--bs-secondary-color);
+}
+
+.admin-status-radio-fieldset legend.form-label {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.admin-status-radio-group .admin-status-radio-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.admin-status-radio-option.is-active {
+  color: #2f7d58;
+  border-color: #88bfa3;
+}
+
+.admin-status-radio-option.is-inactive {
+  color: #a94452;
+  border-color: #d7a0aa;
+}
+
+.btn-check:checked + .admin-status-radio-option.is-active {
+  color: #fff;
+  background-color: #2f7d58;
+  border-color: #2f7d58;
+}
+
+.btn-check:checked + .admin-status-radio-option.is-inactive {
+  color: #fff;
+  background-color: #a94452;
+  border-color: #a94452;
+}
+
+.admin-status-radio-icon {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 .admin-tags-status-column {
@@ -297,7 +360,9 @@ html[data-pwa="admin"] .turbo-progress-bar {
 
 .admin-tag-row.is-inactive .admin-tag-label,
 .admin-tag-row.is-inactive .admin-tag-employees-count,
-.admin-tag-row.is-inactive .admin-row-action {
+.admin-tag-row.is-inactive .admin-row-action,
+.admin-manager-row.is-inactive .admin-manager-name,
+.admin-manager-row.is-inactive .admin-row-action {
   opacity: 0.65;
 }
 

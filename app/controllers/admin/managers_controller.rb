@@ -1,16 +1,17 @@
 class Admin::ManagersController < Admin::BaseController
   MANAGERS_PER_PAGE = 20
 
+  rescue_from ActiveRecord::RecordNotUnique, with: :handle_record_not_unique
+
   def index
     @managers = paginate_admin_relation(
       filtered_managers.order(:last_name, :first_name, :email, :id),
       per_page: MANAGERS_PER_PAGE
-    ).includes(:employee).to_a
+    ).to_a
   end
 
   def new
     @manager = Manager.new(active: true)
-    load_employees
   end
 
   def create
@@ -19,14 +20,12 @@ class Admin::ManagersController < Admin::BaseController
     if @manager.save
       redirect_to admin_managers_path, notice: t("admin.flash.manager_created")
     else
-      load_employees
-      render :new, status: :unprocessable_entity
+      render_manager_form(:new)
     end
   end
 
   def edit
     @manager = Manager.find(params[:id])
-    load_employees
   end
 
   def update
@@ -35,12 +34,34 @@ class Admin::ManagersController < Admin::BaseController
     if @manager.update(manager_params)
       redirect_to admin_managers_path, notice: t("admin.flash.manager_updated")
     else
-      load_employees
-      render :edit, status: :unprocessable_entity
+      render_manager_form(:edit)
+    end
+  end
+
+  def activation
+    @manager = Manager.find(params[:id])
+    target_active = ActiveModel::Type::Boolean.new.cast(manager_activation_params[:active])
+
+    if @manager.update(active: target_active)
+      redirect_back fallback_location: admin_managers_path,
+        notice: t(target_active ? "admin.flash.manager_activated" : "admin.flash.manager_deactivated")
+    else
+      redirect_back fallback_location: admin_managers_path, alert: t("admin.flash.manager_activation_failed")
     end
   end
 
   private
+
+  def render_manager_form(template)
+    render template, status: :unprocessable_entity
+  end
+
+  def handle_record_not_unique
+    @manager ||= params[:id].present? ? Manager.find(params[:id]) : Manager.new
+    @manager.assign_attributes(manager_params)
+    @manager.errors.add(:employee_id, :taken)
+    render_manager_form(@manager.persisted? ? :edit : :new)
+  end
 
   def filtered_managers
     managers = Manager.all
@@ -65,7 +86,7 @@ class Admin::ManagersController < Admin::BaseController
     attributes
   end
 
-  def load_employees
-    @employees = Employee.order(:last_name, :first_name, :id)
+  def manager_activation_params
+    params.require(:manager).permit(:active)
   end
 end

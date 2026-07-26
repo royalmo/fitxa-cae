@@ -65,15 +65,34 @@ ca:
   errors:
     messages:
       pending_taken: "ja té una sol·licitud pendent per aquest dia"
+      taken: "ja està assignat a un altre registre"
 
   activerecord:
     models:
+      manager: "Responsable"
       tag: "Etiqueta"
     attributes:
+      manager:
+        active: "Estat"
+        email: "Correu"
+        employee_id: "Treballador vinculat"
+        first_name: "Nom"
+        last_name: "Cognoms"
+        password: "Contrasenya"
       tag:
         active: "Estat"
         color: "Color"
         name: "Nom"
+    errors:
+      models:
+        manager:
+          attributes:
+            employee_id:
+              taken: "ja està assignat a un altre responsable"
+        tag:
+          attributes:
+            name:
+              taken: "ja està assignat a una altra etiqueta"
 
   employee:
     guest: "Treballador"
@@ -320,6 +339,9 @@ ca:
       employee_updated: "Treballador actualitzat."
       import_started: "Importació iniciada."
       manager_created: "Responsable creat."
+      manager_activated: "Responsable activat."
+      manager_activation_failed: "No s'ha pogut actualitzar l'estat del responsable."
+      manager_deactivated: "Responsable desactivat."
       manager_updated: "Responsable actualitzat."
     nav:
       admin_badge: "ADMIN"
@@ -344,6 +366,8 @@ ca:
         other: "%{count} correccions pendents"
     filters:
       title: "Filtres"
+    employee_search:
+      no_results: "Cap treballadora trobada."
     pagination:
       label: "Paginació"
       showing_count: "Mostrant %{from}-%{to} de %{count}"
@@ -376,6 +400,7 @@ ca:
         first_name: "Nom"
         last_name: "Cognoms"
         email: "Correu"
+        manager_fields_locked: "Edita aquests camps des de la pàgina de responsables"
         save: "Desar canvis"
         new_password: "Nova contrasenya"
         password_confirmation: "Repeteix la contrasenya"
@@ -473,7 +498,6 @@ ca:
         next_year: "Any següent"
         loading: "Carregant calendari..."
         empty: "Selecciona una treballadora per veure el calendari."
-        no_employee_results: "Cap treballadora trobada."
         correct: "Corregir"
         create_swipes: "Crear"
         review: "Revisar"
@@ -548,22 +572,54 @@ ca:
         title: "Responsables"
         heading: "Responsables"
         new_manager: "Nou responsable"
-        search_placeholder: "Nom o correu"
+        search_placeholder: "Nom, cognoms o correu"
         all_statuses: "Tots"
+        active_statuses: "Actius"
+        disabled_statuses: "Inactius"
         name: "Nom"
         email: "Correu"
-        employee: "Treballador vinculat"
+        last_access: "Darrer accés"
+        last_access_never: "Mai"
+        last_access_ago:
+          less_than_minute: "Fa menys d'1 minut"
+          minute:
+            one: "Fa 1 minut"
+            other: "Fa %{count} minuts"
+          hour:
+            one: "Fa 1 hora"
+            other: "Fa %{count} hores"
+          day:
+            one: "Fa 1 dia"
+            other: "Fa %{count} dies"
+          month:
+            one: "Fa 1 mes"
+            other: "Fa %{count} mesos"
+          year:
+            one: "Fa 1 any"
+            other: "Fa %{count} anys"
         status: "Estat"
         no_email: "Sense correu"
-        no_employee: "Sense treballador vinculat"
         empty: "No hi ha responsables amb aquests filtres."
+      activation:
+        activate:
+          button: "Activar responsable %{name}"
+          title: "Activar responsable"
+          body: "Vols activar %{name}?"
+          confirm: "Activar"
+        deactivate:
+          button: "Desactivar responsable %{name}"
+          title: "Desactivar responsable"
+          body: "Vols desactivar %{name}?"
+          confirm: "Desactivar"
       form:
         error_title: "Revisa el responsable"
         first_name: "Nom"
         last_name: "Cognoms"
         email: "Correu"
         password: "Contrasenya"
+        password_keep_blank: "deixar en blanc per no modificar"
         employee: "Treballador vinculat"
+        employee_search_placeholder: "Cerca per nom, DNI, correu o telèfon"
         no_employee: "Sense treballador vinculat"
         status: "Estat"
       new:

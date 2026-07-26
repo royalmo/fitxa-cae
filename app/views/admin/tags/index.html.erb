@@ -21,8 +21,8 @@
       method: :get,
       class: "admin-tags-filter-form d-flex flex-column flex-lg-row align-items-stretch gap-2 w-100 mb-2",
       data: { action: "submit->list-loading#showLoading" } do |form| %>
+      <%= form.label :q, t("shared.search"), class: "form-label visually-hidden" %>
       <div class="input-group flex-grow-1">
-        <%= form.label :q, t("shared.search"), class: "form-label visually-hidden" %>
         <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder"), class: "form-control" %>
         <%= button_tag type: :submit, class: "btn btn-outline-secondary", title: t("shared.search"), aria: { label: t("shared.search") } do %>
           <%= icon "search" %>

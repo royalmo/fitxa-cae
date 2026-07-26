@@ -1,4 +1,8 @@
 <% form_url = manager.persisted? ? admin_manager_path(manager) : admin_managers_path %>
+<% selected_employee = manager.employee %>
+<% password_label = t("admin.managers.form.password") %>
+<% password_label = "#{password_label} (#{t("admin.managers.form.password_keep_blank")})" if manager.persisted? %>
+<% status_id_suffix = manager.persisted? ? manager.id : "new" %>
 
 <% if manager.errors.any? %>
   <div class="alert alert-danger error-summary">
@@ -28,20 +32,72 @@
           <%= form.email_field :email, autocomplete: "email", class: "form-control" %>
         </div>
         <div class="col-12 col-md-6">
-          <%= form.label :password, t("admin.managers.form.password"), class: "form-label" %>
+          <%= form.label :password, password_label, class: "form-label" %>
           <%= form.password_field :password, autocomplete: "new-password", class: "form-control" %>
         </div>
-        <div class="col-12 col-md-8">
+        <div class="col-12 col-md-6">
           <%= form.label :employee_id, t("admin.managers.form.employee"), class: "form-label" %>
-          <%= form.select :employee_id,
-            [[t("admin.managers.form.no_employee"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] },
-            {},
-            class: "form-select" %>
+          <div
+            class="admin-employee-search position-relative"
+            data-controller="employee-search"
+            data-employee-search-url-value="<%= admin_employee_search_path %>"
+            data-employee-search-auto-submit-value="false">
+            <%= form.hidden_field :employee_id,
+              value: manager.employee_id.to_s,
+              data: { employee_search_target: "employeeId" } %>
+            <div class="input-group">
+              <span class="input-group-text"><%= icon "search" %></span>
+              <%= text_field_tag :manager_employee_query,
+                selected_employee ? employee_display_name(selected_employee) : nil,
+                class: "form-control",
+                placeholder: t("admin.managers.form.employee_search_placeholder"),
+                autocomplete: "off",
+                role: "combobox",
+                aria: {
+                  autocomplete: "list",
+                  controls: "admin-manager-employee-results",
+                  expanded: "false"
+                },
+                data: {
+                  employee_search_target: "input",
+                  action: "input->employee-search#search focus->employee-search#search keydown->employee-search#keydown"
+                } %>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                title="<%= t("admin.managers.form.no_employee") %>"
+                aria-label="<%= t("admin.managers.form.no_employee") %>"
+                data-action="employee-search#clear">
+                <%= icon "x" %>
+              </button>
+            </div>
+            <div
+              id="admin-manager-employee-results"
+              class="admin-employee-search-results list-group shadow-sm"
+              data-employee-search-target="results"
+              role="listbox"
+              hidden></div>
+          </div>
         </div>
-        <div class="col-12 col-md-4">
-          <%= form.label :active, t("admin.managers.form.status"), class: "form-label" %>
-          <%= form.select :active, [[status_text(:active), true], [status_text(:disabled), false]], {}, class: "form-select" %>
-        </div>
+        <fieldset class="col-12 col-md-6 admin-status-radio-fieldset">
+          <legend class="form-label"><%= t("admin.managers.form.status") %></legend>
+          <div class="btn-group w-100 admin-status-radio-group" role="group" aria-label="<%= t("admin.managers.form.status") %>">
+            <% [[status_text(:active), true], [status_text(:disabled), false]].each do |(label, value)| %>
+              <% option_id = "manager_active_#{status_id_suffix}_#{value}" %>
+              <%= form.radio_button :active,
+                value,
+                id: option_id,
+                checked: value ? manager.active? : !manager.active?,
+                class: "btn-check" %>
+              <%= form.label :active,
+                for: option_id,
+                class: class_names("btn admin-status-radio-option", "is-active": value, "is-inactive": !value) do %>
+                <%= icon value ? "circle-check" : "circle-off", class: "admin-status-radio-icon" %>
+                <span><%= label %></span>
+              <% end %>
+            <% end %>
+          </div>
+        </fieldset>
       </div>
     </div>
   </section>

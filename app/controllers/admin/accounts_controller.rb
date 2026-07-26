@@ -30,7 +30,7 @@ class Admin::AccountsController < Admin::BaseController
   private
 
   def manager_profile_params
-    params.require(:manager).permit(:first_name, :last_name, :email)
+    params.require(:manager).permit(:email)
   end
 
   def account_password_params

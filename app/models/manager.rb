@@ -1,4 +1,7 @@
 class Manager < ApplicationRecord
+  LAST_REQUEST_AT_SETTING_KEY = "last_request_at"
+  LAST_REQUEST_ACCESS_GRACE_PERIOD = 10.minutes
+
   before_validation :normalize_email_attribute
 
   has_secure_password validations: false
@@ -16,6 +19,7 @@ class Manager < ApplicationRecord
   has_many :received_audit_actions, as: :recipient, class_name: "AuditAction"
 
   validates :active, inclusion: { in: [ true, false ] }
+  validates :employee_id, uniqueness: { allow_nil: true }
 
   def self.normalize_email(email)
     email.to_s.strip.downcase.presence
@@ -33,6 +37,19 @@ class Manager < ApplicationRecord
 
   def authenticate_password(password)
     password.present? && authenticate(password).present?
+  end
+
+  def last_request_at
+    timestamp = settings&.[](LAST_REQUEST_AT_SETTING_KEY)
+    Time.zone.parse(timestamp.to_s) if timestamp.present?
+  rescue ArgumentError
+    nil
+  end
+
+  def record_request_access!(at: Time.current)
+    return false if last_request_at.present? && last_request_at > at - LAST_REQUEST_ACCESS_GRACE_PERIOD
+
+    update_columns(settings: settings.to_h.merge(LAST_REQUEST_AT_SETTING_KEY => at.iso8601))
   end
 
   private

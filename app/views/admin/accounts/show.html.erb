@@ -1,6 +1,7 @@
 <% content_for :title, t(".title") %>
 <% profile_error_messages = @account_error_context.to_s == "profile" ? @manager.errors.full_messages : [] %>
 <% password_error_messages = @account_error_context.to_s == "password" ? @manager.errors.full_messages : [] %>
+<% manager_fields_locked_title = t(".manager_fields_locked") %>
 
 <div class="d-flex align-items-center gap-2 mb-4">
   <%= icon "circle-user", class: "text-primary" %>
@@ -27,13 +28,21 @@
 
         <%= form_with model: @manager, url: admin_account_profile_path, method: :patch do |form| %>
           <div class="row g-3">
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6" title="<%= manager_fields_locked_title %>">
               <%= form.label :first_name, t(".first_name"), class: "form-label" %>
-              <%= form.text_field :first_name, autocomplete: "given-name", class: "form-control" %>
+              <%= form.text_field :first_name,
+                autocomplete: "given-name",
+                class: "form-control",
+                disabled: true,
+                title: manager_fields_locked_title %>
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6" title="<%= manager_fields_locked_title %>">
               <%= form.label :last_name, t(".last_name"), class: "form-label" %>
-              <%= form.text_field :last_name, autocomplete: "family-name", class: "form-control" %>
+              <%= form.text_field :last_name,
+                autocomplete: "family-name",
+                class: "form-control",
+                disabled: true,
+                title: manager_fields_locked_title %>
             </div>
             <div class="col-12">
               <%= form.label :email, t(".email"), class: "form-label" %>

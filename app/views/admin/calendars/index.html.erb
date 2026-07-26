@@ -29,7 +29,7 @@
       <div
         class="admin-employee-search position-relative"
         data-controller="employee-search"
-        data-employee-search-url-value="<%= employee_search_admin_calendars_path %>">
+        data-employee-search-url-value="<%= admin_employee_search_path %>">
         <%= form.hidden_field :employee_id,
           value: (@selected_employee&.id).to_s,
           data: { employee_search_target: "employeeId" } %>

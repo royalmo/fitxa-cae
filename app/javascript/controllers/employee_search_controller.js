@@ -3,7 +3,8 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["input", "employeeId", "results"]
   static values = {
-    url: String
+    url: String,
+    autoSubmit: Boolean
   }
 
   connect() {
@@ -47,6 +48,15 @@ export default class extends Controller {
     this.choose(event.params.id, event.params.label)
   }
 
+  clear(event) {
+    event.preventDefault()
+    this.employeeIdTarget.value = ""
+    this.inputTarget.value = ""
+    this.selectedLabel = ""
+    this.hide()
+    this.inputTarget.focus()
+  }
+
   selectFirstResult(event) {
     if (this.inputTarget.value.trim() === "") return
 
@@ -71,7 +81,7 @@ export default class extends Controller {
     this.inputTarget.value = label
     this.selectedLabel = label
     this.hide()
-    this.inputTarget.form?.requestSubmit()
+    if (this.autoSubmitEnabled) this.inputTarget.form?.requestSubmit()
   }
 
   fetchResults({ selectFirst = false } = {}) {
@@ -114,5 +124,9 @@ export default class extends Controller {
 
   closeFromOutsideClick(event) {
     if (!this.element.contains(event.target)) this.hide()
+  }
+
+  get autoSubmitEnabled() {
+    return this.hasAutoSubmitValue ? this.autoSubmitValue : true
   }
 }

@@ -16,26 +16,27 @@
   <div class="mb-3">
     <%= form_with url: admin_managers_path,
       method: :get,
-      class: "row g-2 align-items-end mb-2",
+      class: "admin-tags-filter-form d-flex flex-column flex-lg-row align-items-stretch gap-2 w-100 mb-2",
       data: { action: "submit->list-loading#showLoading" } do |form| %>
-      <div class="col-12 col-lg-6">
-        <%= form.label :q, t("shared.search"), class: "form-label visually-hidden" %>
+      <%= form.label :q, t("shared.search"), class: "form-label visually-hidden" %>
+      <div class="input-group flex-grow-1">
         <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder"), class: "form-control" %>
-      </div>
-      <div class="col-12 col-sm-6 col-lg-3">
-        <%= form.label :status, t(".status"), class: "form-label visually-hidden" %>
-        <%= form.select :status,
-          [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]],
-          { selected: params[:status] },
-          class: "form-select",
-          data: { action: "change->list-loading#filter" } %>
-      </div>
-      <div class="col-12 col-sm-auto">
-        <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
-          <%= icon "filter" %>
-          <span><%= t("shared.filter") %></span>
+        <%= button_tag type: :submit, class: "btn btn-outline-secondary", title: t("shared.search"), aria: { label: t("shared.search") } do %>
+          <%= icon "search" %>
         <% end %>
       </div>
+      <fieldset class="admin-tags-status-filter btn-group" role="group" aria-label="<%= t(".status") %>">
+        <% [[t(".all_statuses"), ""], [t(".active_statuses"), "active"], [t(".disabled_statuses"), "disabled"]].each do |(label, value)| %>
+          <% option_id = "manager_status_#{value.presence || "all"}" %>
+          <%= form.radio_button :status,
+            value,
+            id: option_id,
+            checked: params[:status].to_s == value,
+            class: "btn-check",
+            data: { action: "change->list-loading#filter" } %>
+          <%= form.label :status, label, for: option_id, class: "btn btn-outline-secondary" %>
+        <% end %>
+      </fieldset>
     <% end %>
 
     <div class="text-center">
@@ -54,36 +55,55 @@
             <tr>
               <th><%= t(".name") %></th>
               <th><%= t(".email") %></th>
-              <th><%= t(".employee") %></th>
-              <th><%= t(".status") %></th>
+              <th><%= t(".last_access") %></th>
               <th class="text-end"><%= t("shared.actions") %></th>
             </tr>
           </thead>
           <tbody>
             <% @managers.each do |manager| %>
               <% manager_status = admin_manager_status(manager) %>
-              <tr>
-                <td><strong><%= manager_display_name(manager) %></strong></td>
-                <td><%= manager.email.presence || t(".no_email") %></td>
-                <td><%= manager.employee ? employee_display_name(manager.employee) : t(".no_employee") %></td>
+              <% manager_name = manager_display_name(manager) %>
+              <% activation_action = admin_manager_activation_action(manager) %>
+              <% activation_modal_id = admin_manager_activation_modal_id(manager) %>
+              <tr class="<%= class_names("admin-manager-row", "is-inactive": manager_status == :disabled) %>">
                 <td>
-                  <span class="<%= bootstrap_status_badge_class(manager_status) %>">
-                    <%= status_text(manager_status) %>
+                  <span class="admin-manager-name">
+                    <%= icon admin_manager_status_icon(manager_status),
+                      class: admin_manager_status_icon_class(manager_status),
+                      title: status_text(manager_status) %>
+                    <strong><%= manager_name %></strong>
                   </span>
                 </td>
+                <td><%= manager.email.presence || t(".no_email") %></td>
+                <td class="text-nowrap"><%= admin_manager_last_access_text(manager) %></td>
                 <td class="text-end">
-                  <%= link_to edit_admin_manager_path(manager),
-                    class: "btn btn-sm btn-outline-secondary admin-row-action",
-                    title: t("shared.edit"),
-                    aria: { label: t("shared.edit") } do %>
-                    <%= icon "pencil" %>
-                  <% end %>
+                  <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                    <button type="button"
+                      class="<%= admin_manager_activation_button_class(manager) %>"
+                      title="<%= t("admin.managers.activation.#{activation_action}.button", name: manager_name) %>"
+                      aria-label="<%= t("admin.managers.activation.#{activation_action}.button", name: manager_name) %>"
+                      data-bs-toggle="modal"
+                      data-bs-target="#<%= activation_modal_id %>">
+                      <%= icon admin_manager_activation_icon(manager) %>
+                    </button>
+
+                    <%= link_to edit_admin_manager_path(manager),
+                      class: "btn btn-sm btn-outline-secondary admin-row-action",
+                      title: t("shared.edit"),
+                      aria: { label: t("shared.edit") } do %>
+                      <%= icon "pencil" %>
+                    <% end %>
+                  </div>
                 </td>
               </tr>
             <% end %>
           </tbody>
         </table>
       </div>
+
+      <% @managers.each do |manager| %>
+        <%= render "activation_modal", manager: manager, action: admin_manager_activation_action(manager) %>
+      <% end %>
 
       <% if @managers.empty? %>
         <div class="card-body text-center text-body-secondary">
