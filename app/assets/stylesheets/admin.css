@@ -390,6 +390,54 @@ html[data-pwa="admin"] .turbo-progress-bar {
   white-space: nowrap;
 }
 
+.admin-corrections-filter-form .admin-employee-search {
+  min-width: 0;
+}
+
+.admin-corrections-employee-filter {
+  width: 100%;
+}
+
+.admin-corrections-status-filter {
+  width: 100%;
+}
+
+.admin-corrections-status-filter .btn {
+  flex: 1 1 0;
+  white-space: nowrap;
+}
+
+.admin-corrections-period {
+  width: 100%;
+}
+
+.admin-corrections-period-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--bs-secondary-color);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (min-width: 1200px) {
+  .admin-corrections-status-filter {
+    flex: 0 1 34rem;
+    max-width: 34rem;
+    width: auto;
+  }
+
+  .admin-corrections-period-label {
+    flex: 0 0 auto;
+    padding-left: 0.5rem;
+  }
+
+  .admin-corrections-period {
+    flex: 0 0 auto;
+    width: 26rem;
+  }
+}
+
 .admin-employee-search-results {
   position: absolute;
   z-index: 1050;

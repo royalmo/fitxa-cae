@@ -5,8 +5,11 @@ class Admin::CorrectionsController < Admin::BaseController
   def index
     @filterable_statuses = SwipeCorrection.filterable_statuses
     @selected_status = selected_correction_status
-    @selected_employee_id = params[:employee_id].presence
-    @employees = Employee.order(:last_name, :first_name, :id)
+    @selected_employee = selected_employee
+    @selected_employee_id = @selected_employee&.id&.to_s
+    @selected_month = selected_month
+    @selected_year = selected_year
+    @year_options = correction_year_options
     @corrections = paginate_admin_relation(
       filtered_corrections.order(created_at: :desc),
       per_page: CORRECTIONS_PER_PAGE
@@ -92,6 +95,7 @@ class Admin::CorrectionsController < Admin::BaseController
     corrections = SwipeCorrection.includes(:employee, :validator)
     corrections = corrections.where(status: @selected_status) if @selected_status
     corrections = corrections.where(employee_id: @selected_employee_id) if @selected_employee_id.present?
+    corrections = filter_corrections_by_period(corrections)
     corrections
   end
 
@@ -105,6 +109,10 @@ class Admin::CorrectionsController < Admin::BaseController
     Employee.find_by(id: params[:employee_id].presence)
   end
 
+  def selected_employee
+    Employee.find_by(id: params[:employee_id].presence) if params[:employee_id].present?
+  end
+
   def selected_day_for_form
     Date.iso8601(params[:day]) if params[:day].present?
   rescue Date::Error
@@ -113,6 +121,47 @@ class Admin::CorrectionsController < Admin::BaseController
 
   def selected_correction_status
     params[:status].to_s if SwipeCorrection.filterable_statuses.include?(params[:status].to_s)
+  end
+
+  def selected_month
+    month = Integer(params[:month].presence, exception: false)
+    month if month&.between?(1, 12)
+  end
+
+  def selected_year
+    year = Integer(params[:year].presence, exception: false)
+    year if year&.between?(2000, 2100)
+  end
+
+  def correction_year_options
+    min_day = SwipeCorrection.minimum(:day)
+    max_day = SwipeCorrection.maximum(:day)
+    years = [ Time.zone.today.year ]
+    years.concat((min_day.year..max_day.year).to_a) if min_day && max_day
+    years << @selected_year if @selected_year
+    years.compact.uniq.sort
+  end
+
+  def filter_corrections_by_period(corrections)
+    return corrections.where(day: selected_month_range(@selected_year, @selected_month)) if @selected_year && @selected_month
+    return corrections.where(day: Date.new(@selected_year, 1, 1)..Date.new(@selected_year, 12, 31)) if @selected_year
+    return corrections unless @selected_month
+
+    condition = @year_options.map { |year| selected_month_range(year, @selected_month) }
+      .map { |range| correction_day_range_condition(range) }
+      .reduce { |combined_condition, range_condition| combined_condition.or(range_condition) }
+
+    condition ? corrections.where(condition) : corrections
+  end
+
+  def selected_month_range(year, month)
+    first_day = Date.new(year, month, 1)
+    first_day..first_day.end_of_month
+  end
+
+  def correction_day_range_condition(range)
+    table = SwipeCorrection.arel_table
+    table[:day].gteq(range.begin).and(table[:day].lteq(range.end))
   end
 
   def assign_correction_attributes(correction)

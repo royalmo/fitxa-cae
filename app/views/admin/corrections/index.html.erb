@@ -16,29 +16,94 @@
   <div class="mb-3">
     <%= form_with url: admin_corrections_path,
       method: :get,
-      class: "row g-2 align-items-end mb-2",
+      class: "admin-corrections-filter-form d-flex flex-column gap-2 w-100 mb-2",
       data: { action: "submit->list-loading#showLoading" } do |form| %>
-      <div class="col-12 col-md-4">
-        <%= form.label :status, t(".status"), class: "form-label visually-hidden" %>
-        <%= form.select :status,
-          [[t(".all_statuses"), ""]] + @filterable_statuses.map { |status| [status_text(status), status] },
-          { selected: @selected_status },
-          class: "form-select",
-          data: { action: "change->list-loading#filter" } %>
+      <div class="admin-corrections-employee-filter">
+        <%= form.label :employee_query, t(".employee"), class: "form-label visually-hidden" %>
+        <div
+          class="admin-employee-search position-relative"
+          data-controller="employee-search"
+          data-employee-search-url-value="<%= admin_employee_search_path %>">
+          <%= form.hidden_field :employee_id,
+            value: @selected_employee_id.to_s,
+            data: { employee_search_target: "employeeId" } %>
+          <div class="input-group">
+            <span class="input-group-text"><%= icon "search" %></span>
+            <%= text_field_tag :employee_query,
+              @selected_employee ? employee_display_name(@selected_employee) : nil,
+              class: "form-control",
+              placeholder: t(".employee_search_placeholder"),
+              autocomplete: "off",
+              role: "combobox",
+              aria: {
+                autocomplete: "list",
+                controls: "admin-corrections-employee-results",
+                expanded: "false"
+              },
+              data: {
+                employee_search_target: "input",
+                action: "input->employee-search#search focus->employee-search#search keydown->employee-search#keydown"
+              } %>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              title="<%= t(".all_employees") %>"
+              aria-label="<%= t(".all_employees") %>"
+              data-action="employee-search#clear">
+              <%= icon "x" %>
+            </button>
+          </div>
+          <div
+            id="admin-corrections-employee-results"
+            class="admin-employee-search-results list-group shadow-sm"
+            data-employee-search-target="results"
+            role="listbox"
+            hidden></div>
+        </div>
       </div>
-      <div class="col-12 col-md-6">
-        <%= form.label :employee_id, t(".employee"), class: "form-label visually-hidden" %>
-        <%= form.select :employee_id,
-          [[t(".all_employees"), ""]] + @employees.map { |employee| [employee_display_name(employee), employee.id] },
-          { selected: @selected_employee_id },
-          class: "form-select",
-          data: { action: "change->list-loading#filter" } %>
-      </div>
-      <div class="col-12 col-md-auto">
-        <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
-          <%= icon "filter" %>
-          <span><%= t("shared.filter") %></span>
-        <% end %>
+
+      <div class="admin-corrections-secondary-filters d-flex flex-column flex-xl-row align-items-stretch gap-2">
+        <fieldset class="admin-corrections-status-filter btn-group" role="group" aria-label="<%= t(".status") %>">
+          <% [ "" ].concat(@filterable_statuses).each do |status| %>
+            <% option_id = "admin_correction_status_#{status.presence || "all"}" %>
+            <%= form.radio_button :status,
+              status,
+              id: option_id,
+              checked: @selected_status.to_s == status.to_s,
+              class: "btn-check",
+              autocomplete: "off",
+              data: { action: "change->list-loading#filter" } %>
+            <%= form.label :status,
+              for: option_id,
+              class: "btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-1" do %>
+              <%= icon admin_corrections_status_filter_icon(status), class: "admin-badge-icon" %>
+              <span><%= admin_corrections_status_filter_label(status) %></span>
+            <% end %>
+          <% end %>
+        </fieldset>
+
+        <span class="admin-corrections-period-label">
+          <span aria-hidden="true">·</span>
+          <span><%= t(".period_prefix") %></span>
+        </span>
+
+        <div class="admin-corrections-period">
+          <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
+          <%= form.label :year, t(".year"), class: "form-label visually-hidden" %>
+          <div class="input-group flex-nowrap">
+            <%= form.select :month,
+              [[t(".all_months"), ""]] + admin_corrections_month_options,
+              { selected: @selected_month || "" },
+              class: "form-select",
+              data: { action: "change->list-loading#filter" } %>
+            <span class="input-group-text"><%= t(".period_connector") %></span>
+            <%= form.select :year,
+              [[t(".all_years"), ""]] + @year_options,
+              { selected: @selected_year || "" },
+              class: "form-select",
+              data: { action: "change->list-loading#filter" } %>
+          </div>
+        </div>
       </div>
     <% end %>
 

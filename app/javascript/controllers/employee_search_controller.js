@@ -55,6 +55,7 @@ export default class extends Controller {
     this.selectedLabel = ""
     this.hide()
     this.inputTarget.focus()
+    if (this.autoSubmitEnabled) this.inputTarget.form?.requestSubmit()
   }
 
   selectFirstResult(event) {
