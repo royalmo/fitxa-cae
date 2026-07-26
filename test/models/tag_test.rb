@@ -24,6 +24,30 @@ class TagTest < ActiveSupport::TestCase
     assert_equal employees.sort, tag.employees.reload.sort
   end
 
+  test "requires unique names case insensitively" do
+    Tag.create!(name: "Office", color: "#2563eb")
+    duplicate = Tag.new(name: "office", color: "#16a34a")
+
+    assert_not duplicate.valid?
+    assert_model_error duplicate, :name, :taken
+  end
+
+  test "enforces unique names in the database" do
+    Tag.create!(name: "Office", color: "#2563eb")
+
+    assert_raises ActiveRecord::RecordNotUnique do
+      Tag.insert_all!([
+        {
+          name: "office",
+          color: "#16a34a",
+          active: true,
+          created_at: Time.current,
+          updated_at: Time.current
+        }
+      ])
+    end
+  end
+
   test "requires active to be boolean when explicitly assigned" do
     tag = Tag.new(name: "off-shore", color: "#6b7280", active: nil)
 

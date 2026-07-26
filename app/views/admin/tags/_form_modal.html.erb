@@ -1,0 +1,68 @@
+<% modal_id = admin_tag_form_modal_id(tag) %>
+<% modal_label_id = "#{modal_id}_label" %>
+
+<div class="modal fade"
+  id="<%= modal_id %>"
+  tabindex="-1"
+  aria-labelledby="<%= modal_label_id %>"
+  aria-hidden="true"
+  data-controller="bootstrap-modal"
+  data-bootstrap-modal-show-value="<%= open %>">
+  <div class="modal-dialog modal-dialog-centered">
+    <%= form_with model: tag,
+      url: admin_tag_form_url(tag),
+      method: admin_tag_form_method(tag),
+      class: "modal-content admin-tag-form" do |form| %>
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="<%= modal_label_id %>">
+          <%= admin_tag_form_title(tag) %>
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+      </div>
+
+      <div class="modal-body">
+        <% if tag.errors.any? %>
+          <div class="alert alert-danger error-summary">
+            <strong><%= t("admin.tags.form.error_title") %></strong>
+            <ul class="mb-0 mt-2">
+              <% tag.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="vstack gap-3">
+          <div class="row g-2 align-items-center admin-tag-form-field">
+            <div class="col-3">
+              <%= form.label :name, t("admin.tags.form.name"), class: "col-form-label" %>
+            </div>
+            <div class="col-9">
+              <%= form.text_field :name, class: "form-control" %>
+            </div>
+          </div>
+          <div class="row g-2 align-items-center admin-tag-form-field">
+            <div class="col-3">
+              <%= form.label :color, t("admin.tags.form.color"), class: "col-form-label" %>
+            </div>
+            <div class="col-9">
+              <%= form.color_field :color, class: "form-control form-control-color" %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <%= t("shared.cancel") %>
+        </button>
+        <%= button_tag type: :submit,
+          class: "btn btn-primary d-inline-flex align-items-center gap-2",
+          data: { submitting_label: t("shared.submitting.saving") } do %>
+          <%= icon "save" %>
+          <span><%= t("shared.save") %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -227,14 +227,83 @@ html[data-pwa="admin"],
   height: 0.8rem;
 }
 
-.admin-color-swatch {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  border: 1px solid var(--bs-border-color);
-  border-radius: 50%;
-  background: var(--admin-swatch-color);
-  vertical-align: -0.15rem;
+.admin-tag-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: min(100%, 22rem);
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.375rem;
+  background: var(--admin-tag-bg);
+  color: var(--admin-tag-color);
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.admin-tag-label-icon {
+  flex: 0 0 auto;
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.admin-tag-row.is-inactive {
+  --bs-table-color: var(--bs-secondary-color);
+  --bs-table-bg: rgba(var(--bs-secondary-bg-rgb), 0.45);
+}
+
+.admin-tags-status-column {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.admin-tag-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.admin-tag-status.is-active {
+  color: #2f7d58;
+}
+
+.admin-tag-status.is-inactive {
+  color: var(--bs-secondary-color);
+}
+
+.admin-tag-employees-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.admin-tag-employees-count:hover {
+  text-decoration: underline;
+}
+
+.admin-tag-employees-count-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.admin-tag-row.is-inactive .admin-tag-label,
+.admin-tag-row.is-inactive .admin-tag-employees-count,
+.admin-tag-row.is-inactive .admin-row-action {
+  opacity: 0.65;
+}
+
+.admin-tags-filter-form .input-group {
+  min-width: 0;
+}
+
+.admin-tags-status-filter .btn {
+  flex: 1 1 0;
+  white-space: nowrap;
 }
 
 .admin-employee-search-results {
@@ -440,7 +509,15 @@ button.admin-calendar-day:hover {
   font-weight: 600;
 }
 
+.btn .icon {
+  translate: 0;
+}
+
 @media (min-width: 992px) {
+  .admin-tags-status-filter {
+    flex: 0 0 auto;
+  }
+
   .admin-shell {
     display: flex;
     flex-direction: column;

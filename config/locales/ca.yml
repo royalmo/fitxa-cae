@@ -66,6 +66,15 @@ ca:
     messages:
       pending_taken: "ja té una sol·licitud pendent per aquest dia"
 
+  activerecord:
+    models:
+      tag: "Etiqueta"
+    attributes:
+      tag:
+        active: "Estat"
+        color: "Color"
+        name: "Nom"
+
   employee:
     guest: "Treballador"
     themes:
@@ -301,7 +310,10 @@ ca:
       correction_created: "Correcció creada."
       correction_rejected: "Correcció rebutjada."
       correction_updated: "Correcció actualitzada."
+      tag_activated: "Etiqueta activada."
+      tag_activation_failed: "No s'ha pogut actualitzar l'estat de l'etiqueta."
       tag_created: "Etiqueta creada."
+      tag_deactivated: "Etiqueta desactivada."
       tag_updated: "Etiqueta actualitzada."
       account_updated: "Compte actualitzat."
       employee_created: "Treballador creat."
@@ -488,22 +500,37 @@ ca:
         heading: "Classificació"
         new_tag: "Nova etiqueta"
         search_placeholder: "Nom"
-        all_statuses: "Tots"
+        all_statuses: "Totes"
+        active_statuses: "Actives"
+        disabled_statuses: "Inactives"
         name: "Nom"
-        color: "Color"
         status: "Estat"
+        employees: "Treballadores"
+        employees_count:
+          one: "Veure 1 treballador amb l'etiqueta %{name}"
+          other: "Veure %{count} treballadors amb l'etiqueta %{name}"
         empty: "No hi ha etiquetes amb aquests filtres."
+      statuses:
+        active: "Activa"
+        disabled: "Inactiva"
+      activation:
+        activate:
+          button: "Activar etiqueta %{name}"
+          title: "Activar etiqueta"
+          body: "Els treballadors que tenien aquesta etiqueta abans de desactivar-la la tornaran a veure."
+          confirm: "Activar"
+        deactivate:
+          button: "Desactivar etiqueta %{name}"
+          title: "Desactivar etiqueta"
+          body: "Aquesta etiqueta no es podrà assignar a cap treballadora."
+          confirm: "Desactivar"
       form:
         error_title: "Revisa l'etiqueta"
+        new_title: "Nova etiqueta"
+        edit_title: "Editar etiqueta"
+        edit_button: "Editar etiqueta %{name}"
         name: "Nom"
         color: "Color"
-        status: "Estat"
-      new:
-        title: "Nova etiqueta"
-        heading: "Nova etiqueta"
-      edit:
-        title: "Editar etiqueta"
-        heading: "Editar etiqueta"
     audit_actions:
       index:
         title: "Activitat"
