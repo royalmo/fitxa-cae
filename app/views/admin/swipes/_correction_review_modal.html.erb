@@ -1,0 +1,63 @@
+<% action = action.to_sym %>
+<% modal_id = admin_swipes_review_modal_id(correction, action) %>
+<% modal_label_id = "#{modal_id}_label" %>
+<% submitting_key = action == :approve ? "approving" : "rejecting" %>
+<% review_swipes = admin_swipes_review_swipes(swipes) %>
+
+<div class="modal fade" id="<%= modal_id %>" tabindex="-1" aria-labelledby="<%= modal_label_id %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="<%= modal_label_id %>">
+          <%= t("admin.swipes.index.review.#{action}.title") %>
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+      </div>
+      <div class="modal-body">
+        <p><%= t("admin.swipes.index.review.#{action}.body") %></p>
+
+        <dl class="row mb-0">
+          <dt class="col-sm-4"><%= t("admin.swipes.index.review.employee") %></dt>
+          <dd class="col-sm-8"><%= employee_display_name(employee) %></dd>
+
+          <dt class="col-sm-4"><%= t("admin.swipes.index.review.day") %></dt>
+          <dd class="col-sm-8"><%= l(correction.day, format: :long) %></dd>
+
+          <dt class="col-sm-4"><%= t("admin.swipes.index.review.request") %></dt>
+          <dd class="col-sm-8">
+            <% if review_swipes.any? %>
+              <div class="d-flex flex-wrap gap-1 admin-swipes-review-pills">
+                <% review_swipes.each do |swipe| %>
+                  <span class="<%= class_names("badge text-bg-light border d-inline-flex align-items-center gap-1", "text-decoration-line-through": clocking_swipe_pending_invalidated?(swipe), "text-primary": clocking_swipe_pending_requested?(swipe)) %>">
+                    <%= icon clocking_icon_name(swipe.kind) %>
+                    <span><%= l(swipe.swipe_at, format: :hour_minute) %></span>
+                  </span>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="text-body-secondary"><%= t("employee.corrections.summary.no_details") %></span>
+            <% end %>
+          </dd>
+
+          <% if correction.requester_comments.present? %>
+            <dt class="col-sm-4"><%= t("admin.swipes.index.review.comments") %></dt>
+            <dd class="col-sm-8"><%= correction.requester_comments %></dd>
+          <% end %>
+        </dl>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <%= t("shared.cancel") %>
+        </button>
+
+        <%= form_with url: admin_swipes_review_path(correction, action), method: :post, class: "m-0" do %>
+          <%= button_tag type: :submit,
+            class: admin_swipes_review_submit_class(action),
+            data: { submitting_label: t("shared.submitting.#{submitting_key}") } do %>
+            <%= t("admin.swipes.index.review.#{action}.confirm") %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

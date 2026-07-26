@@ -208,8 +208,10 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get admin_swipes_path
     assert_response :success
     assert_select "title", text: "Fitxatges | FitxaCAE Admin"
-    assert_select "table"
-    assert_select "button[type='submit'][data-submitting-label='Filtrant...']"
+    assert_select "a[href='#{admin_reports_path}']", text: "Exportar"
+    assert_select ".admin-calendar-empty p.small", text: "Selecciona una treballadora per veure els fitxatges."
+    assert_select "table", 0
+    assert_select "button[type='submit'][data-submitting-label='Filtrant...']", 0
 
     get admin_corrections_path
     assert_response :success

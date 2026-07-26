@@ -10,25 +10,117 @@ class Admin::SwipesControllerTest < ActionDispatch::IntegrationTest
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 0), metadata: "employee_portal")
     employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 2, 16, 0), metadata: "employee_portal")
 
-    get admin_swipes_path, params: { employee_id: employee.id, month: "2026-07" }
+    get admin_swipes_path, params: { employee_id: employee.id, month: "7", year: "2026" }
 
     assert_response :success
     assert_select "h1", text: "Fitxatges"
+    assert_select "a.btn[href='#{admin_reports_path}']", text: "Exportar" do
+      assert_select "svg.icon"
+    end
     assert_select "h2", text: "Filtres", count: 0
-    assert_select "#employee_id option[selected][value='#{employee.id}']"
-    assert_select "input[type='month'][value='2026-07']"
+    assert_select "input[name='employee_id'][value='#{employee.id}']"
+    assert_select "input[name='employee_query'][value='Clara Pons']"
+    assert_select ".admin-employee-search[data-employee-search-url-value='#{admin_employee_search_path}']"
+    assert_select "select[name='month'] option[selected][value='7']"
+    assert_select "select[name='year'] option[selected][value='2026']"
+    assert_select "form[action='#{admin_swipes_path}'] button[type='submit']", 0
+    assert_select "input[type='month']", 0
+    assert_select "thead th", text: "Estat", count: 0
+    assert_select "thead th:nth-child(4)", text: "Accions"
     assert_select "tbody tr", count: 31
     assert_match "8 h 00 min", response.body
     assert_match "Sense fitxatges", response.body
-    assert_select "a.admin-row-action[href='#{new_admin_correction_path(employee_id: employee.id, day: "2026-07-01")}'] svg.icon"
+    assert_select "a.admin-row-action[href='#{new_admin_correction_path(employee_id: employee.id, day: "2026-07-01")}'][aria-label='Crear fitxatges el 1/7/2026'] svg.icon"
+    assert_select "a.admin-row-action[href='#{new_admin_correction_path(employee_id: employee.id, day: "2026-07-02")}'][aria-label='Editar fitxatges el 2/7/2026'] svg.icon"
   end
 
-  test "falls back to the current month for invalid month params" do
-    create_employee
+  test "renders pending correction review actions with confirmation modals" do
+    employee = create_employee(first_name: "Clara", last_name: "Pons")
+    invalidated_entry = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 0), metadata: "employee_portal")
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      requester_comments: "Oblit de fitxatge d'entrada demo 13",
+      details: {
+        "invalidated_swipe_ids" => [ invalidated_entry.id ],
+        "requested_swipes" => [ { "kind" => "exit", "hour" => "17:00:00" } ]
+      }
+    )
 
-    get admin_swipes_path, params: { month: "bad" }
+    get admin_swipes_path, params: { employee_id: employee.id, month: "7", year: "2026" }
 
     assert_response :success
-    assert_select "input[type='month'][value='#{Time.zone.today.strftime("%Y-%m")}']"
+    assert_select "a.admin-row-action[href='#{new_admin_correction_path(employee_id: employee.id, day: "2026-07-02")}']", count: 0
+
+    approve_modal_id = "swipe_correction_approve_modal_#{correction.id}"
+    reject_modal_id = "swipe_correction_reject_modal_#{correction.id}"
+    assert_select "button.admin-row-action.btn-outline-success[data-bs-toggle='modal'][data-bs-target='##{approve_modal_id}'][aria-label='Aprovar correcció del 2/7/2026'] svg.icon"
+    assert_select "button.admin-row-action.btn-outline-danger[data-bs-toggle='modal'][data-bs-target='##{reject_modal_id}'][aria-label='Rebutjar correcció del 2/7/2026'] svg.icon"
+
+    assert_select "##{approve_modal_id}.modal.fade[aria-labelledby='#{approve_modal_id}_label']" do
+      assert_select "h2##{approve_modal_id}_label", text: "Aprovar correcció"
+      assert_select ".modal-body", text: /Vols aprovar la següent correcció horària/
+      assert_select ".modal-body", text: /Clara Pons/
+      assert_select ".modal-body", text: /2 Juliol 2026/
+      assert_select ".modal-body", text: /Hora sol·licitada:/, count: 0
+      assert_select "dt", text: "Sol·licitud"
+      assert_select ".admin-swipes-review-pills .badge.text-decoration-line-through", text: "08:00"
+      assert_select ".admin-swipes-review-pills .badge.text-primary", text: "17:00"
+      assert_select "dt", text: "Comentaris"
+      assert_select "dd", text: "Oblit de fitxatge d'entrada demo 13"
+      assert_select "form[action='#{approve_admin_correction_path(correction)}'][method='post']" do
+        assert_select "button[type='submit']", text: "Aprovar"
+      end
+    end
+
+    assert_select "##{reject_modal_id}.modal.fade[aria-labelledby='#{reject_modal_id}_label']" do
+      assert_select "h2##{reject_modal_id}_label", text: "Rebutjar correcció"
+      assert_select ".modal-body", text: /Vols rebutjar la següent correcció horària/
+      assert_select "form[action='#{reject_admin_correction_path(correction)}'][method='post']" do
+        assert_select "button[type='submit']", text: "Rebutjar"
+      end
+    end
+  end
+
+  test "renders no employee by default" do
+    create_employee
+
+    travel_to Time.zone.local(2026, 7, 26, 12, 0) do
+      get admin_swipes_path
+    end
+
+    assert_response :success
+    assert_select "input[name='employee_id'][value='']", 1
+    assert_select "input[name='employee_query'][placeholder='Cerca per nom, DNI, correu o telèfon']", 1
+    assert_select "select[name='month'] option[selected][value='7']"
+    assert_select "select[name='year'] option[selected][value='2026']"
+    assert_select ".admin-calendar-empty .icon", 1
+    assert_select ".admin-calendar-empty p.small", text: "Selecciona una treballadora per veure els fitxatges."
+    assert_select "tbody tr", 0
+  end
+
+  test "falls back to the current period for invalid params" do
+    create_employee
+
+    travel_to Time.zone.local(2026, 7, 26, 12, 0) do
+      get admin_swipes_path, params: { month: "bad", year: "bad" }
+    end
+
+    assert_response :success
+    assert_select "select[name='month'] option[selected][value='7']"
+    assert_select "select[name='year'] option[selected][value='2026']"
+  end
+
+  test "keeps legacy month params and includes previous selected years" do
+    employee = create_employee(first_name: "Clara", last_name: "Pons")
+
+    get admin_swipes_path, params: { employee_id: employee.id, month: "2025-12" }
+
+    assert_response :success
+    assert_select "select[name='month'] option[selected][value='12']"
+    assert_select "select[name='year'] option[selected][value='2025']"
+    assert_select "select[name='year'] option[value='2025']"
+    assert_select "select[name='year'] option[value='2026']"
   end
 end

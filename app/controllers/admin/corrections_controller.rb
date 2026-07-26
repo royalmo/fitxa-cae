@@ -65,9 +65,9 @@ class Admin::CorrectionsController < Admin::BaseController
 
     if correction.pending?
       approve_correction(correction)
-      redirect_to admin_corrections_path, notice: t("admin.flash.correction_approved")
+      redirect_back fallback_location: admin_corrections_path, notice: t("admin.flash.correction_approved")
     else
-      redirect_to admin_corrections_path, alert: t("admin.flash.correction_already_reviewed")
+      redirect_back fallback_location: admin_corrections_path, alert: t("admin.flash.correction_already_reviewed")
     end
   end
 
@@ -80,9 +80,9 @@ class Admin::CorrectionsController < Admin::BaseController
         validator: current_manager,
         validator_comments: t("admin.corrections.review.rejected")
       )
-      redirect_to admin_corrections_path, notice: t("admin.flash.correction_rejected")
+      redirect_back fallback_location: admin_corrections_path, notice: t("admin.flash.correction_rejected")
     else
-      redirect_to admin_corrections_path, alert: t("admin.flash.correction_already_reviewed")
+      redirect_back fallback_location: admin_corrections_path, alert: t("admin.flash.correction_already_reviewed")
     end
   end
 

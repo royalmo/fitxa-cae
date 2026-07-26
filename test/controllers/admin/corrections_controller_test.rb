@@ -166,6 +166,24 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal manager, correction.validator
   end
 
+  test "review redirects back to referrer when present" do
+    manager = create_manager
+    log_in_manager(manager)
+    employee = create_employee
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 4),
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
+    )
+    referrer = admin_swipes_path(employee_id: employee.id, month: 7, year: 2026)
+
+    post approve_admin_correction_path(correction), headers: { "HTTP_REFERER" => referrer }
+
+    assert_redirected_to referrer
+    assert_predicate correction.reload, :approved?
+  end
+
   test "does not review an already reviewed correction twice" do
     log_in_manager
     employee = create_employee

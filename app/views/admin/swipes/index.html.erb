@@ -1,40 +1,79 @@
 <% content_for :title, t(".title") %>
 
-<div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "clock", class: "text-primary" %>
-  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <%= icon "clock", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+  <%= link_to admin_reports_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
+    <%= icon "download" %>
+    <span><%= t(".export") %></span>
+  <% end %>
 </div>
 
 <div data-controller="list-loading">
-  <div class="mb-3">
-    <%= form_with url: admin_swipes_path,
-      method: :get,
-      class: "row g-2 align-items-end",
-      data: { action: "submit->list-loading#showLoading" } do |form| %>
-      <div class="col-12 col-lg-6">
-        <%= form.label :employee_id, t(".employee"), class: "form-label visually-hidden" %>
-        <%= form.select :employee_id,
-          @employees.map { |employee| [employee_display_name(employee), employee.id] },
-          { selected: @selected_employee&.id },
+  <%= form_with url: admin_swipes_path,
+    method: :get,
+    class: "admin-swipes-controls d-flex flex-column flex-lg-row align-items-stretch gap-2 mb-4",
+    data: { action: "submit->list-loading#showLoading" } do |form| %>
+    <div class="admin-calendar-search flex-grow-1">
+      <%= form.label :employee_query, t(".employee"), class: "form-label visually-hidden" %>
+      <div
+        class="admin-employee-search position-relative"
+        data-controller="employee-search"
+        data-employee-search-url-value="<%= admin_employee_search_path %>">
+        <%= form.hidden_field :employee_id,
+          value: (@selected_employee&.id).to_s,
+          data: { employee_search_target: "employeeId" } %>
+        <div class="input-group">
+          <span class="input-group-text"><%= icon "search" %></span>
+          <%= text_field_tag :employee_query,
+            @selected_employee ? employee_display_name(@selected_employee) : nil,
+            class: "form-control",
+            placeholder: t(".employee_search_placeholder"),
+            autocomplete: "off",
+            role: "combobox",
+            aria: {
+              autocomplete: "list",
+              controls: "admin-swipes-employee-results",
+              expanded: "false"
+            },
+            data: {
+              employee_search_target: "input",
+              action: "input->employee-search#search focus->employee-search#search keydown->employee-search#keydown"
+            } %>
+        </div>
+        <div
+          id="admin-swipes-employee-results"
+          class="admin-employee-search-results list-group shadow-sm"
+          data-employee-search-target="results"
+          role="listbox"
+          hidden></div>
+      </div>
+    </div>
+
+    <div class="admin-swipes-period">
+      <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
+      <%= form.label :year, t(".year"), class: "form-label visually-hidden" %>
+      <div class="input-group flex-nowrap">
+        <%= form.select :month,
+          admin_swipes_month_options,
+          { selected: @month.month },
+          class: "form-select",
+          data: { action: "change->list-loading#filter" } %>
+        <span class="input-group-text"><%= t(".period_connector") %></span>
+        <%= form.select :year,
+          @year_options,
+          { selected: @month.year },
           class: "form-select",
           data: { action: "change->list-loading#filter" } %>
       </div>
-      <div class="col-12 col-sm-6 col-lg-3">
-        <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
-        <%= form.month_field :month, value: @month.strftime("%Y-%m"), class: "form-control", data: { action: "change->list-loading#filter" } %>
-      </div>
-      <div class="col-12 col-sm-auto">
-        <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
-          <%= icon "filter" %>
-          <span><%= t("shared.filter") %></span>
-        <% end %>
-      </div>
-    <% end %>
-  </div>
+    </div>
+  <% end %>
 
   <div data-list-loading-target="results">
-    <section class="card shadow-sm">
-      <% if @selected_employee %>
+    <% if @selected_employee %>
+      <section class="card shadow-sm">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
@@ -42,12 +81,12 @@
                 <th><%= t(".date") %></th>
                 <th><%= t(".hours") %></th>
                 <th><%= t(".swipes") %></th>
-                <th><%= t(".status") %></th>
                 <th class="text-end"><%= t("shared.actions") %></th>
               </tr>
             </thead>
             <tbody>
               <% @clocking_days.each do |day| %>
+                <% pending_correction = day[:correction] %>
                 <tr>
                   <td class="text-nowrap"><%= l(day[:date], format: :weekday_day_month) %></td>
                   <td class="text-nowrap"><%= duration_text(day[:worked_seconds]) %></td>
@@ -69,30 +108,56 @@
                       <span class="text-body-secondary"><%= t(".empty_day") %></span>
                     <% end %>
                   </td>
-                  <td>
-                    <span class="<%= bootstrap_status_badge_class(day[:status]) %>">
-                      <%= admin_clocking_status_text(day[:status]) %>
-                    </span>
-                  </td>
                   <td class="text-end">
-                    <%= link_to admin_correction_day_path(@selected_employee, day[:date], day[:correction]),
-                      class: "btn btn-sm btn-outline-secondary admin-row-action",
-                      title: t(".edit_day", date: l(day[:date], format: :short)),
-                      aria: { label: t(".edit_day", date: l(day[:date], format: :short)) } do %>
-                      <%= icon "pencil" %>
-                    <% end %>
+                    <div class="d-inline-flex justify-content-end gap-1">
+                      <% if pending_correction %>
+                        <% [ :approve, :reject ].each do |review_action| %>
+                          <button type="button"
+                            class="<%= admin_swipes_review_button_class(review_action) %>"
+                            title="<%= t("admin.swipes.index.review.#{review_action}.button", date: l(day[:date], format: :short)) %>"
+                            aria-label="<%= t("admin.swipes.index.review.#{review_action}.button", date: l(day[:date], format: :short)) %>"
+                            data-bs-toggle="modal"
+                            data-bs-target="#<%= admin_swipes_review_modal_id(pending_correction, review_action) %>">
+                            <%= icon(review_action == :approve ? "check" : "x") %>
+                          </button>
+                        <% end %>
+                      <% else %>
+                        <% day_action_label = t(day[:swipes].any? ? ".edit_day" : ".create_day", date: l(day[:date], format: :short)) %>
+                        <%= link_to admin_correction_day_path(@selected_employee, day[:date]),
+                          class: "btn btn-sm btn-outline-secondary admin-row-action",
+                          title: day_action_label,
+                          aria: { label: day_action_label } do %>
+                          <%= icon admin_swipes_day_action_icon(day) %>
+                        <% end %>
+                      <% end %>
+                    </div>
                   </td>
                 </tr>
               <% end %>
             </tbody>
           </table>
         </div>
-      <% else %>
-        <div class="card-body text-center text-body-secondary">
-          <%= t(".empty") %>
-        </div>
-      <% end %>
-    </section>
+
+        <% @clocking_days.each do |day| %>
+          <% next unless day[:correction] %>
+          <%= render "correction_review_modal",
+            correction: day[:correction],
+            action: :approve,
+            employee: @selected_employee,
+            swipes: day[:swipes] %>
+          <%= render "correction_review_modal",
+            correction: day[:correction],
+            action: :reject,
+            employee: @selected_employee,
+            swipes: day[:swipes] %>
+        <% end %>
+      </section>
+    <% else %>
+      <section class="admin-calendar-empty text-center text-body-secondary" aria-live="polite">
+        <%= icon "search" %>
+        <p class="small mb-0"><%= t(".empty") %></p>
+      </section>
+    <% end %>
   </div>
 
   <%= render "admin/shared/list_loading" %>

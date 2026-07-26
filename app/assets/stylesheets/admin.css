@@ -425,6 +425,17 @@ html[data-pwa="admin"] .turbo-progress-bar {
   font-weight: 700;
 }
 
+.admin-swipes-period {
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .admin-swipes-period {
+    flex: 0 0 auto;
+    width: 20rem;
+  }
+}
+
 .admin-calendar-empty {
   display: flex;
   align-items: center;

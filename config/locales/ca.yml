@@ -478,15 +478,35 @@ ca:
       index:
         title: "Fitxatges"
         heading: "Fitxatges"
+        export: "Exportar"
         employee: "Treballador"
+        employee_search_placeholder: "Cerca per nom, DNI, correu o telèfon"
         month: "Mes"
+        period_connector: "de"
+        year: "Any"
         date: "Data"
         hours: "Hores"
         swipes: "Fitxatges"
         status: "Estat"
-        empty: "No hi ha treballadors."
+        empty: "Selecciona una treballadora per veure els fitxatges."
         empty_day: "Sense fitxatges"
-        edit_day: "Editar el %{date}"
+        create_day: "Crear fitxatges el %{date}"
+        edit_day: "Editar fitxatges el %{date}"
+        review:
+          employee: "Treballadora"
+          day: "Dia"
+          request: "Sol·licitud"
+          comments: "Comentaris"
+          approve:
+            button: "Aprovar correcció del %{date}"
+            title: "Aprovar correcció"
+            body: "Vols aprovar la següent correcció horària?"
+            confirm: "Aprovar"
+          reject:
+            button: "Rebutjar correcció del %{date}"
+            title: "Rebutjar correcció"
+            body: "Vols rebutjar la següent correcció horària?"
+            confirm: "Rebutjar"
     calendars:
       index:
         title: "Calendaris"
