@@ -39,5 +39,4 @@ module Admin::SwipesHelper
 
     new_admin_correction_path(employee_id: employee.id, day: day.iso8601)
   end
-
 end
