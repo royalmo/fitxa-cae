@@ -66,6 +66,32 @@ ca:
     messages:
       pending_taken: "ja té una sol·licitud pendent per aquest dia"
       taken: "ja està assignat a un altre registre"
+    pages:
+      show:
+        actions:
+          home: "Torna a l'inici"
+          human_resources: "Contacta amb RRHH"
+        mail_subject: "Incidència FitxaCAE - Error %{code}"
+        bad_request:
+          title: "Sol·licitud incorrecta"
+          heading: "No podem obrir aquesta sol·licitud."
+          body: "La sol·licitud no és vàlida o ha caducat."
+        not_found:
+          title: "Pàgina no trobada"
+          heading: "No hem trobat aquesta pantalla."
+          body: "L'enllaç pot haver canviat o la pàgina ja no existeix."
+        not_acceptable:
+          title: "Navegador no compatible"
+          heading: "Aquest navegador no és compatible."
+          body: "Obre FitxaCAE amb un navegador actual per continuar."
+        unprocessable_entity:
+          title: "Canvi rebutjat"
+          heading: "No s'ha pogut aplicar aquest canvi."
+          body: "El formulari pot haver caducat o l'acció no és permesa."
+        internal_server_error:
+          title: "Error intern"
+          heading: "Vaja! Alguna cosa no ha anat bé."
+          body: "Hem tingut una incidència interna. Prova-ho de nou d'aquí a uns minuts."
 
   activerecord:
     models:
@@ -327,6 +353,7 @@ ca:
       correction_already_reviewed: "Aquesta correcció ja està revisada."
       correction_approved: "Correcció aprovada."
       correction_created: "Correcció creada."
+      correction_created_and_approved: "Correcció creada i aprovada."
       correction_rejected: "Correcció rebutjada."
       correction_updated: "Correcció actualitzada."
       tag_activated: "Etiqueta activada."
@@ -366,6 +393,10 @@ ca:
         other: "%{count} correccions pendents"
     filters:
       title: "Filtres"
+    shared:
+      employee_search:
+        clear: "Esborrar treballador"
+        placeholder: "Cerca per nom, DNI, correu o telèfon"
     employee_search:
       no_results: "Cap treballadora trobada."
     pagination:
@@ -694,6 +725,8 @@ ca:
         error_title: "Revisa la correcció"
         invalid: "Indica un treballador i una data vàlids."
         employee: "Treballador"
+        employee_search_placeholder: "Cerca per nom, DNI, correu o telèfon"
+        clear_employee: "Esborrar treballador"
         select_employee: "Selecciona un treballador"
         day: "Dia"
         swipes: "Fitxatges"
@@ -701,6 +734,15 @@ ca:
         invalidate: "Invalidar"
         keep_swipe: "Restaurar"
         no_existing_swipes: "No hi ha fitxatges per aquest dia."
+        select_employee_day_empty: "Selecciona una treballadora i un dia per veure els fitxatges."
+        loading_day: "Carregant fitxatges..."
+        existing_correction: "Ja hi ha una correcció per aquest treballador i dia."
+        existing_correction_title: "Aquest dia ja té una correcció"
+        existing_reviewed_correction:
+          approved: "Aquest dia ja té una correcció aprovada."
+          rejected: "Aquest dia ja té una correcció rebutjada."
+        create_and_approve: "Crear i aprovar correcció"
+        creating_and_approving: "Creant i aprovant..."
         requested_swipes: "Fitxatges sol·licitats"
         entries: "Entrades"
         exits: "Sortides"

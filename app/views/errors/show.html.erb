@@ -1,0 +1,27 @@
+<% content_for :title, t("errors.pages.show.#{@error_key}.title", default: "Error #{@error_code}") %>
+<% content_for :main_class, "error-page-main" unless @admin_error_page %>
+<% home_path = @admin_error_page ? admin_root_path : root_path %>
+<% section_attributes = if @admin_error_page
+  {
+    class: "mx-auto text-center py-5",
+    style: "display: grid; justify-items: center; align-content: center; gap: .85rem; max-width: 28rem; min-height: calc(100dvh - 9rem);"
+  }
+else
+  { class: "error-page-layout" }
+end %>
+<% action_classes = @admin_error_page ? "d-flex justify-content-center flex-wrap gap-2 mt-1" : "error-page-actions" %>
+<% home_button_class = @admin_error_page ? "btn btn-primary" : "button button-primary" %>
+<% support_button_class = @admin_error_page ? "btn btn-outline-secondary" : "button button-secondary" %>
+
+<section <%= tag.attributes(section_attributes.merge(aria: { labelledby: "error-page-title" })) %>>
+  <h1 id="error-page-title" class="<%= "mb-0" if @admin_error_page %>"><%= t("errors.pages.show.#{@error_key}.heading") %></h1>
+  <p class="<%= "mb-0 text-body-secondary" if @admin_error_page %>"><%= t("errors.pages.show.#{@error_key}.body") %></p>
+
+  <div class="<%= action_classes %>">
+    <%= link_to t("errors.pages.show.actions.home"), home_path, class: home_button_class %>
+    <%= mail_to @human_resources_email,
+      t("errors.pages.show.actions.human_resources"),
+      subject: t("errors.pages.show.mail_subject", code: @error_code),
+      class: support_button_class %>
+  </div>
+</section>

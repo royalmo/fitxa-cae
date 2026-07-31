@@ -22,18 +22,18 @@
     data-controller="employee-theme submit-feedback"
     data-employee-theme-preference-value="<%= employee_theme_setting %>"
     data-employee-theme-signed-in-value="<%= employee_signed_in? %>">
-    <% full_employee_name = employee_display_name(employee) %>
 
     <header class="employee-topbar">
       <div class="employee-topbar-inner">
         <%= render "layouts/brand_mark", path: root_path %>
 
         <div class="employee-topbar-actions">
-          <%= link_to account_path, class: "employee-chip", title: full_employee_name do %>
-            <span><%= full_employee_name %></span>
-          <% end %>
-
           <% if employee_signed_in? %>
+            <% full_employee_name = employee_display_name(employee) %>
+            <%= link_to account_path, class: "employee-chip", title: full_employee_name do %>
+              <span><%= full_employee_name %></span>
+            <% end %>
+
             <% if current_employee.manager&.active? %>
               <%= link_to admin_root_path, class: "employee-admin-button", title: t("employee.nav.admin"), aria: { label: t("employee.nav.admin") } do %>
                 <%= icon "hammer" %>
@@ -41,6 +41,14 @@
             <% end %>
             <%= button_to logout_path, method: :delete, form_class: "topbar-form", class: "employee-logout-button", title: t("employee.nav.logout"), aria: { label: t("employee.nav.logout") } do %>
               <%= icon "log-out", title: t("employee.nav.logout") %>
+            <% end %>
+          <% else %>
+            <%= link_to login_path,
+              class: "employee-login-button",
+              title: t("employee.sessions.new.password_submit"),
+              aria: { label: t("employee.sessions.new.password_submit") } do %>
+              <%= icon "log-in" %>
+              <span><%= t("employee.sessions.new.password_submit") %></span>
             <% end %>
           <% end %>
         </div>

@@ -24,6 +24,11 @@ module FitxaCae
     config.time_zone = "Europe/Madrid"
     config.i18n.default_locale = :ca
     config.i18n.available_locales = [ :ca ]
+    config.exceptions_app = ->(env) do
+      Rails.application.routes.call(env)
+    rescue StandardError
+      ActionDispatch::PublicExceptions.new(Rails.public_path).call(env)
+    end
     config.x.app_version = "1.0"
     config.x.human_resources_email = ENV.fetch("HUMAN_RESOURCES_EMAIL", "rrhh@cae.cat")
     # config.eager_load_paths << Rails.root.join("extras")

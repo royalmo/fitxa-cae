@@ -8,6 +8,25 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "unavailable" => "pwa#unavailable", as: :unavailable
 
+  match "400" => "errors#bad_request", via: :all
+  match "404" => "errors#not_found", via: :all
+  match "406" => "errors#not_acceptable", via: :all
+  match "422" => "errors#unprocessable_entity", via: :all
+  match "500" => "errors#internal_server_error", via: :all
+
+  if Rails.env.development? || Rails.env.test?
+    match "errors/400" => "errors#bad_request", via: :all
+    match "errors/404" => "errors#not_found", via: :all
+    match "errors/406" => "errors#not_acceptable", via: :all
+    match "errors/422" => "errors#unprocessable_entity", via: :all
+    match "errors/500" => "errors#internal_server_error", via: :all
+    match "admin/400" => "errors#bad_request", via: :all
+    match "admin/404" => "errors#not_found", via: :all
+    match "admin/406" => "errors#not_acceptable", via: :all
+    match "admin/422" => "errors#unprocessable_entity", via: :all
+    match "admin/500" => "errors#internal_server_error", via: :all
+  end
+
   get "login" => "employee/sessions#new", as: :login
   post "login" => "employee/sessions#create"
   post "login/code" => "employee/sessions#request_code", as: :request_login_code
@@ -58,6 +77,8 @@ Rails.application.routes.draw do
     resources :reports, only: %i[index]
 
     resources :corrections, only: %i[index show new create edit update] do
+      get :day, on: :collection
+
       member do
         post :approve
         post :reject

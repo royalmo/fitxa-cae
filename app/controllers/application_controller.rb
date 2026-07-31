@@ -3,7 +3,7 @@ class ApplicationController < ActionController::Base
   include ManagerAuthentication
 
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
-  allow_browser versions: :modern
+  allow_browser versions: :modern, unless: :browser_check_skipped?
 
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
@@ -14,5 +14,9 @@ class ApplicationController < ActionController::Base
 
   def employee_authentication_required?
     controller_path.start_with?("employee/") && controller_name != "sessions"
+  end
+
+  def browser_check_skipped?
+    controller_path == "errors"
   end
 end
