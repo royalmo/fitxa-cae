@@ -3,12 +3,15 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "date",
+    "employeeId",
     "existingSwipes",
     "comment",
     "pendingNotice",
     "formContent",
     "emptyPrompt",
     "loadingPrompt",
+    "existingCorrectionPrompt",
+    "submitActions",
     "deleteAction",
     "deleteLink"
   ]
@@ -28,17 +31,25 @@ export default class extends Controller {
     keepSwipeIcon: String,
     removeSwipeIcon: String,
     requestedRemoveIcon: String,
-    addIcon: String
+    addIcon: String,
+    updateUrl: Boolean,
+    invalidatedSwipeName: String,
+    requestedKindName: String,
+    requestedTimeName: String
   }
 
   connect() {
     this.sortSwipeColumns()
   }
 
-  loadDay() {
+  loadDay(event) {
+    event?.preventDefault()
     const selectedDate = this.dateTarget.value
+    const selectedEmployeeId = this.hasEmployeeIdTarget ? this.employeeIdTarget.value : ""
 
-    if (!selectedDate) {
+    this.updateBrowserUrl(selectedEmployeeId, selectedDate)
+
+    if (!selectedDate || (this.hasEmployeeIdTarget && !selectedEmployeeId)) {
       this.clearDay()
       return
     }
@@ -47,24 +58,30 @@ export default class extends Controller {
 
     const url = new URL(this.dayUrlValue, window.location.origin)
     url.searchParams.set("date", selectedDate)
+    if (selectedEmployeeId) url.searchParams.set("employee_id", selectedEmployeeId)
 
     fetch(url, { headers: { Accept: "application/json" } })
       .then((response) => response.json())
       .then((data) => {
-        if (this.dateTarget.value === selectedDate) {
+        const sameEmployee = !this.hasEmployeeIdTarget || this.employeeIdTarget.value === selectedEmployeeId
+
+        if (this.dateTarget.value === selectedDate && sameEmployee) {
           this.renderDay(data)
         }
       })
       .catch(() => {
-        if (this.dateTarget.value === selectedDate) {
+        const sameEmployee = !this.hasEmployeeIdTarget || this.employeeIdTarget.value === selectedEmployeeId
+
+        if (this.dateTarget.value === selectedDate && sameEmployee) {
           this.clearDay()
         }
       })
   }
 
   dismissErrors() {
-    this.element
-      .closest(".correction-form-section")
+    const container = this.element.closest(".correction-form-section") || this.element.closest("form")
+
+    container
       ?.querySelectorAll(".error-summary")
       .forEach((summary) => summary.remove())
   }
@@ -76,45 +93,113 @@ export default class extends Controller {
     }
 
     const pendingCorrection = data.pending_correction
+    const existingCorrectionHtml = data.existing_correction_html
 
-    this.formContentTarget.hidden = false
-    this.emptyPromptTarget.hidden = true
-    this.loadingPromptTarget.hidden = true
+    if (existingCorrectionHtml && data.existing_correction_blocks_form) {
+      this.showBlockingExistingCorrection(existingCorrectionHtml)
+      return
+    }
+
+    this.showFormContent()
+    if (this.hasEmptyPromptTarget) this.emptyPromptTarget.hidden = true
+    if (this.hasLoadingPromptTarget) this.loadingPromptTarget.hidden = true
+    if (existingCorrectionHtml) {
+      this.renderExistingCorrection(existingCorrectionHtml)
+    } else {
+      this.hideExistingCorrection()
+    }
     this.renderSwipeTable(
       data.swipes || [],
       pendingCorrection?.invalidated_swipe_ids || [],
       pendingCorrection?.requested_swipes || []
     )
-    this.commentTarget.value = pendingCorrection?.comment || ""
-    this.pendingNoticeTarget.hidden = !pendingCorrection
+    if (this.hasCommentTarget) this.commentTarget.value = pendingCorrection?.comment || ""
+    if (this.hasPendingNoticeTarget) this.pendingNoticeTarget.hidden = !pendingCorrection
     this.renderDeleteAction(pendingCorrection)
   }
 
   showLoading() {
-    this.formContentTarget.hidden = true
-    this.emptyPromptTarget.hidden = true
-    this.loadingPromptTarget.hidden = false
-    this.pendingNoticeTarget.hidden = true
+    this.hideFormContent()
+    if (this.hasEmptyPromptTarget) this.emptyPromptTarget.hidden = true
+    if (this.hasLoadingPromptTarget) this.loadingPromptTarget.hidden = false
+    this.hideExistingCorrection()
+    if (this.hasPendingNoticeTarget) this.pendingNoticeTarget.hidden = true
     this.renderDeleteAction(null)
   }
 
   clearDay() {
-    this.formContentTarget.hidden = true
-    this.emptyPromptTarget.hidden = false
-    this.loadingPromptTarget.hidden = true
-    this.pendingNoticeTarget.hidden = true
+    this.hideFormContent()
+    if (this.hasEmptyPromptTarget) this.emptyPromptTarget.hidden = false
+    if (this.hasLoadingPromptTarget) this.loadingPromptTarget.hidden = true
+    this.hideExistingCorrection()
+    if (this.hasPendingNoticeTarget) this.pendingNoticeTarget.hidden = true
     this.renderDeleteAction(null)
-    this.existingSwipesTarget.replaceChildren()
-    this.commentTarget.value = ""
+    if (this.hasExistingSwipesTarget) this.existingSwipesTarget.replaceChildren()
+    if (this.hasCommentTarget) this.commentTarget.value = ""
   }
 
   renderDeleteAction(pendingCorrection) {
+    if (!this.hasDeleteActionTarget || !this.hasDeleteLinkTarget) return
+
     if (pendingCorrection?.delete_url) {
       this.deleteLinkTarget.href = pendingCorrection.delete_url
       this.deleteActionTarget.hidden = false
     } else {
       this.deleteActionTarget.hidden = true
       this.deleteLinkTarget.href = "#"
+    }
+  }
+
+  updateBrowserUrl(employeeId, day) {
+    if (!this.updateUrlValue || !window.history?.replaceState) return
+
+    const url = new URL(window.location.href)
+
+    if (employeeId) {
+      url.searchParams.set("employee_id", employeeId)
+    } else {
+      url.searchParams.delete("employee_id")
+    }
+
+    if (day) {
+      url.searchParams.set("day", day)
+    } else {
+      url.searchParams.delete("day")
+    }
+
+    url.searchParams.delete("date")
+
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    const nextUrl = `${url.pathname}${url.search}${url.hash}`
+
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(window.history.state, "", nextUrl)
+    }
+  }
+
+  showBlockingExistingCorrection(html) {
+    this.hideFormContent()
+    if (this.hasEmptyPromptTarget) this.emptyPromptTarget.hidden = true
+    if (this.hasLoadingPromptTarget) this.loadingPromptTarget.hidden = true
+    if (this.hasPendingNoticeTarget) this.pendingNoticeTarget.hidden = true
+    if (this.hasExistingSwipesTarget) this.existingSwipesTarget.replaceChildren()
+    if (this.hasCommentTarget) this.commentTarget.value = ""
+    this.renderDeleteAction(null)
+
+    this.renderExistingCorrection(html)
+  }
+
+  renderExistingCorrection(html) {
+    if (this.hasExistingCorrectionPromptTarget) {
+      this.existingCorrectionPromptTarget.innerHTML = html
+      this.existingCorrectionPromptTarget.hidden = false
+    }
+  }
+
+  hideExistingCorrection() {
+    if (this.hasExistingCorrectionPromptTarget) {
+      this.existingCorrectionPromptTarget.hidden = true
+      this.existingCorrectionPromptTarget.replaceChildren()
     }
   }
 
@@ -145,6 +230,8 @@ export default class extends Controller {
   }
 
   renderSwipeTable(swipes, invalidatedSwipeIds, requestedSwipes) {
+    if (!this.hasExistingSwipesTarget) return
+
     this.existingSwipesTarget.replaceChildren()
 
     const table = document.createElement("div")
@@ -190,7 +277,7 @@ export default class extends Controller {
     label.className = "correction-existing-swipe"
     label.dataset.kind = swipe.kind
     label.innerHTML = `
-        <input type="checkbox" name="invalidated_swipe_ids[]" value="${this.escapeAttribute(swipe.id)}" class="sr-only" ${invalidatedSwipeIds.includes(String(swipe.id)) ? "checked" : ""}>
+        <input type="checkbox" name="${this.escapeAttribute(this.invalidatedSwipeName)}" value="${this.escapeAttribute(swipe.id)}" class="visually-hidden sr-only" ${invalidatedSwipeIds.includes(String(swipe.id)) ? "checked" : ""}>
         <span class="correction-existing-swipe-main">
           ${this.swipeKindIcon(swipe.kind)}
           <span class="correction-existing-swipe-copy">
@@ -218,12 +305,13 @@ export default class extends Controller {
     cell.className = "correction-swipe-table-cell correction-swipe-request-cell"
     wrapper.className = "correction-existing-swipe correction-requested-swipe"
     wrapper.dataset.kind = kind
+    const requestedTime = requestedSwipe?.time || requestedSwipe?.hour || ""
     wrapper.innerHTML = `
       <span class="correction-existing-swipe-main">
         ${this.swipeKindIcon(kind)}
         <span class="correction-existing-swipe-copy">
-          <input type="hidden" name="requested_swipes[][kind]" value="${this.escapeAttribute(kind)}">
-          <input type="time" name="requested_swipes[][time]" value="${this.escapeAttribute((requestedSwipe?.time || "").slice(0, 5))}" aria-label="${this.escapeAttribute(requestLabel)}">
+          <input type="hidden" name="${this.escapeAttribute(this.requestedKindName)}" value="${this.escapeAttribute(kind)}">
+          <input type="time" name="${this.escapeAttribute(this.requestedTimeName)}" value="${this.escapeAttribute(requestedTime.slice(0, 5))}" aria-label="${this.escapeAttribute(requestLabel)}">
         </span>
       </span>
       <button type="button" class="correction-existing-swipe-state correction-requested-swipe-remove" title="${this.escapeAttribute(this.removeRequestedSwipeLabelValue)}" aria-label="${this.escapeAttribute(this.removeRequestedSwipeLabelValue)}" data-action="correction-form#removeRequestedSwipe">
@@ -263,6 +351,8 @@ export default class extends Controller {
   }
 
   sortSwipeColumns() {
+    if (!this.hasExistingSwipesTarget) return
+
     this.existingSwipesTarget
       .querySelectorAll(".correction-swipe-column-list")
       .forEach((list) => this.sortSwipeColumnList(list))
@@ -296,5 +386,27 @@ export default class extends Controller {
 
   swipeKindIcon(kind) {
     return kind === "exit" ? this.exitIconValue : this.entryIconValue
+  }
+
+  showFormContent() {
+    if (this.hasFormContentTarget) this.formContentTarget.hidden = false
+    if (this.hasSubmitActionsTarget) this.submitActionsTarget.hidden = false
+  }
+
+  hideFormContent() {
+    if (this.hasFormContentTarget) this.formContentTarget.hidden = true
+    if (this.hasSubmitActionsTarget) this.submitActionsTarget.hidden = true
+  }
+
+  get invalidatedSwipeName() {
+    return this.hasInvalidatedSwipeNameValue ? this.invalidatedSwipeNameValue : "invalidated_swipe_ids[]"
+  }
+
+  get requestedKindName() {
+    return this.hasRequestedKindNameValue ? this.requestedKindNameValue : "requested_swipes[][kind]"
+  }
+
+  get requestedTimeName() {
+    return this.hasRequestedTimeNameValue ? this.requestedTimeNameValue : "requested_swipes[][time]"
   }
 }

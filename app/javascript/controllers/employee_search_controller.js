@@ -28,7 +28,7 @@ export default class extends Controller {
     clearTimeout(this.searchTimeout)
 
     if (this.inputTarget.value !== this.selectedLabel) {
-      this.employeeIdTarget.value = ""
+      this.setEmployeeId("")
     }
 
     if (this.inputTarget.value.trim() === "") {
@@ -41,7 +41,10 @@ export default class extends Controller {
 
   keydown(event) {
     if (event.key === "Escape") this.hide()
-    if (event.key === "Enter") this.selectFirstResult(event)
+    if (event.key === "Enter") {
+      if (!this.autoSubmitEnabled) event.preventDefault()
+      this.selectFirstResult(event)
+    }
   }
 
   select(event) {
@@ -50,7 +53,7 @@ export default class extends Controller {
 
   clear(event) {
     event.preventDefault()
-    this.employeeIdTarget.value = ""
+    this.setEmployeeId("")
     this.inputTarget.value = ""
     this.selectedLabel = ""
     this.hide()
@@ -78,11 +81,20 @@ export default class extends Controller {
   }
 
   choose(id, label) {
-    this.employeeIdTarget.value = id
+    this.setEmployeeId(id)
     this.inputTarget.value = label
     this.selectedLabel = label
     this.hide()
     if (this.autoSubmitEnabled) this.inputTarget.form?.requestSubmit()
+  }
+
+  setEmployeeId(id) {
+    const previousId = this.employeeIdTarget.value
+
+    this.employeeIdTarget.value = id
+    if (previousId !== id) {
+      this.employeeIdTarget.dispatchEvent(new Event("change", { bubbles: true }))
+    }
   }
 
   fetchResults({ selectFirst = false } = {}) {

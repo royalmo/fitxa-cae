@@ -1,6 +1,5 @@
 class Admin::CorrectionsController < Admin::BaseController
   CORRECTIONS_PER_PAGE = 20
-  REQUESTED_SWIPE_FORM_ROWS = 4
 
   def index
     @filterable_statuses = SwipeCorrection.filterable_statuses
@@ -9,6 +8,7 @@ class Admin::CorrectionsController < Admin::BaseController
     @selected_employee_id = @selected_employee&.id&.to_s
     @selected_month = selected_month
     @selected_year = selected_year
+    @highlight_day = selected_highlight_day
     @year_options = correction_year_options
     @corrections = paginate_admin_relation(
       filtered_corrections.order(created_at: :desc),
@@ -19,6 +19,30 @@ class Admin::CorrectionsController < Admin::BaseController
   def show
     @correction = SwipeCorrection.includes(:employee, :validator).find(params[:id])
     @invalidated_swipes_by_id = invalidated_swipes_by_id(@correction)
+  end
+
+  def day
+    employee = Employee.find_by(id: params[:employee_id].presence)
+    correction_day = selected_day_for_form
+
+    unless employee && correction_day
+      render json: {
+        day_allowed: false,
+        swipes: [],
+        pending_correction: nil
+      }
+      return
+    end
+
+    existing_correction = existing_day_correction(employee, correction_day)
+
+    render json: {
+      day_allowed: true,
+      existing_correction_html: existing_correction_prompt_html(existing_correction),
+      existing_correction_blocks_form: existing_correction&.pending? || false,
+      swipes: employee.swipes.kept.for_day(correction_day).chronological.map { |swipe| swipe_payload(swipe) },
+      pending_correction: nil
+    }
   end
 
   def new
@@ -36,10 +60,10 @@ class Admin::CorrectionsController < Admin::BaseController
     @correction = SwipeCorrection.new(requester: current_manager, status: :pending)
     assignment_valid = assign_correction_attributes(@correction)
 
-    if assignment_valid && @correction.save
-      redirect_to admin_correction_path(@correction), notice: t("admin.flash.correction_created")
+    if assignment_valid && create_and_approve_correction(@correction)
+      redirect_to admin_correction_path(@correction), notice: t("admin.flash.correction_created_and_approved")
     else
-      @correction.errors.add(:base, t("admin.corrections.form.invalid")) unless assignment_valid
+      @correction.errors.add(:base, t("admin.corrections.form.invalid")) if !assignment_valid && @correction.errors.empty?
       load_correction_form_context
       render :new, status: :unprocessable_entity
     end
@@ -57,7 +81,7 @@ class Admin::CorrectionsController < Admin::BaseController
     if assignment_valid && @correction.save
       redirect_to admin_correction_path(@correction), notice: t("admin.flash.correction_updated")
     else
-      @correction.errors.add(:base, t("admin.corrections.form.invalid")) unless assignment_valid
+      @correction.errors.add(:base, t("admin.corrections.form.invalid")) if !assignment_valid && @correction.errors.empty?
       load_correction_form_context
       render :edit, status: :unprocessable_entity
     end
@@ -101,6 +125,9 @@ class Admin::CorrectionsController < Admin::BaseController
 
   def load_correction_form_context
     @employees = Employee.order(:last_name, :first_name, :id)
+    @identity_ready = @correction.employee_id.present? && @correction.day.present?
+    @existing_day_correction = existing_day_correction(@correction.employee, @correction.day) if @identity_ready && !@correction.persisted?
+    @form_ready = @identity_ready && !@existing_day_correction&.pending?
     @day_swipes = @correction.employee&.swipes&.kept&.for_day(@correction.day)&.chronological&.to_a || []
     @requested_swipe_rows = requested_swipe_form_rows(@correction)
   end
@@ -114,7 +141,8 @@ class Admin::CorrectionsController < Admin::BaseController
   end
 
   def selected_day_for_form
-    Date.iso8601(params[:day]) if params[:day].present?
+    day = params[:day].presence || params[:date].presence
+    Date.iso8601(day) if day.present?
   rescue Date::Error
     nil
   end
@@ -131,6 +159,12 @@ class Admin::CorrectionsController < Admin::BaseController
   def selected_year
     year = Integer(params[:year].presence, exception: false)
     year if year&.between?(2000, 2100)
+  end
+
+  def selected_highlight_day
+    Date.iso8601(params[:highlight_day].to_s) if params[:highlight_day].present?
+  rescue Date::Error
+    nil
   end
 
   def correction_year_options
@@ -166,9 +200,22 @@ class Admin::CorrectionsController < Admin::BaseController
 
   def assign_correction_attributes(correction)
     attributes = correction_params
-    employee = Employee.find_by(id: attributes[:employee_id])
-    day = parsed_correction_day(attributes[:day])
-    return false unless employee && day
+
+    if correction.persisted?
+      employee = correction.employee
+      day = correction.day
+    else
+      employee = Employee.find_by(id: attributes[:employee_id])
+      day = parsed_correction_day(attributes[:day])
+      return false unless employee && day
+
+      if pending_day_correction(employee, day)
+        correction.employee = employee
+        correction.day = day
+        correction.errors.add(:base, t("admin.corrections.form.existing_correction"))
+        return false
+      end
+    end
 
     correction.employee = employee
     correction.day = day
@@ -224,16 +271,46 @@ class Admin::CorrectionsController < Admin::BaseController
   end
 
   def requested_swipe_form_rows(correction)
-    rows = Array(correction.details&.fetch("requested_swipes", nil)).map do |requested_swipe|
+    Array(correction.details&.fetch("requested_swipes", nil)).filter_map do |requested_swipe|
+      next if requested_swipe["kind"].blank? || requested_swipe["hour"].blank?
+
       { "kind" => requested_swipe["kind"], "hour" => requested_swipe["hour"].to_s.first(5) }
     end
-
-    rows << {} while rows.size < REQUESTED_SWIPE_FORM_ROWS
-    rows
   end
 
   def empty_correction_details
     { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
+  end
+
+  def existing_day_correction(employee, day)
+    return unless employee && day
+
+    corrections = employee.swipe_corrections.where(day: day)
+    pending_day_correction(employee, day) || corrections.order(created_at: :desc).first
+  end
+
+  def pending_day_correction(employee, day)
+    return unless employee && day
+
+    employee.swipe_corrections.pending.where(day: day).order(created_at: :desc).first
+  end
+
+  def existing_correction_prompt_html(correction)
+    return unless correction
+
+    render_to_string(
+      partial: "admin/corrections/existing_correction_prompt",
+      formats: [ :html ],
+      locals: { correction: correction }
+    )
+  end
+
+  def swipe_payload(swipe)
+    {
+      id: swipe.id.to_s,
+      kind: swipe.kind,
+      time: helpers.l(swipe.swipe_at, format: :hour_minute)
+    }
   end
 
   def invalidated_swipes_by_id(correction)
@@ -253,6 +330,16 @@ class Admin::CorrectionsController < Admin::BaseController
         validator_comments: t("admin.corrections.review.approved")
       )
     end
+  end
+
+  def create_and_approve_correction(correction)
+    SwipeCorrection.transaction do
+      correction.save!
+      approve_correction(correction)
+    end
+    true
+  rescue ActiveRecord::RecordInvalid
+    false
   end
 
   def remove_invalidated_swipes(correction)

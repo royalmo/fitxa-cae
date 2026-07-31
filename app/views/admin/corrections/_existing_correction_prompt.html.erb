@@ -1,0 +1,65 @@
+<% corrections_list_path = admin_corrections_path(
+  employee_id: correction.employee_id,
+  month: correction.day.month,
+  year: correction.day.year,
+  highlight_day: correction.day.iso8601
+) %>
+
+<% if correction.pending? %>
+  <div class="admin-existing-correction-prompt alert alert-primary mb-0 text-center">
+    <div class="admin-existing-correction-prompt-inner">
+      <%= icon "square-pen", class: "admin-existing-correction-prompt-icon" %>
+
+      <div>
+        <h2 class="h5 mb-2"><%= t("admin.corrections.form.existing_correction_title") %></h2>
+        <p class="mb-0">
+          <strong><%= employee_display_name(correction.employee) %></strong>
+          <span class="text-primary-emphasis">·</span>
+          <span><%= l(correction.day, format: :long) %></span>
+          <span class="text-primary-emphasis">·</span>
+          <span class="<%= bootstrap_status_badge_class(correction.status) %>">
+            <%= icon correction_status_icon_name(correction.status), class: "admin-badge-icon" %>
+            <span><%= status_text(correction.status) %></span>
+          </span>
+        </p>
+      </div>
+
+      <div class="d-flex flex-wrap justify-content-center gap-2">
+        <%= link_to admin_correction_path(correction),
+          class: "btn btn-primary d-inline-flex align-items-center gap-2" do %>
+          <%= icon "eye" %>
+          <span><%= t("shared.view") %></span>
+        <% end %>
+
+        <%= link_to edit_admin_correction_path(correction),
+          class: "btn btn-outline-primary d-inline-flex align-items-center gap-2" do %>
+          <%= icon "pencil" %>
+          <span><%= t("shared.edit") %></span>
+        <% end %>
+
+        <%= link_to approve_admin_correction_path(correction),
+          class: "btn btn-outline-success d-inline-flex align-items-center gap-2",
+          data: { turbo_method: :post } do %>
+          <%= icon "check" %>
+          <span><%= t("shared.approve") %></span>
+        <% end %>
+
+        <%= link_to reject_admin_correction_path(correction),
+          class: "btn btn-outline-danger d-inline-flex align-items-center gap-2",
+          data: { turbo_method: :post } do %>
+          <%= icon "x" %>
+          <span><%= t("shared.reject") %></span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <div class="alert alert-info alert-dismissible fade show mb-0" role="alert">
+    <div class="d-flex align-items-center gap-2 pe-4">
+      <%= icon "info", class: "admin-badge-icon admin-existing-correction-info-icon" %>
+      <span><%= t("admin.corrections.form.existing_reviewed_correction.#{correction.status}") %></span>
+      <%= link_to t("shared.view"), corrections_list_path, class: "alert-link" %>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="<%= t("shared.dismiss_flash") %>"></button>
+  </div>
+<% end %>

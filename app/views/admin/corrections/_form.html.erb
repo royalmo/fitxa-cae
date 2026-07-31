@@ -1,5 +1,35 @@
 <% invalidated_swipe_ids = Array(correction.details&.fetch("invalidated_swipe_ids", nil)).map(&:to_s) %>
 <% form_url = correction.persisted? ? admin_correction_path(correction) : admin_corrections_path %>
+<% requested_swipes_by_kind = @requested_swipe_rows.group_by { |requested_swipe| requested_swipe["kind"].to_s } %>
+<% identity_ready = @identity_ready || correction.persisted? %>
+<% form_ready = @form_ready || correction.persisted? %>
+<% editable_identity = !correction.persisted? %>
+<% submit_icon_name = correction.persisted? ? "save" : "check" %>
+<% submit_label = correction.persisted? ? t("shared.save") : t("admin.corrections.form.create_and_approve") %>
+<% submit_submitting_label = correction.persisted? ? t("shared.submitting.saving") : t("admin.corrections.form.creating_and_approving") %>
+<% correction_form_data = {
+  controller: "correction-form",
+  correction_form_day_url_value: day_admin_corrections_path,
+  correction_form_update_url_value: editable_identity,
+  correction_form_entries_label_value: t("admin.corrections.form.entries"),
+  correction_form_exits_label_value: t("admin.corrections.form.exits"),
+  correction_form_request_entry_label_value: t("admin.corrections.form.request_entry"),
+  correction_form_request_exit_label_value: t("admin.corrections.form.request_exit"),
+  correction_form_existing_swipes_label_value: t("admin.corrections.form.swipes"),
+  correction_form_entry_icon_value: icon("log-in", class: "correction-existing-swipe-kind-icon"),
+  correction_form_exit_icon_value: icon("log-out", class: "correction-existing-swipe-kind-icon"),
+  correction_form_keep_swipe_label_value: t("admin.corrections.form.keep_swipe"),
+  correction_form_remove_swipe_label_value: t("admin.corrections.form.invalidate"),
+  correction_form_remove_requested_swipe_label_value: t("admin.corrections.form.remove_requested_swipe"),
+  correction_form_keep_swipe_icon_value: icon("rotate-ccw", class: "correction-existing-swipe-state-icon"),
+  correction_form_remove_swipe_icon_value: icon("trash-2", class: "correction-existing-swipe-state-icon"),
+  correction_form_requested_remove_icon_value: icon("trash-2", class: "correction-existing-swipe-state-icon"),
+  correction_form_add_icon_value: icon("plus", class: "correction-requested-swipe-add-icon"),
+  correction_form_invalidated_swipe_name_value: "swipe_correction[invalidated_swipe_ids][]",
+  correction_form_requested_kind_name_value: "swipe_correction[requested_swipes][][kind]",
+  correction_form_requested_time_name_value: "swipe_correction[requested_swipes][][hour]",
+  action: "input->correction-form#dismissErrors change->correction-form#dismissErrors focusout->correction-form#sortRequestedSwipeColumn"
+} %>
 
 <% if correction.errors.any? %>
   <div class="alert alert-danger error-summary">
@@ -12,82 +42,156 @@
   </div>
 <% end %>
 
-<%= form_with model: correction, url: form_url do |form| %>
+<%= form_with model: correction, url: form_url, data: correction_form_data do |form| %>
   <section class="card shadow-sm">
     <div class="card-body">
       <div class="row g-3">
-        <div class="col-12 col-lg-7">
+        <div class="col-12 col-lg-9">
           <%= form.label :employee_id, t("admin.corrections.form.employee"), class: "form-label" %>
-          <%= form.select :employee_id,
-            @employees.map { |employee| [employee_display_name(employee), employee.id] },
-            { selected: correction.employee_id, include_blank: t("admin.corrections.form.select_employee") },
-            class: "form-select" %>
+          <%= render "admin/shared/employee_search",
+            form: form,
+            field: :employee_id,
+            query_field: :employee_query,
+            selected_employee: correction.employee,
+            placeholder: t("admin.corrections.form.employee_search_placeholder"),
+            clear_label: t("admin.corrections.form.clear_employee"),
+            results_id: "admin-correction-form-employee-results",
+            auto_submit: false,
+            disabled: !editable_identity,
+            hidden_data: {
+              correction_form_target: "employeeId",
+              action: "change->correction-form#loadDay"
+            } %>
         </div>
         <div class="col-12 col-sm-6 col-lg-3">
           <%= form.label :day, t("admin.corrections.form.day"), class: "form-label" %>
-          <%= form.date_field :day, value: correction.day&.iso8601, class: "form-control" %>
+          <% if editable_identity %>
+            <%= form.date_field :day,
+              value: correction.day&.iso8601,
+              class: "form-control",
+              data: {
+                correction_form_target: "date",
+                action: "change->correction-form#loadDay"
+              } %>
+          <% else %>
+            <%= form.date_field :day, value: correction.day&.iso8601, class: "form-control", disabled: true %>
+            <%= form.hidden_field :day, value: correction.day&.iso8601, data: { correction_form_target: "date" } %>
+          <% end %>
         </div>
       </div>
 
       <hr>
 
-      <div class="row g-4">
-        <div class="col-12 col-xl-5">
-          <h2 class="h6"><%= t("admin.corrections.form.existing_swipes") %></h2>
-          <% if @day_swipes.any? %>
-            <div class="list-group">
-              <% @day_swipes.each do |swipe| %>
-                <label class="list-group-item d-flex align-items-center gap-2">
-                  <%= check_box_tag "swipe_correction[invalidated_swipe_ids][]", swipe.id, invalidated_swipe_ids.include?(swipe.id.to_s), class: "form-check-input m-0" %>
-                  <%= icon clocking_icon_name(swipe.kind), title: clocking_kind_text(swipe.kind) %>
-                  <span><%= clocking_kind_text(swipe.kind) %> · <%= l(swipe.swipe_at, format: :hour_minute) %></span>
-                  <span class="ms-auto small text-body-secondary"><%= t("admin.corrections.form.invalidate") %></span>
-                </label>
-              <% end %>
-            </div>
-          <% else %>
-            <p class="text-body-secondary mb-0"><%= t("admin.corrections.form.no_existing_swipes") %></p>
-          <% end %>
-        </div>
-
-        <div class="col-12 col-xl-7">
-          <h2 class="h6"><%= t("admin.corrections.form.requested_swipes") %></h2>
-          <div class="vstack gap-2">
-            <% @requested_swipe_rows.each_with_index do |requested_swipe, index| %>
-              <div class="row g-2 align-items-center">
-                <div class="col-12 col-sm-6">
-                  <%= select_tag "swipe_correction[requested_swipes][#{index}][kind]",
-                    options_for_select([[t("admin.corrections.form.no_requested_swipe"), ""]] + Swipe.kinds.keys.map { |kind| [clocking_kind_text(kind), kind] }, requested_swipe["kind"]),
-                    class: "form-select",
-                    aria: { label: t("admin.corrections.form.kind") } %>
-                </div>
-                <div class="col-12 col-sm-6">
-                  <%= time_field_tag "swipe_correction[requested_swipes][#{index}][hour]",
-                    requested_swipe["hour"],
-                    class: "form-control",
-                    aria: { label: t("admin.corrections.form.hour") } %>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        </div>
+      <div class="admin-calendar-empty py-4" data-correction-form-target="emptyPrompt" <%= "hidden" if identity_ready %>>
+        <%= icon "square-pen" %>
+        <p class="small"><%= t("admin.corrections.form.select_employee_day_empty") %></p>
       </div>
 
-      <div class="mt-4">
-        <%= form.label :requester_comments, t("admin.corrections.form.note"), class: "form-label" %>
-        <%= form.text_area :requester_comments, rows: 3, class: "form-control" %>
+      <div class="admin-calendar-empty py-4" data-correction-form-target="loadingPrompt" hidden>
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <p class="small"><%= t("admin.corrections.form.loading_day") %></p>
+      </div>
+
+      <div class="mb-4" data-correction-form-target="existingCorrectionPrompt" <%= "hidden" unless @existing_day_correction %>>
+        <% if @existing_day_correction %>
+          <%= render "existing_correction_prompt", correction: @existing_day_correction %>
+        <% end %>
+      </div>
+
+      <div data-correction-form-target="formContent" <%= "hidden" unless form_ready %>>
+        <div class="row g-4">
+          <div class="col-12">
+            <div class="admin-correction-swipes">
+              <div class="correction-existing-swipes" data-correction-form-target="existingSwipes">
+                <div class="correction-swipe-table" role="group" aria-label="<%= t("admin.corrections.form.swipes") %>">
+                  <% [
+                    { kind: "entry", label: t("admin.corrections.form.entries"), request_label: t("admin.corrections.form.request_entry") },
+                    { kind: "exit", label: t("admin.corrections.form.exits"), request_label: t("admin.corrections.form.request_exit") }
+                  ].each do |column| %>
+                    <% column_swipes = @day_swipes.select { |swipe| swipe.kind == column[:kind] } %>
+
+                    <div class="correction-swipe-column" data-kind="<%= column[:kind] %>">
+                      <div class="correction-swipe-column-header"><%= column[:label] %></div>
+                      <div class="correction-swipe-column-list">
+                        <% column_swipes.each do |swipe| %>
+                          <div class="correction-swipe-table-cell">
+                            <label class="correction-existing-swipe" data-kind="<%= swipe.kind %>">
+                              <%= check_box_tag "swipe_correction[invalidated_swipe_ids][]", swipe.id, invalidated_swipe_ids.include?(swipe.id.to_s), class: "visually-hidden" %>
+                              <span class="correction-existing-swipe-main">
+                                <%= icon clocking_icon_name(swipe.kind), title: clocking_kind_text(swipe.kind), class: "correction-existing-swipe-kind-icon" %>
+                                <span class="correction-existing-swipe-copy">
+                                  <strong><%= l(swipe.swipe_at, format: :hour_minute) %></strong>
+                                </span>
+                              </span>
+                              <span class="correction-existing-swipe-state">
+                                <span class="correction-existing-swipe-keep" title="<%= t("admin.corrections.form.invalidate") %>" aria-label="<%= t("admin.corrections.form.invalidate") %>">
+                                  <%= icon "trash-2", class: "correction-existing-swipe-state-icon" %>
+                                </span>
+                                <span class="correction-existing-swipe-remove" title="<%= t("admin.corrections.form.keep_swipe") %>" aria-label="<%= t("admin.corrections.form.keep_swipe") %>">
+                                  <%= icon "rotate-ccw", class: "correction-existing-swipe-state-icon" %>
+                                </span>
+                              </span>
+                            </label>
+                          </div>
+                        <% end %>
+
+                        <% Array(requested_swipes_by_kind[column[:kind]]).each do |requested_swipe| %>
+                          <div class="correction-swipe-table-cell correction-swipe-request-cell">
+                            <div class="correction-existing-swipe correction-requested-swipe" data-kind="<%= column[:kind] %>">
+                              <span class="correction-existing-swipe-main">
+                                <%= icon clocking_icon_name(column[:kind]), title: clocking_kind_text(column[:kind]), class: "correction-existing-swipe-kind-icon" %>
+                                <span class="correction-existing-swipe-copy">
+                                  <%= hidden_field_tag "swipe_correction[requested_swipes][][kind]", column[:kind] %>
+                                  <%= time_field_tag "swipe_correction[requested_swipes][][hour]",
+                                    requested_swipe["hour"].to_s.first(5),
+                                    aria: { label: column[:request_label] } %>
+                                </span>
+                              </span>
+                              <%= button_tag type: :button,
+                                class: "correction-existing-swipe-state correction-requested-swipe-remove",
+                                title: t("admin.corrections.form.remove_requested_swipe"),
+                                aria: { label: t("admin.corrections.form.remove_requested_swipe") },
+                                data: { action: "correction-form#removeRequestedSwipe" } do %>
+                                <%= icon "trash-2", class: "correction-existing-swipe-state-icon" %>
+                              <% end %>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+
+                      <%= button_tag type: :button,
+                        class: "correction-requested-swipe-add",
+                        data: { action: "correction-form#addRequestedSwipe", kind: column[:kind] } do %>
+                        <%= icon "plus", class: "correction-requested-swipe-add-icon" %>
+                        <span><%= column[:request_label] %></span>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <%= form.label :requester_comments, t("admin.corrections.form.note"), class: "form-label" %>
+          <%= form.text_area :requester_comments,
+            rows: 3,
+            class: "form-control",
+            data: { correction_form_target: "comment" } %>
+        </div>
       </div>
     </div>
   </section>
 
-  <div class="d-flex flex-wrap gap-2 mt-4">
+  <div class="d-flex flex-wrap gap-2 mt-4" data-correction-form-target="submitActions" <%= "hidden" unless form_ready %>>
     <%= link_to admin_corrections_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
       <%= icon "x" %>
       <span><%= t("shared.cancel") %></span>
     <% end %>
-    <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.saving") } do %>
-      <%= icon "save" %>
-      <span><%= t("shared.save") %></span>
+    <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: submit_submitting_label } do %>
+      <%= icon submit_icon_name %>
+      <span><%= submit_label %></span>
     <% end %>
   </div>
 <% end %>

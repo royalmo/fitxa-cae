@@ -115,7 +115,7 @@
     </div>
   </div>
 
-  <div data-list-loading-target="results">
+  <div data-list-loading-target="results" data-controller="correction-highlight">
     <section class="card shadow-sm">
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -132,7 +132,16 @@
           </thead>
           <tbody>
             <% @corrections.each do |correction| %>
-              <tr>
+              <% highlighted = @highlight_day == correction.day %>
+              <% row_options = {
+                class: class_names("admin-correction-row", "is-highlighted": highlighted),
+                data: { correction_day: correction.day.iso8601 }
+              } %>
+              <% if highlighted %>
+                <% row_options[:data][:correction_highlight_target] = "row" %>
+                <% row_options[:tabindex] = "-1" %>
+              <% end %>
+              <%= tag.tr(**row_options) do %>
                 <td><strong><%= employee_display_name(correction.employee) %></strong></td>
                 <td><%= l(correction.day, format: :short) %></td>
                 <td>
@@ -183,7 +192,7 @@
                     <% end %>
                   </div>
                 </td>
-              </tr>
+              <% end %>
             <% end %>
           </tbody>
         </table>
