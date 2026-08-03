@@ -1,0 +1,63 @@
+<% modal_id = admin_swipes_day_corrections_modal_id(employee, day[:date]) %>
+<% modal_label_id = "#{modal_id}_label" %>
+<% corrections = Array(day[:corrections]) %>
+
+<div class="modal fade" id="<%= modal_id %>" tabindex="-1" aria-labelledby="<%= modal_label_id %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5 d-inline-flex align-items-center gap-2" id="<%= modal_label_id %>">
+          <%= icon "history" %>
+          <span><%= t("admin.swipes.index.day_corrections.title", date: l(day[:date], format: :long)) %></span>
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="d-flex flex-column gap-2">
+          <% corrections.each do |correction| %>
+            <% change_items = admin_correction_change_items(correction, day[:day_swipes]) %>
+
+            <div class="admin-swipes-day-correction-item">
+              <div class="admin-swipes-day-correction-copy">
+                <div class="admin-swipes-day-correction-status">
+                  <%= icon correction_status_icon_name(correction.status), class: "admin-swipes-day-correction-status-icon" %>
+                  <span><%= admin_correction_status_text(correction.status) %></span>
+                </div>
+
+                <% if change_items.any? %>
+                  <div class="admin-correction-change-summary" aria-label="<%= change_items.map { |item| admin_correction_change_item_label(item) }.join(" · ") %>">
+                    <% change_items.each do |item| %>
+                      <span class="<%= class_names("admin-correction-change-item", "is-#{item[:type]}", item[:kind].present? && "is-#{item[:kind]}") %>">
+                        <%= icon admin_correction_change_icon_name(item),
+                          title: admin_correction_change_icon_title(item),
+                          class: "admin-correction-change-icon" %>
+                        <span><%= item[:time] %></span>
+                      </span>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <span class="small text-body-secondary"><%= t("employee.corrections.summary.no_details") %></span>
+                <% end %>
+              </div>
+
+              <%= link_to admin_correction_path(correction),
+                class: "btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2 flex-shrink-0",
+                title: t("shared.view"),
+                aria: { label: t("shared.view") } do %>
+                <%= icon "eye" %>
+                <span><%= t("shared.view") %></span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <%= t("shared.cancel") %>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

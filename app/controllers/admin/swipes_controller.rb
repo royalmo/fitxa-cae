@@ -77,9 +77,11 @@ class Admin::SwipesController < Admin::BaseController
       {
         date: date,
         swipes: display_swipes,
+        day_swipes: day_swipes,
         swipes_count: effective_swipes.count,
         worked_seconds: Swipe.paired_work_seconds(effective_swipes),
-        correction: day_corrections.find(&:pending?)
+        correction: day_corrections.find(&:pending?),
+        corrections: day_corrections
       }
     end
   end

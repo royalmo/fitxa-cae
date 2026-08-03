@@ -1264,6 +1264,36 @@ button.admin-calendar-day:hover {
   height: 0.85rem;
 }
 
+.admin-swipes-day-correction-copy {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.admin-swipes-day-correction-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background: var(--bs-tertiary-bg);
+}
+
+.admin-swipes-day-correction-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--bs-body-color);
+  font-weight: 700;
+}
+
+.admin-swipes-day-correction-status-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
 .admin-list-loading[hidden] {
   display: none !important;
 }

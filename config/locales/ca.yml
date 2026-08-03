@@ -529,6 +529,10 @@ ca:
         empty_day: "Sense fitxatges"
         create_day: "Crear fitxatges el %{date}"
         edit_day: "Editar fitxatges el %{date}"
+        day_corrections:
+          button: "Veure correccions del %{date}"
+          title: "Correccions del %{date}"
+          no_comments: "Sense comentari."
         review:
           employee: "Treballadora"
           day: "Dia"

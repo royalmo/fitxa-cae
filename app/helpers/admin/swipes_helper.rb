@@ -9,6 +9,14 @@ module Admin::SwipesHelper
     day[:swipes].any? ? "pencil" : "plus"
   end
 
+  def admin_swipes_day_corrections_modal_id(employee, day)
+    "admin_swipes_day_corrections_modal_#{employee.id}_#{day.iso8601}"
+  end
+
+  def admin_swipes_day_reviewed_corrections?(day)
+    Array(day[:corrections]).any? { |correction| correction.approved? || correction.rejected? }
+  end
+
   def admin_swipes_review_modal_id(correction, action)
     "swipe_correction_#{action}_modal_#{correction.id}"
   end
