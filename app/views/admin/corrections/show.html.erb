@@ -1,93 +1,152 @@
 <% content_for :title, t(".title") %>
+<% status_label = admin_correction_status_text(@correction.status) %>
+<% answered_at = correction_answered_at(@correction) %>
+<% change_items = admin_correction_change_items(@correction, @day_swipes) %>
 
+<%= tag.div(data: (@correction.pending? ? { controller: "correction-review-comments" } : nil)) do %>
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
   <div class="d-flex align-items-center gap-2">
     <%= icon "square-pen", class: "text-primary" %>
     <h1 class="h2 mb-0"><%= t(".heading") %></h1>
   </div>
 
-  <div class="d-flex flex-wrap gap-2">
-    <%= link_to edit_admin_correction_path(@correction), class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
-      <%= icon "pencil" %>
-      <span><%= t("shared.edit") %></span>
-    <% end %>
-    <%= link_to admin_corrections_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
-      <%= icon "x" %>
-      <span><%= t(".back_to_list") %></span>
-    <% end %>
-  </div>
+  <%= link_to admin_corrections_path, class: "btn btn-outline-secondary border-0 d-inline-flex align-items-center gap-2" do %>
+    <%= icon "x" %>
+    <span><%= t(".back_to_list") %></span>
+  <% end %>
 </div>
 
-<div class="row g-4">
-  <div class="col-12 col-xl-8">
-    <section class="card shadow-sm">
-      <div class="card-body">
-        <dl class="row mb-0">
-          <dt class="col-sm-4"><%= t("admin.corrections.index.employee") %></dt>
-          <dd class="col-sm-8"><%= employee_display_name(@correction.employee) %></dd>
-
-          <dt class="col-sm-4"><%= t("admin.corrections.index.date") %></dt>
-          <dd class="col-sm-8"><%= l(@correction.day, format: :long) %></dd>
-
-          <dt class="col-sm-4"><%= t("admin.corrections.index.status") %></dt>
-          <dd class="col-sm-8">
-            <span class="<%= bootstrap_status_badge_class(@correction.status) %>">
-              <%= icon correction_status_icon_name(@correction.status), class: "admin-badge-icon" %>
-              <span><%= status_text(@correction.status) %></span>
-            </span>
-          </dd>
-
-          <dt class="col-sm-4"><%= t(".request") %></dt>
-          <dd class="col-sm-8"><%= correction_requested_text(@correction) %></dd>
-
-          <dt class="col-sm-4"><%= t(".validator") %></dt>
-          <dd class="col-sm-8"><%= @correction.validator ? manager_display_name(@correction.validator) : t(".not_reviewed") %></dd>
-
-          <dt class="col-sm-4"><%= t(".created_at") %></dt>
-          <dd class="col-sm-8"><%= l(@correction.created_at, format: :short) %></dd>
-        </dl>
-      </div>
-    </section>
+<section class="<%= class_names("admin-correction-status-banner", "is-#{@correction.status}") %>">
+  <div class="admin-correction-status-banner-main">
+    <%= icon correction_status_icon_name(@correction.status),
+      title: status_label,
+      class: "admin-correction-status-banner-icon" %>
+    <div class="admin-correction-status-banner-copy">
+      <strong><%= status_label %></strong>
+      <small>
+        <% if @correction.pending? %>
+          <%= t(".requested_ago", distance: admin_correction_created_ago_text(@correction)) %>
+        <% elsif answered_at %>
+          <%= admin_correction_relative_time_text(answered_at, capitalize: true) %>
+        <% else %>
+          <%= admin_correction_created_ago_text(@correction, capitalize: true) %>
+        <% end %>
+      </small>
+    </div>
   </div>
 
-  <div class="col-12 col-xl-4">
-    <section class="card shadow-sm">
-      <div class="card-header bg-body">
-        <h2 class="h5 mb-0"><%= t(".changes") %></h2>
-      </div>
-      <div class="list-group list-group-flush">
-        <% correction_change_items(@correction, @invalidated_swipes_by_id).each do |item| %>
-          <div class="list-group-item d-flex align-items-center gap-2">
-            <%= icon correction_change_icon_name(item), title: correction_change_icon_title(item) %>
-            <span><%= correction_change_item_label(item) %></span>
-          </div>
+  <div class="admin-correction-status-banner-actions">
+    <% if @correction.pending? %>
+      <% [ :approve, :reject ].each do |review_action| %>
+        <button type="button"
+          class="<%= class_names("btn btn-sm d-inline-flex align-items-center gap-2", review_action == :approve ? "btn-outline-success" : "btn-outline-danger") %>"
+          data-action="correction-review-comments#copyToModal"
+          data-bs-toggle="modal"
+          data-bs-target="#<%= admin_correction_review_modal_id(@correction, review_action) %>">
+          <%= icon(review_action == :approve ? "check" : "x") %>
+          <span><%= t("shared.#{review_action}") %></span>
+        </button>
+      <% end %>
+
+      <%= link_to edit_admin_correction_path(@correction),
+        class: "btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
+        <%= icon "pencil" %>
+        <span><%= t("shared.edit") %></span>
+      <% end %>
+    <% else %>
+      <%= link_to new_admin_correction_path(employee_id: @correction.employee_id, day: @correction.day.iso8601),
+        class: "btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
+        <%= icon "plus" %>
+        <span><%= t("admin.corrections.index.new_correction") %></span>
+      <% end %>
+    <% end %>
+  </div>
+</section>
+
+<section class="card shadow-sm mt-4">
+  <div class="card-body">
+    <div class="admin-correction-show-summary">
+      <div class="admin-correction-show-summary-title">
+        <span><%= l(@correction.day, format: :long) %></span>
+        <span class="admin-correction-show-summary-separator">-</span>
+        <span><%= employee_display_name(@correction.employee) %></span>
+        <% if @correction.employee.national_id.present? %>
+          <span class="admin-correction-show-summary-dni">
+            <span aria-hidden="true">-</span>
+            <em><%= @correction.employee.national_id %></em>
+          </span>
         <% end %>
       </div>
 
-      <% if correction_change_items(@correction, @invalidated_swipes_by_id).empty? %>
-        <div class="card-body text-body-secondary">
-          <%= t(".no_changes") %>
+      <div class="admin-correction-show-meta">
+        <p>
+          <%= t(".created_by",
+            name: admin_correction_actor_name(@correction.requester),
+            distance: admin_correction_created_ago_text(@correction)) %>
+        </p>
+        <% unless @correction.pending? %>
+          <p>
+            <%= t(".reviewed_by.#{@correction.status}",
+              name: admin_correction_actor_name(@correction.validator),
+              distance: admin_correction_relative_time_text(answered_at || @correction.updated_at)) %>
+          </p>
+        <% end %>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="admin-correction-show-section">
+      <h2 class="h5"><%= t(".changes") %></h2>
+      <% if change_items.any? %>
+        <div class="admin-correction-change-summary admin-correction-show-change-summary" aria-label="<%= change_items.map { |item| admin_correction_change_item_label(item) }.join(" · ") %>">
+          <% change_items.each do |item| %>
+            <span class="<%= class_names("admin-correction-change-item", "is-#{item[:type]}", item[:kind].present? && "is-#{item[:kind]}") %>">
+              <%= icon admin_correction_change_icon_name(item),
+                title: admin_correction_change_icon_title(item),
+                class: "admin-correction-change-icon" %>
+              <span><%= item[:time] %></span>
+            </span>
+          <% end %>
         </div>
+      <% else %>
+        <span class="text-body-secondary"><%= t(".no_changes") %></span>
       <% end %>
-    </section>
+    </div>
+
+    <hr>
+
+    <div class="admin-correction-show-section">
+      <h2 class="h5"><%= t(".comments") %></h2>
+      <div class="d-flex flex-column gap-3">
+        <div>
+          <%= label_tag "admin_correction_requester_comments",
+            t(".requester_comment"),
+            class: "form-label" %>
+          <%= text_area_tag "admin_correction_requester_comments",
+            @correction.requester_comments.presence || t(".no_comments"),
+            rows: 3,
+            class: "form-control admin-correction-readonly-comment",
+            disabled: true %>
+        </div>
+        <div>
+          <%= label_tag "admin_correction_validator_comments",
+            t(".validator_comment"),
+            class: "form-label" %>
+          <%= text_area_tag "admin_correction_validator_comments",
+            @correction.pending? ? @correction.validator_comments.to_s : @correction.validator_comments.presence || t(".no_comments"),
+            rows: 3,
+            class: class_names("form-control", "admin-correction-readonly-comment": !@correction.pending?),
+            disabled: !@correction.pending?,
+            data: (@correction.pending? ? { correction_review_comments_target: "source" } : {}) %>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
 <% if @correction.pending? %>
-  <div class="d-flex flex-wrap gap-2 mt-4">
-    <%= button_to approve_admin_correction_path(@correction),
-      method: :post,
-      class: "btn btn-success d-inline-flex align-items-center gap-2",
-      data: { submitting_label: t("shared.submitting.approving") } do %>
-      <%= icon "check" %>
-      <span><%= t("shared.approve") %></span>
-    <% end %>
-    <%= button_to reject_admin_correction_path(@correction),
-      method: :post,
-      class: "btn btn-outline-danger d-inline-flex align-items-center gap-2",
-      data: { submitting_label: t("shared.submitting.rejecting") } do %>
-      <%= icon "x" %>
-      <span><%= t("shared.reject") %></span>
-    <% end %>
-  </div>
+  <%= render "review_modal", correction: @correction, action: :approve, day_swipes: @day_swipes %>
+  <%= render "review_modal", correction: @correction, action: :reject, day_swipes: @day_swipes %>
+<% end %>
 <% end %>

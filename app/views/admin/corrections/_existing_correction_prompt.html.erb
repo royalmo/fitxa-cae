@@ -19,7 +19,7 @@
           <span class="text-primary-emphasis">·</span>
           <span class="<%= bootstrap_status_badge_class(correction.status) %>">
             <%= icon correction_status_icon_name(correction.status), class: "admin-badge-icon" %>
-            <span><%= status_text(correction.status) %></span>
+            <span><%= admin_correction_status_text(correction.status) %></span>
           </span>
         </p>
       </div>

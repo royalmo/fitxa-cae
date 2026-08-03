@@ -218,6 +218,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Correccions | FitxaCAE Admin"
     assert_select "table"
     assert_select "[data-controller='employee-search']"
+    assert_select "[data-controller='tag-search']"
     assert_select "button[type='submit'][data-submitting-label='Filtrant...']", 0
 
     get admin_calendars_path

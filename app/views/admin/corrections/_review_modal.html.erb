@@ -1,0 +1,92 @@
+<% action = action.to_sym %>
+<% modal_id = admin_correction_review_modal_id(correction, action) %>
+<% modal_label_id = "#{modal_id}_label" %>
+<% submitting_key = action == :approve ? "approving" : "rejecting" %>
+<% change_items = admin_correction_change_items(correction, day_swipes) %>
+
+<div class="modal fade" id="<%= modal_id %>" tabindex="-1" aria-labelledby="<%= modal_label_id %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <%= form_with url: admin_correction_review_path(correction, action), method: :post, class: "modal-content" do %>
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="<%= modal_label_id %>">
+          <%= t("admin.corrections.index.review.#{action}.title") %>
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+      </div>
+      <div class="modal-body">
+        <p><%= t("admin.corrections.index.review.#{action}.body") %></p>
+
+        <dl class="row mb-0 admin-correction-review-details">
+          <dt class="col-sm-4"><%= t("admin.corrections.index.review.person") %></dt>
+          <dd class="col-sm-8">
+            <span class="admin-correction-review-person">
+              <span><%= employee_display_name(correction.employee) %></span>
+              <% if correction.employee.national_id.present? %>
+                <em class="admin-correction-review-person-meta"><%= correction.employee.national_id %></em>
+              <% end %>
+            </span>
+          </dd>
+
+          <dt class="col-sm-4"><%= t("admin.corrections.index.review.requested_day") %></dt>
+          <dd class="col-sm-8"><%= l(correction.day, format: :long) %></dd>
+
+          <dt class="col-sm-4"><%= t("admin.corrections.index.review.request") %></dt>
+          <dd class="col-sm-8">
+            <% if change_items.any? %>
+              <div class="admin-correction-change-summary">
+                <% change_items.each do |item| %>
+                  <span class="<%= class_names("admin-correction-change-item", "is-#{item[:type]}", item[:kind].present? && "is-#{item[:kind]}") %>">
+                    <%= icon admin_correction_change_icon_name(item),
+                      title: admin_correction_change_icon_title(item),
+                      class: "admin-correction-change-icon" %>
+                    <span><%= item[:time] %></span>
+                  </span>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="text-body-secondary"><%= t("employee.corrections.summary.no_details") %></span>
+            <% end %>
+          </dd>
+
+          <dt class="col-sm-4"><%= t("admin.corrections.index.review.comments") %></dt>
+          <dd class="col-sm-8">
+            <% if correction.requester_comments.present? %>
+              <%= simple_format(correction.requester_comments, class: "mb-0") %>
+            <% else %>
+              <span class="text-body-secondary fst-italic"><%= t("admin.corrections.index.review.no_comments") %></span>
+            <% end %>
+          </dd>
+
+          <dt class="col-sm-4"><%= t("admin.corrections.index.review.requested_ago") %></dt>
+          <dd class="col-sm-8">
+            <span class="admin-correction-review-age" title="<%= l(correction.created_at, format: :short) %>">
+              <%= admin_correction_created_ago_text(correction) %>
+            </span>
+          </dd>
+        </dl>
+
+        <div class="mt-3">
+          <%= label_tag "#{modal_id}_validator_comments",
+            t("admin.corrections.index.review.hr_comments"),
+            class: "form-label" %>
+          <%= text_area_tag :validator_comments,
+            correction.validator_comments.to_s,
+            id: "#{modal_id}_validator_comments",
+            rows: 3,
+            class: "form-control" %>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <%= t("shared.cancel") %>
+        </button>
+
+        <%= button_tag type: :submit,
+          class: admin_correction_review_submit_class(action),
+          data: { submitting_label: t("shared.submitting.#{submitting_key}") } do %>
+          <%= t("admin.corrections.index.review.#{action}.confirm") %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

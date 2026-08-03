@@ -18,47 +18,29 @@
       method: :get,
       class: "admin-corrections-filter-form d-flex flex-column gap-2 w-100 mb-2",
       data: { action: "submit->list-loading#showLoading" } do |form| %>
-      <div class="admin-corrections-employee-filter">
-        <%= form.label :employee_query, t(".employee"), class: "form-label visually-hidden" %>
-        <div
-          class="admin-employee-search position-relative"
-          data-controller="employee-search"
-          data-employee-search-url-value="<%= admin_employee_search_path %>">
-          <%= form.hidden_field :employee_id,
-            value: @selected_employee_id.to_s,
-            data: { employee_search_target: "employeeId" } %>
-          <div class="input-group">
-            <span class="input-group-text"><%= icon "search" %></span>
-            <%= text_field_tag :employee_query,
-              @selected_employee ? employee_display_name(@selected_employee) : nil,
-              class: "form-control",
-              placeholder: t(".employee_search_placeholder"),
-              autocomplete: "off",
-              role: "combobox",
-              aria: {
-                autocomplete: "list",
-                controls: "admin-corrections-employee-results",
-                expanded: "false"
-              },
-              data: {
-                employee_search_target: "input",
-                action: "input->employee-search#search focus->employee-search#search keydown->employee-search#keydown"
-              } %>
-            <button
-              type="button"
-              class="btn btn-outline-secondary"
-              title="<%= t(".all_employees") %>"
-              aria-label="<%= t(".all_employees") %>"
-              data-action="employee-search#clear">
-              <%= icon "x" %>
-            </button>
-          </div>
-          <div
-            id="admin-corrections-employee-results"
-            class="admin-employee-search-results list-group shadow-sm"
-            data-employee-search-target="results"
-            role="listbox"
-            hidden></div>
+      <div class="admin-corrections-primary-filters d-flex flex-column flex-lg-row align-items-stretch gap-2">
+        <div class="admin-corrections-employee-filter">
+          <%= form.label :employee_query, t(".employee"), class: "form-label visually-hidden" %>
+          <%= render "admin/shared/employee_search",
+            form: form,
+            field: :employee_id,
+            query_field: :employee_query,
+            selected_employee: @selected_employee,
+            placeholder: t(".employee_search_placeholder"),
+            clear_label: t(".all_employees"),
+            results_id: "admin-corrections-employee-results" %>
+        </div>
+
+        <div class="admin-corrections-tag-filter">
+          <%= form.label :tag_query, t(".tag"), class: "form-label visually-hidden" %>
+          <%= render "admin/shared/tag_search",
+            form: form,
+            field: :tag_id,
+            query_field: :tag_query,
+            selected_tag: @selected_tag,
+            placeholder: t(".tag_search_placeholder"),
+            clear_label: t(".all_tags"),
+            results_id: "admin-corrections-tag-results" %>
         </div>
       </div>
 
@@ -82,30 +64,31 @@
           <% end %>
         </fieldset>
 
-        <span class="admin-corrections-period-label">
-          <span aria-hidden="true">·</span>
-          <span><%= t(".period_prefix") %></span>
-        </span>
+        <div class="admin-corrections-period-filter">
+          <span class="admin-corrections-period-label"><%= t(".period_prefix") %></span>
 
-        <div class="admin-corrections-period">
-          <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
-          <%= form.label :year, t(".year"), class: "form-label visually-hidden" %>
-          <div class="input-group flex-nowrap">
-            <%= form.select :month,
-              [[t(".all_months"), ""]] + admin_corrections_month_options,
-              { selected: @selected_month || "" },
-              class: "form-select",
-              data: { action: "change->list-loading#filter" } %>
-            <span class="input-group-text"><%= t(".period_connector") %></span>
-            <%= form.select :year,
-              [[t(".all_years"), ""]] + @year_options,
-              { selected: @selected_year || "" },
-              class: "form-select",
-              data: { action: "change->list-loading#filter" } %>
+          <div class="admin-corrections-period">
+            <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
+            <%= form.label :year, t(".year"), class: "form-label visually-hidden" %>
+            <div class="input-group flex-nowrap">
+              <%= form.select :month,
+                [[t(".all_months"), ""]] + admin_corrections_month_options,
+                { selected: @selected_month || "" },
+                class: "form-select",
+                data: { action: "change->list-loading#filter" } %>
+              <span class="input-group-text"><%= t(".period_connector") %></span>
+              <%= form.select :year,
+                [[t(".all_years"), ""]] + @year_options,
+                { selected: @selected_year || "" },
+                class: "form-select",
+                data: { action: "change->list-loading#filter" } %>
+            </div>
           </div>
         </div>
       </div>
     <% end %>
+
+    <hr class="admin-filters-divider">
 
     <div class="text-center">
       <%= render "admin/shared/result_count",
@@ -121,12 +104,11 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
+              <th class="admin-correction-status-cell"><%= t(".status") %></th>
               <th><%= t(".employee") %></th>
               <th><%= t(".date") %></th>
               <th><%= t(".request") %></th>
-              <th><%= t(".status") %></th>
               <th><%= t(".validator") %></th>
-              <th><%= t(".age") %></th>
               <th class="text-end"><%= t("shared.actions") %></th>
             </tr>
           </thead>
@@ -142,20 +124,46 @@
                 <% row_options[:tabindex] = "-1" %>
               <% end %>
               <%= tag.tr(**row_options) do %>
-                <td><strong><%= employee_display_name(correction.employee) %></strong></td>
-                <td><%= l(correction.day, format: :short) %></td>
-                <td>
-                  <strong><%= correction_title(correction) %></strong>
-                  <div class="small text-body-secondary"><%= correction_requested_text(correction) %></div>
-                </td>
-                <td>
+                <td class="admin-correction-status-cell">
                   <span class="<%= bootstrap_status_badge_class(correction.status) %>">
                     <%= icon correction_status_icon_name(correction.status), class: "admin-badge-icon" %>
-                    <span><%= status_text(correction.status) %></span>
+                    <span><%= admin_correction_status_text(correction.status) %></span>
                   </span>
                 </td>
-                <td><%= correction.validator ? manager_display_name(correction.validator) : "—" %></td>
-                <td><%= l(correction.created_at, format: :short) %></td>
+                <td class="admin-correction-employee-cell">
+                  <% employee_name = employee_display_name(correction.employee) %>
+                  <span class="admin-correction-person">
+                    <strong class="admin-correction-person-name" title="<%= employee_name %>"><%= employee_name %></strong>
+                    <em class="admin-correction-person-meta" title="<%= correction.employee.national_id %>"><%= correction.employee.national_id %></em>
+                  </span>
+                </td>
+                <td class="admin-correction-date-cell"><%= l(correction.day, format: :short) %></td>
+                <td class="admin-correction-request-cell">
+                  <% day_swipes = @correction_day_swipes_by_key.fetch([correction.employee_id, correction.day], []) %>
+                  <% change_items = admin_correction_change_items(correction, day_swipes) %>
+                  <% if change_items.any? %>
+                    <div class="admin-correction-change-summary" aria-label="<%= change_items.map { |item| admin_correction_change_item_label(item) }.join(" · ") %>">
+                      <% change_items.each do |item| %>
+                        <span class="<%= class_names("admin-correction-change-item", "is-#{item[:type]}", item[:kind].present? && "is-#{item[:kind]}") %>">
+                          <%= icon admin_correction_change_icon_name(item),
+                            title: admin_correction_change_icon_title(item),
+                            class: "admin-correction-change-icon" %>
+                          <span><%= item[:time] %></span>
+                        </span>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span class="small text-body-secondary"><%= t("employee.corrections.summary.no_details") %></span>
+                  <% end %>
+                </td>
+                <td class="admin-correction-validator-cell">
+                  <% if correction.validator %>
+                    <% validator_name = manager_display_name(correction.validator) %>
+                    <span class="admin-correction-validator-name" title="<%= validator_name %>"><%= validator_name %></span>
+                  <% else %>
+                    <span class="text-body-secondary">—</span>
+                  <% end %>
+                </td>
                 <td class="text-end">
                   <div class="d-inline-flex gap-1">
                     <%= link_to admin_correction_path(correction),
@@ -164,30 +172,29 @@
                       aria: { label: t("shared.view") } do %>
                       <%= icon "eye" %>
                     <% end %>
-                    <%= link_to edit_admin_correction_path(correction),
-                      class: "btn btn-sm btn-outline-secondary admin-row-action",
-                      title: t("shared.edit"),
-                      aria: { label: t("shared.edit") } do %>
-                      <%= icon "pencil" %>
-                    <% end %>
                     <% if correction.pending? %>
-                      <%= button_to approve_admin_correction_path(correction),
-                        method: :post,
-                        form_class: "m-0",
-                        class: "btn btn-sm btn-outline-success admin-row-action",
-                        title: t("shared.approve"),
-                        aria: { label: t("shared.approve") },
-                        data: { submitting_label: t("shared.submitting.approving") } do %>
-                        <%= icon "check" %>
+                      <% [ :approve, :reject ].each do |review_action| %>
+                        <button type="button"
+                          class="<%= admin_correction_review_button_class(review_action) %>"
+                          title="<%= t("shared.#{review_action}") %>"
+                          aria-label="<%= t("shared.#{review_action}") %>"
+                          data-bs-toggle="modal"
+                          data-bs-target="#<%= admin_correction_review_modal_id(correction, review_action) %>">
+                          <%= icon(review_action == :approve ? "check" : "x") %>
+                        </button>
                       <% end %>
-                      <%= button_to reject_admin_correction_path(correction),
-                        method: :post,
-                        form_class: "m-0",
-                        class: "btn btn-sm btn-outline-danger admin-row-action",
-                        title: t("shared.reject"),
-                        aria: { label: t("shared.reject") },
-                        data: { submitting_label: t("shared.submitting.rejecting") } do %>
-                        <%= icon "x" %>
+                      <%= link_to edit_admin_correction_path(correction),
+                        class: "btn btn-sm btn-outline-secondary admin-row-action",
+                        title: t("shared.edit"),
+                        aria: { label: t("shared.edit") } do %>
+                        <%= icon "pencil" %>
+                      <% end %>
+                    <% else %>
+                      <%= link_to new_admin_correction_path(employee_id: correction.employee_id, day: correction.day.iso8601),
+                        class: "btn btn-sm btn-outline-secondary admin-row-action",
+                        title: t(".new_correction"),
+                        aria: { label: t(".new_correction") } do %>
+                        <%= icon "plus" %>
                       <% end %>
                     <% end %>
                   </div>
@@ -197,6 +204,13 @@
           </tbody>
         </table>
       </div>
+
+      <% @corrections.each do |correction| %>
+        <% next unless correction.pending? %>
+        <% day_swipes = @correction_day_swipes_by_key.fetch([correction.employee_id, correction.day], []) %>
+        <%= render "review_modal", correction: correction, action: :approve, day_swipes: day_swipes %>
+        <%= render "review_modal", correction: correction, action: :reject, day_swipes: day_swipes %>
+      <% end %>
 
       <% if @corrections.empty? %>
         <div class="card-body text-center text-body-secondary">

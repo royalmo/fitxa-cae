@@ -12,6 +12,7 @@ export default class extends Controller {
     "loadingPrompt",
     "existingCorrectionPrompt",
     "submitActions",
+    "reviewConfirmationBody",
     "deleteAction",
     "deleteLink"
   ]
@@ -35,7 +36,12 @@ export default class extends Controller {
     updateUrl: Boolean,
     invalidatedSwipeName: String,
     requestedKindName: String,
-    requestedTimeName: String
+    requestedTimeName: String,
+    initialInvalidatedSwipeIds: String,
+    initialRequestedSwipes: String,
+    modifiedReviewMessage: String,
+    unmodifiedReviewMessage: String,
+    reviewConfirmationModalId: String
   }
 
   connect() {
@@ -84,6 +90,21 @@ export default class extends Controller {
     container
       ?.querySelectorAll(".error-summary")
       .forEach((summary) => summary.remove())
+  }
+
+  prepareReviewConfirmation() {
+    if (!this.hasReviewConfirmationBodyTarget) return
+
+    this.reviewConfirmationBodyTarget.textContent = this.reviewConfirmationMessage()
+  }
+
+  confirmReviewSubmission(event) {
+    if (!this.hasReviewConfirmationBodyTarget) return
+    if (event.submitter?.dataset.correctionFormConfirmed === "true") return
+
+    event.preventDefault()
+    this.prepareReviewConfirmation()
+    this.showReviewConfirmationModal()
   }
 
   renderDay(data) {
@@ -356,6 +377,74 @@ export default class extends Controller {
     this.existingSwipesTarget
       .querySelectorAll(".correction-swipe-column-list")
       .forEach((list) => this.sortSwipeColumnList(list))
+  }
+
+  reviewConfirmationMessage() {
+    if (this.swipeDetailsChanged()) return this.modifiedReviewMessageValue
+
+    return this.unmodifiedReviewMessageValue
+  }
+
+  swipeDetailsChanged() {
+    return this.serializedCurrentInvalidatedSwipeIds() !== this.serializedInitialInvalidatedSwipeIds() ||
+      this.serializedCurrentRequestedSwipes() !== this.serializedInitialRequestedSwipes()
+  }
+
+  serializedInitialInvalidatedSwipeIds() {
+    return JSON.stringify(this.normalizedSwipeIds(this.parsedJSONValue(this.initialInvalidatedSwipeIdsValue)))
+  }
+
+  serializedCurrentInvalidatedSwipeIds() {
+    const checkedBoxes = this.element.querySelectorAll(`input[name="${this.invalidatedSwipeNameValue}"]:checked`)
+    const ids = Array.from(checkedBoxes).map((checkbox) => checkbox.value)
+
+    return JSON.stringify(this.normalizedSwipeIds(ids))
+  }
+
+  normalizedSwipeIds(ids) {
+    return Array.from(ids || []).map((id) => String(id)).filter(Boolean).sort()
+  }
+
+  serializedInitialRequestedSwipes() {
+    return JSON.stringify(this.normalizedRequestedSwipes(this.parsedJSONValue(this.initialRequestedSwipesValue)))
+  }
+
+  serializedCurrentRequestedSwipes() {
+    const requestedSwipes = Array.from(this.element.querySelectorAll(".correction-requested-swipe")).map((wrapper) => {
+      const kind = wrapper.querySelector(`input[name="${this.requestedKindNameValue}"]`)?.value || ""
+      const hour = wrapper.querySelector(`input[name="${this.requestedTimeNameValue}"]`)?.value || ""
+
+      return { kind, hour }
+    })
+
+    return JSON.stringify(this.normalizedRequestedSwipes(requestedSwipes))
+  }
+
+  normalizedRequestedSwipes(requestedSwipes) {
+    return Array.from(requestedSwipes || [])
+      .map((requestedSwipe) => ({
+        kind: String(requestedSwipe.kind || requestedSwipe["kind"] || ""),
+        hour: String(requestedSwipe.hour || requestedSwipe["hour"] || "").slice(0, 5)
+      }))
+      .filter((requestedSwipe) => requestedSwipe.kind || requestedSwipe.hour)
+      .sort((left, right) => `${left.hour}|${left.kind}`.localeCompare(`${right.hour}|${right.kind}`))
+  }
+
+  parsedJSONValue(value) {
+    try {
+      return JSON.parse(value || "[]")
+    } catch {
+      return []
+    }
+  }
+
+  showReviewConfirmationModal() {
+    if (!this.hasReviewConfirmationModalIdValue) return
+
+    const modalElement = document.getElementById(this.reviewConfirmationModalIdValue)
+    const Modal = window.bootstrap?.Modal
+
+    if (modalElement && Modal) Modal.getOrCreateInstance(modalElement).show()
   }
 
   swipeCellMinutes(cell) {

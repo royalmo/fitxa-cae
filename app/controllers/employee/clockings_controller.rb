@@ -7,7 +7,7 @@ class Employee::ClockingsController < ApplicationController
 
   def index
     @employee = current_employee
-    @min_clocking_month = @employee.created_at.to_date.beginning_of_month
+    @min_clocking_month = earliest_clocking_month
     @max_clocking_month = Time.zone.today.beginning_of_month
     @month = requested_clocking_month || @max_clocking_month
     @clocking_month_reachable = clocking_month_reachable?(@month)
@@ -58,6 +58,14 @@ class Employee::ClockingsController < ApplicationController
   end
 
   private
+
+  def earliest_clocking_month
+    [
+      @employee.created_at,
+      @employee.swipes.minimum(:swipe_at),
+      @employee.swipe_corrections.minimum(:day)
+    ].compact.map(&:to_date).min.beginning_of_month
+  end
 
   def undo_recent_clocking
     recent_swipe = undoable_recent_swipe

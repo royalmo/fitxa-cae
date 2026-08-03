@@ -6,6 +6,8 @@ class Admin::CorrectionsController < Admin::BaseController
     @selected_status = selected_correction_status
     @selected_employee = selected_employee
     @selected_employee_id = @selected_employee&.id&.to_s
+    @selected_tag = selected_active_tag
+    @selected_tag_id = @selected_tag&.id&.to_s
     @selected_month = selected_month
     @selected_year = selected_year
     @highlight_day = selected_highlight_day
@@ -14,11 +16,12 @@ class Admin::CorrectionsController < Admin::BaseController
       filtered_corrections.order(created_at: :desc),
       per_page: CORRECTIONS_PER_PAGE
     ).to_a
+    @correction_day_swipes_by_key = day_swipes_by_correction_key(@corrections)
   end
 
   def show
     @correction = SwipeCorrection.includes(:employee, :validator).find(params[:id])
-    @invalidated_swipes_by_id = invalidated_swipes_by_id(@correction)
+    @day_swipes = @correction.employee.swipes.for_day(@correction.day).chronological.to_a
   end
 
   def day
@@ -71,17 +74,18 @@ class Admin::CorrectionsController < Admin::BaseController
 
   def edit
     @correction = SwipeCorrection.find(params[:id])
+    return redirect_reviewed_correction(@correction) unless @correction.pending?
+
     load_correction_form_context
   end
 
   def update
     @correction = SwipeCorrection.find(params[:id])
-    assignment_valid = assign_correction_attributes(@correction)
+    return redirect_reviewed_correction(@correction) unless @correction.pending?
 
-    if assignment_valid && @correction.save
-      redirect_to admin_correction_path(@correction), notice: t("admin.flash.correction_updated")
+    if review_pending_correction_from_edit(@correction)
+      redirect_to admin_correction_path(@reviewed_correction), notice: @review_notice
     else
-      @correction.errors.add(:base, t("admin.corrections.form.invalid")) if !assignment_valid && @correction.errors.empty?
       load_correction_form_context
       render :edit, status: :unprocessable_entity
     end
@@ -91,7 +95,7 @@ class Admin::CorrectionsController < Admin::BaseController
     correction = SwipeCorrection.find(params[:id])
 
     if correction.pending?
-      approve_correction(correction)
+      approve_correction(correction, validator_comments: review_validator_comments(:approved))
       redirect_back fallback_location: admin_corrections_path, notice: t("admin.flash.correction_approved")
     else
       redirect_back fallback_location: admin_corrections_path, alert: t("admin.flash.correction_already_reviewed")
@@ -105,7 +109,7 @@ class Admin::CorrectionsController < Admin::BaseController
       correction.update!(
         status: :rejected,
         validator: current_manager,
-        validator_comments: t("admin.corrections.review.rejected")
+        validator_comments: review_validator_comments(:rejected)
       )
       redirect_back fallback_location: admin_corrections_path, notice: t("admin.flash.correction_rejected")
     else
@@ -119,8 +123,17 @@ class Admin::CorrectionsController < Admin::BaseController
     corrections = SwipeCorrection.includes(:employee, :validator)
     corrections = corrections.where(status: @selected_status) if @selected_status
     corrections = corrections.where(employee_id: @selected_employee_id) if @selected_employee_id.present?
+    corrections = corrections.joins(employee: :tags).where(tags: { id: @selected_tag_id }).distinct if @selected_tag_id.present?
     corrections = filter_corrections_by_period(corrections)
     corrections
+  end
+
+  def redirect_reviewed_correction(correction)
+    redirect_to admin_correction_path(correction), alert: t("admin.flash.correction_already_reviewed")
+  end
+
+  def review_validator_comments(status)
+    params[:validator_comments].presence || t("admin.corrections.review.#{status}")
   end
 
   def load_correction_form_context
@@ -138,6 +151,10 @@ class Admin::CorrectionsController < Admin::BaseController
 
   def selected_employee
     Employee.find_by(id: params[:employee_id].presence) if params[:employee_id].present?
+  end
+
+  def selected_active_tag
+    Tag.find_by(id: params[:tag_id].presence, active: true) if params[:tag_id].present?
   end
 
   def selected_day_for_form
@@ -198,6 +215,17 @@ class Admin::CorrectionsController < Admin::BaseController
     table[:day].gteq(range.begin).and(table[:day].lteq(range.end))
   end
 
+  def day_swipes_by_correction_key(corrections)
+    employee_ids = corrections.map(&:employee_id).compact.uniq
+    days = corrections.map(&:day).compact.uniq
+    return {} if employee_ids.empty? || days.empty?
+
+    Swipe
+      .where(employee_id: employee_ids, swipe_at: days.min.beginning_of_day..days.max.end_of_day)
+      .chronological
+      .group_by { |swipe| [ swipe.employee_id, swipe.swipe_at.in_time_zone.to_date ] }
+  end
+
   def assign_correction_attributes(correction)
     attributes = correction_params
 
@@ -229,6 +257,7 @@ class Admin::CorrectionsController < Admin::BaseController
       :employee_id,
       :day,
       :requester_comments,
+      :validator_comments,
       invalidated_swipe_ids: [],
       requested_swipes: [ :kind, :hour ]
     )
@@ -320,22 +349,89 @@ class Admin::CorrectionsController < Admin::BaseController
     correction.employee.swipes.where(id: swipe_ids).index_by { |swipe| swipe.id.to_s }
   end
 
-  def approve_correction(correction)
+  def review_pending_correction_from_edit(correction)
+    attributes = correction_params
+    modified_details = correction_details(attributes, correction.day)
+    hr_comment = attributes[:validator_comments].to_s
+
+    if correction_details_changed?(correction.details, modified_details)
+      approve_with_modified_details(correction, modified_details, hr_comment)
+    else
+      approve_correction(
+        correction,
+        validator_comments: hr_comment.presence || t("admin.corrections.review.approved")
+      )
+      @reviewed_correction = correction
+      @review_notice = t("admin.flash.correction_approved")
+    end
+
+    true
+  rescue ActiveRecord::RecordInvalid
+    correction.details = modified_details
+    correction.validator_comments = hr_comment
+    correction.errors.add(:base, t("admin.corrections.form.invalid")) if correction.errors.empty?
+    false
+  end
+
+  def approve_with_modified_details(correction, modified_details, hr_comment)
+    SwipeCorrection.transaction do
+      correction.update!(
+        status: :rejected,
+        validator: current_manager,
+        validator_comments: t("admin.corrections.review.approved_with_modifications")
+      )
+      @approved_correction = SwipeCorrection.create!(
+        employee: correction.employee,
+        day: correction.day,
+        requester: current_manager,
+        requester_comments: hr_comment,
+        details: modified_details,
+        status: :pending
+      )
+      approve_correction(@approved_correction)
+    end
+
+    @reviewed_correction = @approved_correction
+    @review_notice = t("admin.flash.correction_approved_with_modifications")
+  end
+
+  def correction_details_changed?(previous_details, next_details)
+    normalized_correction_details(previous_details) != normalized_correction_details(next_details)
+  end
+
+  def normalized_correction_details(details)
+    {
+      "invalidated_swipe_ids" => Array(details&.fetch("invalidated_swipe_ids", nil)).compact_blank.map(&:to_s).sort,
+      "requested_swipes" => normalized_correction_requested_swipes(details)
+    }
+  end
+
+  def normalized_correction_requested_swipes(details)
+    Array(details&.fetch("requested_swipes", nil)).filter_map do |requested_swipe|
+      kind = requested_swipe.fetch("kind", requested_swipe[:kind]).to_s
+      hour = requested_swipe.fetch("hour", requested_swipe[:hour]).to_s
+      next if kind.blank? && hour.blank?
+
+      { "kind" => kind, "hour" => hour.first(8) }
+    end.sort_by { |requested_swipe| [ requested_swipe["hour"], requested_swipe["kind"] ] }
+  end
+
+  def approve_correction(correction, validator_comments: t("admin.corrections.review.approved"))
     SwipeCorrection.transaction do
       remove_invalidated_swipes(correction)
       create_requested_swipes(correction)
       correction.update!(
         status: :approved,
         validator: current_manager,
-        validator_comments: t("admin.corrections.review.approved")
+        validator_comments: validator_comments
       )
     end
   end
 
-  def create_and_approve_correction(correction)
+  def create_and_approve_correction(correction, validator_comments: t("admin.corrections.review.approved"))
     SwipeCorrection.transaction do
       correction.save!
-      approve_correction(correction)
+      approve_correction(correction, validator_comments: validator_comments)
     end
     true
   rescue ActiveRecord::RecordInvalid

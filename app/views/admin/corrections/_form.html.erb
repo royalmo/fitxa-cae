@@ -4,9 +4,17 @@
 <% identity_ready = @identity_ready || correction.persisted? %>
 <% form_ready = @form_ready || correction.persisted? %>
 <% editable_identity = !correction.persisted? %>
-<% submit_icon_name = correction.persisted? ? "save" : "check" %>
-<% submit_label = correction.persisted? ? t("shared.save") : t("admin.corrections.form.create_and_approve") %>
-<% submit_submitting_label = correction.persisted? ? t("shared.submitting.saving") : t("admin.corrections.form.creating_and_approving") %>
+<% modification_form = correction.persisted? %>
+<% review_confirmation_modal_id = "correction_review_confirmation_modal_#{correction.id}" if modification_form %>
+<% submit_icon_name = "check" %>
+<% submit_label = modification_form ? t("admin.corrections.form.approve_with_modifications") : t("admin.corrections.form.create_and_approve") %>
+<% submit_submitting_label = modification_form ? t("admin.corrections.form.approving_with_modifications") : t("admin.corrections.form.creating_and_approving") %>
+<% correction_form_actions = [
+  "input->correction-form#dismissErrors",
+  "change->correction-form#dismissErrors",
+  "focusout->correction-form#sortRequestedSwipeColumn"
+] %>
+<% correction_form_actions << "submit->correction-form#confirmReviewSubmission" if modification_form %>
 <% correction_form_data = {
   controller: "correction-form",
   correction_form_day_url_value: day_admin_corrections_path,
@@ -28,8 +36,22 @@
   correction_form_invalidated_swipe_name_value: "swipe_correction[invalidated_swipe_ids][]",
   correction_form_requested_kind_name_value: "swipe_correction[requested_swipes][][kind]",
   correction_form_requested_time_name_value: "swipe_correction[requested_swipes][][hour]",
-  action: "input->correction-form#dismissErrors change->correction-form#dismissErrors focusout->correction-form#sortRequestedSwipeColumn"
+  action: correction_form_actions.join(" ")
 } %>
+<% if modification_form %>
+  <% correction_form_data.merge!(
+    correction_form_initial_invalidated_swipe_ids_value: invalidated_swipe_ids.compact_blank.sort.to_json,
+    correction_form_initial_requested_swipes_value: @requested_swipe_rows.map { |requested_swipe|
+      {
+        kind: requested_swipe["kind"].to_s,
+        hour: requested_swipe["hour"].to_s.first(5)
+      }
+    }.sort_by { |requested_swipe| [ requested_swipe[:hour], requested_swipe[:kind] ] }.to_json,
+    correction_form_modified_review_message_value: t("admin.corrections.form.modified_review_confirmation"),
+    correction_form_unmodified_review_message_value: t("admin.corrections.form.unmodified_review_confirmation"),
+    correction_form_review_confirmation_modal_id_value: review_confirmation_modal_id
+  ) %>
+<% end %>
 
 <% if correction.errors.any? %>
   <div class="alert alert-danger error-summary">
@@ -173,13 +195,36 @@
           </div>
         </div>
 
-        <div class="mt-4">
-          <%= form.label :requester_comments, t("admin.corrections.form.note"), class: "form-label" %>
-          <%= form.text_area :requester_comments,
-            rows: 3,
-            class: "form-control",
-            data: { correction_form_target: "comment" } %>
-        </div>
+        <% if modification_form %>
+          <div class="d-flex flex-column gap-3 mt-3">
+            <div>
+              <%= label_tag "swipe_correction_requester_comments",
+                t("admin.corrections.form.employee_note"),
+                class: "form-label" %>
+              <%= text_area_tag "swipe_correction[requester_comments]",
+                correction.requester_comments.presence || t("admin.corrections.form.no_employee_note"),
+                id: "swipe_correction_requester_comments",
+                rows: 3,
+                class: "form-control admin-correction-readonly-comment",
+                disabled: true %>
+            </div>
+            <div>
+              <%= form.label :validator_comments, t("admin.corrections.form.hr_note"), class: "form-label" %>
+              <%= form.text_area :validator_comments,
+                rows: 3,
+                class: "form-control",
+                data: { correction_form_target: "comment" } %>
+            </div>
+          </div>
+        <% else %>
+          <div class="mt-4">
+            <%= form.label :requester_comments, t("admin.corrections.form.note"), class: "form-label" %>
+            <%= form.text_area :requester_comments,
+              rows: 3,
+              class: "form-control",
+              data: { correction_form_target: "comment" } %>
+          </div>
+        <% end %>
       </div>
     </div>
   </section>
@@ -189,9 +234,55 @@
       <%= icon "x" %>
       <span><%= t("shared.cancel") %></span>
     <% end %>
-    <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: submit_submitting_label } do %>
-      <%= icon submit_icon_name %>
-      <span><%= submit_label %></span>
+    <% if modification_form %>
+      <%= button_tag type: :button,
+        class: "btn btn-primary d-inline-flex align-items-center gap-2",
+        data: {
+          action: "correction-form#prepareReviewConfirmation",
+          bs_toggle: "modal",
+          bs_target: "##{review_confirmation_modal_id}"
+        } do %>
+        <%= icon submit_icon_name %>
+        <span><%= submit_label %></span>
+      <% end %>
+    <% else %>
+      <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: submit_submitting_label } do %>
+        <%= icon submit_icon_name %>
+        <span><%= submit_label %></span>
+      <% end %>
     <% end %>
   </div>
+
+  <% if modification_form %>
+    <div class="modal fade" id="<%= review_confirmation_modal_id %>" tabindex="-1" aria-labelledby="<%= review_confirmation_modal_id %>_label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="<%= review_confirmation_modal_id %>_label">
+              <%= t("admin.corrections.form.review_confirmation_title") %>
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0" data-correction-form-target="reviewConfirmationBody">
+              <%= t("admin.corrections.form.unmodified_review_confirmation") %>
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <%= t("shared.cancel") %>
+            </button>
+            <%= button_tag type: :submit,
+              class: "btn btn-primary",
+              data: {
+                correction_form_confirmed: "true",
+                submitting_label: submit_submitting_label
+              } do %>
+              <%= t("admin.corrections.form.review_confirmation_confirm") %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
 <% end %>

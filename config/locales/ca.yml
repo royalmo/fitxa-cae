@@ -354,6 +354,7 @@ ca:
       correction_approved: "Correcció aprovada."
       correction_created: "Correcció creada."
       correction_created_and_approved: "Correcció creada i aprovada."
+      correction_approved_with_modifications: "Correcció aprovada amb modificacions."
       correction_rejected: "Correcció rebutjada."
       correction_updated: "Correcció actualitzada."
       tag_activated: "Etiqueta activada."
@@ -397,8 +398,13 @@ ca:
       employee_search:
         clear: "Esborrar treballador"
         placeholder: "Cerca per nom, DNI, correu o telèfon"
+      tag_search:
+        clear: "Esborrar etiqueta"
+        placeholder: "Cerca una etiqueta"
     employee_search:
       no_results: "Cap treballadora trobada."
+    tag_search:
+      no_results: "Cap etiqueta activa trobada."
     pagination:
       label: "Paginació"
       showing_count: "Mostrant %{from}-%{to} de %{count}"
@@ -684,9 +690,12 @@ ca:
         title: "Correccions"
         heading: "Correccions"
         new_correction: "Nova correcció"
-        employee: "Treballador"
+        employee: "Persona"
         employee_search_placeholder: "Cerca per nom, DNI, correu o telèfon"
-        all_employees: "Tots els treballadors"
+        all_employees: "Totes les persones"
+        tag: "Etiqueta"
+        tag_search_placeholder: "Cerca una etiqueta"
+        all_tags: "Totes les etiquetes"
         date: "Data"
         request: "Petició"
         status: "Estat"
@@ -702,19 +711,66 @@ ca:
         period_connector: "de"
         year: "Any"
         all_years: "Tots els anys"
-        validator: "Validador"
+        validator: "Validat per"
         age: "Antiguitat"
         empty: "No hi ha correccions registrades."
+        summary:
+          existing: "%{kind} existent"
+          invalidate: "Invalidar"
+        review:
+          approve:
+            title: "Aprovar correcció"
+            body: "Vols aprovar la següent correcció horària?"
+            confirm: "Aprovar"
+          reject:
+            title: "Rebutjar correcció"
+            body: "Vols rebutjar la següent correcció horària?"
+            confirm: "Rebutjar"
+          person: "Persona"
+          requested_day: "Dia sol·licitat"
+          requested_ago: "Demanat"
+          request: "Sol·licitud"
+          comments: "Comentaris"
+          hr_comments: "Comentaris de RRHH"
+          no_comments: "Sense comentari."
+          created_ago:
+            less_than_minute: "fa menys d'1 minut"
+            minute:
+              one: "fa 1 minut"
+              other: "fa %{count} minuts"
+            hour:
+              one: "fa 1 hora"
+              other: "fa %{count} hores"
+            day:
+              one: "fa 1 dia"
+              other: "fa %{count} dies"
+            month:
+              one: "fa 1 mes"
+              other: "fa %{count} mesos"
+            year:
+              one: "fa 1 any"
+              other: "fa %{count} anys"
       show:
         title: "Correcció"
         heading: "Correcció"
         back_to_list: "Tornar"
         request: "Petició"
-        validator: "Validador"
+        validator: "Validat per"
         not_reviewed: "Sense revisar"
         created_at: "Creada"
+        answered_at: "Resposta: %{date}"
+        sent_at: "Enviada: %{date}"
+        requested_ago: "Sol·licitada %{distance}"
+        created_by: "Creada per %{name} %{distance}"
+        reviewed_by:
+          approved: "Aprovada per %{name} %{distance}"
+          rejected: "Rebutjada per %{name} %{distance}"
         changes: "Canvis"
         no_changes: "Sense canvis."
+        comments: "Comentaris"
+        requester_comment: "Comentari de la persona"
+        validator_comment: "Comentari de RRHH"
+        no_comments: "Sense comentari."
       new:
         title: "Nova correcció"
         heading: "Nova correcció"
@@ -743,6 +799,16 @@ ca:
           rejected: "Aquest dia ja té una correcció rebutjada."
         create_and_approve: "Crear i aprovar correcció"
         creating_and_approving: "Creant i aprovant..."
+        approve_with_modifications: "Aprovar amb modificacions"
+        approving_with_modifications: "Aprovant amb modificacions..."
+        review_confirmation_title: "Confirmar correcció"
+        review_confirmation_confirm: "Procedir"
+        modified_review_confirmation: "Es rebutjarà aquesta petició i se'n crearà una altra amb els nous canvis. Procedir?"
+        unmodified_review_confirmation: "Vols aprovar aquesta correcció?"
+        employee_note: "Comentari de la persona"
+        no_employee_note: "Sense comentari."
+        hr_note: "Comentari de RRHH"
+        no_modified_changes: "Canvia algun fitxatge per aprovar amb modificacions."
         requested_swipes: "Fitxatges sol·licitats"
         entries: "Entrades"
         exits: "Sortides"
@@ -755,6 +821,7 @@ ca:
         note: "Comentari"
       review:
         approved: "Aprovada des de gestió."
+        approved_with_modifications: "Aprovada amb modificacions."
         rejected: "Rebutjada des de gestió."
 
   pwa:

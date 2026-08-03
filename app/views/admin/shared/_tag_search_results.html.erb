@@ -1,0 +1,20 @@
+<% if tags.any? %>
+  <% tags.each do |tag| %>
+    <% selected = tag.id.to_s == selected_tag_id.to_s %>
+    <button
+      type="button"
+      class="<%= class_names("list-group-item list-group-item-action admin-tag-search-result", "active": selected) %>"
+      data-action="tag-search#select"
+      data-tag-search-id-param="<%= tag.id %>"
+      data-tag-search-label-param="<%= tag.name %>"
+      data-tag-search-style-param="<%= admin_tag_name_style(tag) %>"
+      role="option"
+      aria-selected="<%= selected %>">
+      <%= render "admin/tags/label", tag: tag %>
+    </button>
+  <% end %>
+<% else %>
+  <div class="list-group-item text-body-secondary">
+    <%= t("admin.tag_search.no_results") %>
+  </div>
+<% end %>

@@ -3,23 +3,116 @@ require "test_helper"
 class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
   test "lists persisted corrections" do
     log_in_manager
-    employee = create_employee(first_name: "Laia", last_name: "Font")
-    employee.swipe_corrections.create!(
+    employee = create_employee(first_name: "Laia", last_name: "Font", national_id: valid_dni(42_200_006))
+    invalidated_swipe = employee.swipes.create!(
+      kind: :entry,
+      swipe_at: Time.zone.local(2026, 7, 4, 8, 40),
+      metadata: "employee_portal"
+    )
+    employee.swipes.create!(
+      kind: :exit,
+      swipe_at: Time.zone.local(2026, 7, 4, 13, 0),
+      metadata: "employee_portal"
+    )
+    pending_correction = employee.swipe_corrections.create!(
       requester: employee,
       status: :pending,
       day: Date.new(2026, 7, 4),
+      requester_comments: "Oblit de fitxatge d'entrada demo 13",
       details: {
-        "invalidated_swipe_ids" => [],
-        "requested_swipes" => [ { "kind" => "exit", "hour" => "17:00:00" } ]
+        "invalidated_swipe_ids" => [ invalidated_swipe.id ],
+        "requested_swipes" => [
+          { "kind" => "exit", "hour" => "17:00:00" },
+          { "kind" => "entry", "hour" => "08:05:00" }
+        ]
       }
+    )
+    validator = create_manager(
+      first_name: "Montserrat",
+      last_name: "Capdevila Soler",
+      email: "montserrat.capdevila@example.test"
+    )
+    approved_correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :approved,
+      validator: validator,
+      day: Date.new(2026, 7, 5),
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
     )
 
     get admin_corrections_path
 
     assert_response :success
     assert_match "Laia Font", response.body
-    assert_match "Correcció de fitxatge", response.body
-    assert_match "Sortida 17:00", response.body
+    assert_no_match "Correcció de fitxatge", response.body
+    assert_select "table thead tr th:first-child", text: "Estat"
+    assert_select "table thead tr th", text: "Persona"
+    assert_select "table thead tr th", text: "Validat per"
+    assert_select "table thead tr th", text: "Antiguitat", count: 0
+    assert_select ".admin-correction-person-name[title='Laia Font']", text: "Laia Font"
+    assert_select ".admin-correction-person-meta[title='#{employee.national_id}']", text: employee.national_id
+    assert_select ".admin-correction-validator-name[title='Montserrat Capdevila Soler']", text: "Montserrat Capdevila Soler"
+    assert_select ".admin-correction-change-summary[aria-label='Entrada 08:05 · Invalidar 08:40 · Sortida existent 13:00 · Sortida 17:00']"
+    assert_select ".admin-correction-change-item.is-requested.is-entry", text: "08:05"
+    assert_select ".admin-correction-change-item.is-invalidate.is-entry", text: "08:40"
+    assert_select ".admin-correction-change-item.is-existing.is-exit", text: "13:00"
+    assert_select ".admin-correction-change-item.is-requested.is-exit", text: "17:00"
+    assert_select ".admin-correction-change-item.is-existing .admin-correction-change-icon[aria-label='Sortida existent'][title='Sortida existent']"
+    assert_select ".admin-correction-change-separator", 0
+    assert_select ".badge.text-bg-success", text: "Aprovada"
+    pending_row = Capybara.string(css_select("tr.admin-correction-row[data-correction-day='2026-07-04']").first.to_html)
+    assert_equal [ "Veure", "Aprovar", "Rebutjar", "Editar" ],
+      pending_row.all(".admin-row-action").map { |action| action["aria-label"] }
+    approve_modal_id = "admin_correction_approve_modal_#{pending_correction.id}"
+    reject_modal_id = "admin_correction_reject_modal_#{pending_correction.id}"
+    assert pending_row.has_css?("button.admin-row-action.btn-outline-success[data-bs-toggle='modal'][data-bs-target='##{approve_modal_id}'][aria-label='Aprovar']")
+    assert pending_row.has_css?("button.admin-row-action.btn-outline-danger[data-bs-toggle='modal'][data-bs-target='##{reject_modal_id}'][aria-label='Rebutjar']")
+    assert pending_row.has_css?("a.admin-row-action[href='#{edit_admin_correction_path(pending_correction)}'][aria-label='Editar']")
+    assert_not pending_row.has_css?("form[action='#{approve_admin_correction_path(pending_correction)}']")
+    assert_not pending_row.has_css?("form[action='#{reject_admin_correction_path(pending_correction)}']")
+    assert_not pending_row.has_css?("a.admin-row-action[href='#{new_admin_correction_path(employee_id: employee.id, day: "2026-07-04")}'][aria-label='Nova correcció']")
+    assert_select "##{approve_modal_id}.modal.fade[aria-labelledby='#{approve_modal_id}_label']" do
+      assert_select "h2##{approve_modal_id}_label", text: "Aprovar correcció"
+      assert_select ".modal-body", text: /Vols aprovar la següent correcció horària/
+      assert_select "dt", text: "Persona"
+      assert_select ".admin-correction-review-person", text: /Laia Font/
+      assert_select ".admin-correction-review-person-meta", text: employee.national_id
+      assert_select "dt", text: "Dia sol·licitat"
+      assert_select "dd", text: "4 Juliol 2026"
+      assert_select "dt", text: "Sol·licitud"
+      assert_select ".admin-correction-change-item.is-requested.is-entry", text: "08:05"
+      assert_select ".admin-correction-change-item.is-invalidate.is-entry", text: "08:40"
+      assert_select ".admin-correction-change-item.is-existing.is-exit", text: "13:00"
+      assert_select ".admin-correction-change-item.is-requested.is-exit", text: "17:00"
+      assert_select "dt", text: "Comentaris"
+      assert_select "dd", text: /Oblit de fitxatge d'entrada demo 13/
+      assert_select "dt", text: "Demanat"
+      assert_select ".admin-correction-review-age", text: /fa menys d'1 minut/
+      modal_text = css_select("##{approve_modal_id} .modal-body").first.text
+      assert_operator modal_text.index("Comentaris"), :<, modal_text.index("Demanat")
+      assert_select "form[action='#{approve_admin_correction_path(pending_correction)}'][method='post']" do
+        assert_select "label[for='#{approve_modal_id}_validator_comments']", text: "Comentaris de RRHH"
+        assert_select "textarea##{approve_modal_id}_validator_comments[name='validator_comments']"
+        assert_select "button[type='submit'][data-submitting-label='Aprovant...']", text: "Aprovar"
+      end
+    end
+    assert_select "##{reject_modal_id}.modal.fade[aria-labelledby='#{reject_modal_id}_label']" do
+      assert_select "h2##{reject_modal_id}_label", text: "Rebutjar correcció"
+      assert_select ".modal-body", text: /Vols rebutjar la següent correcció horària/
+      assert_select "form[action='#{reject_admin_correction_path(pending_correction)}'][method='post']" do
+        assert_select "label[for='#{reject_modal_id}_validator_comments']", text: "Comentaris de RRHH"
+        assert_select "textarea##{reject_modal_id}_validator_comments[name='validator_comments']"
+        assert_select "button[type='submit'][data-submitting-label='Rebutjant...']", text: "Rebutjar"
+      end
+    end
+    reviewed_row = Capybara.string(css_select("tr.admin-correction-row[data-correction-day='2026-07-05']").first.to_html)
+    assert_equal [ "Veure", "Nova correcció" ],
+      reviewed_row.all(".admin-row-action").map { |action| action["aria-label"] }
+    assert reviewed_row.has_css?("a.admin-row-action[href='#{admin_correction_path(approved_correction)}'][aria-label='Veure']")
+    assert reviewed_row.has_css?("a.admin-row-action[href='#{new_admin_correction_path(employee_id: employee.id, day: "2026-07-05")}'][aria-label='Nova correcció']")
+    assert_not reviewed_row.has_css?("a.admin-row-action[href='#{edit_admin_correction_path(approved_correction)}'][aria-label='Editar']")
+    assert_not reviewed_row.has_css?("form[action='#{approve_admin_correction_path(approved_correction)}']")
+    assert_not reviewed_row.has_css?("form[action='#{reject_admin_correction_path(approved_correction)}']")
     assert_select "[data-controller='list-loading']"
     assert_select "h2", text: "Filtres", count: 0
     assert_select ".admin-result-count[data-list-loading-target='results']",
@@ -27,25 +120,36 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".text-center .admin-result-count",
       text: "Mostrant 1-#{[ SwipeCorrection.count, 20 ].min} de #{SwipeCorrection.count}"
     assert_select "form.admin-corrections-filter-form[action='#{admin_corrections_path}'][method='get']" do
-      assert_select ".admin-employee-search[data-employee-search-url-value='#{admin_employee_search_path}']" do
-        assert_select "input[type='hidden'][name='employee_id'][value='']"
-        assert_select "input[name='employee_query'][placeholder='Cerca per nom, DNI, correu o telèfon']"
-        assert_select "button[type='button'][aria-label='Tots els treballadors'][data-action='employee-search#clear'] svg.icon"
+      assert_select ".admin-corrections-primary-filters" do
+        assert_select ".admin-corrections-employee-filter .admin-employee-search[data-employee-search-url-value='#{admin_employee_search_path}']" do
+          assert_select "input[type='hidden'][name='employee_id'][value='']"
+          assert_select "input[name='employee_query'][placeholder='Cerca per nom, DNI, correu o telèfon']"
+          assert_select "button[type='button'][aria-label='Totes les persones'][data-action='employee-search#clear'] svg.icon"
+        end
+        assert_select ".admin-corrections-tag-filter .admin-tag-search[data-tag-search-url-value='#{admin_tag_search_path}']" do
+          assert_select "input[type='hidden'][name='tag_id'][value='']"
+          assert_select "input[name='tag_query'][placeholder='Cerca una etiqueta']"
+          assert_select "button[type='button'][aria-label='Totes les etiquetes'][data-action='tag-search#clear'] svg.icon"
+        end
       end
       assert_select "select[name='employee_id']", count: 0
+      assert_select "select[name='tag_id']", count: 0
       assert_select "select[name='status']", count: 0
       assert_select "input[type='radio'][name='status'][value=''][checked='checked'][autocomplete='off'] + label", text: "Totes"
       assert_select "input[type='radio'][name='status'][value='pending'][autocomplete='off'] + label svg.admin-badge-icon + span", text: "Pendents"
       assert_select "input[type='radio'][name='status'][value='approved'][autocomplete='off'] + label svg.admin-badge-icon + span", text: "Aprovades"
       assert_select "input[type='radio'][name='status'][value='rejected'][autocomplete='off'] + label svg.admin-badge-icon + span", text: "Rebutjades"
-      assert_select ".admin-corrections-period-label:not(.input-group-text)", text: /Correccions de dies en/
-      assert_select ".admin-corrections-period-label span[aria-hidden='true']", text: "·"
-      assert_select "select[name='month'] option[selected][value='']", text: "Tots els mesos"
-      assert_select "select[name='year'] option[selected][value='']", text: "Tots els anys"
+      assert_select ".admin-corrections-period-filter" do
+        assert_select ".admin-corrections-period-label:not(.input-group-text)", text: /Correccions de dies en/
+        assert_select ".admin-corrections-period-label span[aria-hidden='true']", 0
+        assert_select "select[name='month'] option[selected][value='']", text: "Tots els mesos"
+        assert_select "select[name='year'] option[selected][value='']", text: "Tots els anys"
+      end
       assert_select "button[type='submit'][data-submitting-label='Filtrant...']", count: 0
     end
-    assert_select "button.btn.admin-row-action[aria-label='Aprovar'][data-submitting-label='Aprovant...'] svg.icon"
-    assert_select "button.btn.admin-row-action[aria-label='Rebutjar'][data-submitting-label='Rebutjant...'] svg.icon"
+    assert_select "hr.admin-filters-divider"
+    assert_select "button.btn.admin-row-action[aria-label='Aprovar'][data-bs-toggle='modal'] svg.icon"
+    assert_select "button.btn.admin-row-action[aria-label='Rebutjar'][data-bs-toggle='modal'] svg.icon"
     assert_select ".badge.text-bg-warning svg.admin-badge-icon"
   end
 
@@ -85,6 +189,39 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type='radio'][name='status'][value='pending'][checked='checked'] + label", text: "Pendents"
     assert_select "select[name='month'] option[selected][value='7']"
     assert_select "select[name='year'] option[selected][value='2026']"
+  end
+
+  test "filters corrections by active tag" do
+    log_in_manager
+    tag = Tag.create!(name: "Producció", color: "#16a34a", active: true)
+    inactive_tag = Tag.create!(name: "Oficina", color: "#2563eb", active: false)
+    visible_employee = create_employee(first_name: "Ada", last_name: "Soler", national_id: valid_dni(42_200_011))
+    second_visible_employee = create_employee(first_name: "Jana", last_name: "Prat", national_id: valid_dni(42_200_012))
+    hidden_employee = create_employee(first_name: "Ona", last_name: "Serra", national_id: valid_dni(42_200_013))
+    inactive_tag_employee = create_employee(first_name: "Nil", last_name: "Font", national_id: valid_dni(42_200_014))
+    visible_employee.tags << tag
+    second_visible_employee.tags << tag
+    inactive_tag_employee.tags << inactive_tag
+    visible_employee.swipe_corrections.create!(requester: visible_employee, status: :pending, day: Date.new(2026, 7, 4))
+    second_visible_employee.swipe_corrections.create!(requester: second_visible_employee, status: :approved, day: Date.new(2026, 7, 5))
+    hidden_employee.swipe_corrections.create!(requester: hidden_employee, status: :pending, day: Date.new(2026, 7, 6))
+    inactive_tag_employee.swipe_corrections.create!(requester: inactive_tag_employee, status: :pending, day: Date.new(2026, 7, 7))
+
+    get admin_corrections_path, params: { tag_id: tag.id }
+
+    assert_response :success
+    row_text = css_select("tbody tr").map { |row| row.text.squish }.join(" ")
+    assert_match "Ada Soler", row_text
+    assert_match "Jana Prat", row_text
+    assert_no_match "Ona Serra", row_text
+    assert_no_match "Nil Font", row_text
+    assert_select "input[name='tag_id'][value='#{tag.id}']"
+    assert_select "input[name='tag_query'][value='Producció']"
+    assert_select ".admin-tag-search-field.has-selected-tag" do
+      assert_select ".admin-tag-search-selection.admin-tag-label[style*='#16a34a']" do
+        assert_select "svg.admin-tag-label-icon + span", text: "Producció"
+      end
+    end
   end
 
   test "filters corrections by month across all years" do
@@ -292,18 +429,210 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     correction = employee.swipe_corrections.create!(
       requester: employee,
       status: :pending,
-      day: Date.new(2026, 7, 4)
+      day: Date.new(2026, 7, 4),
+      requester_comments: "Oblit de fitxatge",
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+      }
     )
 
     get edit_admin_correction_path(correction)
 
     assert_response :success
     assert_select "form[data-controller='correction-form'][data-correction-form-update-url-value='false']"
+    form = css_select("form[data-controller='correction-form']").first
+    assert_includes form["data-action"], "submit->correction-form#confirmReviewSubmission"
+    assert_equal [], JSON.parse(form["data-correction-form-initial-invalidated-swipe-ids-value"])
+    assert_equal [ { "kind" => "entry", "hour" => "08:05" } ],
+      JSON.parse(form["data-correction-form-initial-requested-swipes-value"])
+    assert_equal "Vols aprovar aquesta correcció?", form["data-correction-form-unmodified-review-message-value"]
+    assert_equal "Es rebutjarà aquesta petició i se'n crearà una altra amb els nous canvis. Procedir?",
+      form["data-correction-form-modified-review-message-value"]
+    modal_id = "correction_review_confirmation_modal_#{correction.id}"
+    assert_select "button[type='button'][data-action='correction-form#prepareReviewConfirmation'][data-bs-toggle='modal'][data-bs-target='##{modal_id}']",
+      text: "Aprovar amb modificacions"
+    assert_select "button[type='submit'][data-submitting-label='Aprovant amb modificacions...']", text: "Aprovar amb modificacions", count: 0
+    assert_select "##{modal_id}.modal.fade[aria-labelledby='#{modal_id}_label']" do
+      assert_select "h2##{modal_id}_label", text: "Confirmar correcció"
+      assert_select "p[data-correction-form-target='reviewConfirmationBody']", text: "Vols aprovar aquesta correcció?"
+      assert_select "button[type='submit'][data-correction-form-confirmed='true'][data-submitting-label='Aprovant amb modificacions...']", text: "Procedir"
+    end
     assert_select "input[type='hidden'][name='swipe_correction[employee_id]'][value='#{employee.id}']"
     assert_select "input[name='employee_query'][value='Clara Pons'][disabled]"
     assert_select "button[data-action='employee-search#clear']", 0
     assert_select "input[type='date'][name='swipe_correction[day]'][value='2026-07-04'][disabled]"
     assert_select "input[type='hidden'][name='swipe_correction[day]'][value='2026-07-04'][data-correction-form-target='date']"
+    assert_select "textarea[name='swipe_correction[requester_comments]'][disabled].admin-correction-readonly-comment", text: "Oblit de fitxatge"
+    assert_select "textarea[name='swipe_correction[validator_comments]'][data-correction-form-target='comment']"
+  end
+
+  test "shows a reviewed correction with status banner details and full change summary" do
+    log_in_manager
+    employee = create_employee(first_name: "Aina", last_name: "Martinez Vidal", national_id: valid_dni(42_200_007))
+    invalidated_swipe = employee.swipes.create!(
+      kind: :entry,
+      swipe_at: Time.zone.local(2026, 7, 4, 8, 40),
+      metadata: "employee_portal",
+      removed: true
+    )
+    employee.swipes.create!(
+      kind: :exit,
+      swipe_at: Time.zone.local(2026, 7, 4, 13, 0),
+      metadata: "employee_portal"
+    )
+    validator = create_manager(
+      first_name: "Marta",
+      last_name: "Serra",
+      email: "marta.serra@example.test"
+    )
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :approved,
+      validator: validator,
+      day: Date.new(2026, 7, 4),
+      requester_comments: "Em vaig equivocar.",
+      validator_comments: "Aprovat per RRHH.",
+      details: {
+        "invalidated_swipe_ids" => [ invalidated_swipe.id ],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+      }
+    )
+
+    get admin_correction_path(correction)
+
+    assert_response :success
+    assert_select "a.btn.border-0[href='#{admin_corrections_path}']", text: "Tornar"
+    assert_select ".admin-correction-status-banner.is-approved" do
+      assert_select ".admin-correction-status-banner-copy strong", text: "Aprovada"
+      assert_select ".admin-correction-status-banner-copy small", text: "Fa menys d'1 minut"
+      assert_select ".admin-correction-status-banner-actions a[href='#{new_admin_correction_path(employee_id: employee.id, day: "2026-07-04")}']", text: "Nova correcció"
+      assert_select "a[href='#{edit_admin_correction_path(correction)}']", 0
+      assert_select "button[data-bs-toggle='modal']", 0
+    end
+    assert_no_match "Resposta:", response.body
+    assert_select "dl.admin-correction-show-details", 0
+    assert_select ".card .card-body dt", count: 0
+    assert_select ".admin-correction-show-summary-title", text: /4 Juliol 2026/
+    assert_select ".admin-correction-show-summary-title", text: /Aina Martinez Vidal/
+    assert_select ".admin-correction-show-summary-separator", text: "-"
+    assert_select ".admin-correction-show-summary-dni", text: /- #{employee.national_id}/
+    assert_select ".admin-correction-show-summary-dni em", text: employee.national_id
+    assert_select ".admin-correction-show-meta p", text: "Creada per Aina Martinez Vidal fa menys d'1 minut"
+    assert_select ".admin-correction-show-meta p", text: "Aprovada per Marta Serra fa menys d'1 minut"
+    assert_select ".col-xl-4", 0
+    assert_select ".admin-correction-show-section h2", text: "Canvis"
+    assert_select ".admin-correction-change-summary[aria-label='Entrada 08:05 · Invalidar 08:40 · Sortida existent 13:00']"
+    assert_select ".admin-correction-change-item.is-requested.is-entry", text: "08:05"
+    assert_select ".admin-correction-change-item.is-invalidate.is-entry", text: "08:40"
+    assert_select ".admin-correction-change-item.is-existing.is-exit", text: "13:00"
+    assert_select "textarea#admin_correction_requester_comments[disabled].admin-correction-readonly-comment", text: "Em vaig equivocar."
+    assert_select "textarea#admin_correction_validator_comments[disabled].admin-correction-readonly-comment", text: "Aprovat per RRHH."
+    assert_select "a[href='#{edit_admin_correction_path(correction)}']", 0
+  end
+
+  test "show pending correction puts review and edit actions in the status banner" do
+    log_in_manager
+    employee = create_employee(first_name: "Clara", last_name: "Pons")
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 4),
+      validator_comments: "Cal revisar-ho amb administració."
+    )
+
+    get admin_correction_path(correction)
+
+    assert_response :success
+    assert_select "[data-controller='correction-review-comments']"
+    approve_modal_id = "admin_correction_approve_modal_#{correction.id}"
+    reject_modal_id = "admin_correction_reject_modal_#{correction.id}"
+    assert_select ".admin-correction-status-banner.is-pending" do
+      assert_select ".admin-correction-status-banner-copy strong", text: "Pendent"
+      assert_select ".admin-correction-status-banner-copy small", text: "Sol·licitada fa menys d'1 minut"
+      assert_select "button[data-action='correction-review-comments#copyToModal'][data-bs-toggle='modal'][data-bs-target='##{approve_modal_id}']", text: "Aprovar"
+      assert_select "button[data-action='correction-review-comments#copyToModal'][data-bs-toggle='modal'][data-bs-target='##{reject_modal_id}']", text: "Rebutjar"
+      assert_select "a[href='#{edit_admin_correction_path(correction)}']", text: "Editar"
+    end
+    assert_no_match "Enviada:", response.body
+    pending_banner = Capybara.string(css_select(".admin-correction-status-banner.is-pending").first.to_html)
+    assert_not pending_banner.has_css?("a[href='#{new_admin_correction_path(employee_id: employee.id, day: "2026-07-04")}']")
+    assert_select ".card .card-body dt", count: 0
+    assert_select ".admin-correction-show-summary-title", text: /4 Juliol 2026/
+    assert_select ".admin-correction-show-summary-title", text: /Clara Pons/
+    assert_select ".admin-correction-show-meta p", text: "Creada per Clara Pons fa menys d'1 minut"
+    assert_select ".admin-correction-show-meta p", text: /Aprovada per|Rebutjada per/, count: 0
+    assert_select "textarea#admin_correction_validator_comments[data-correction-review-comments-target='source']", text: "Cal revisar-ho amb administració."
+    assert_select "textarea#admin_correction_validator_comments[disabled]", 0
+    assert_no_match "Sense revisar", response.body
+    assert_select "##{approve_modal_id}.modal.fade textarea[name='validator_comments']", text: "Cal revisar-ho amb administració."
+    assert_select "##{reject_modal_id}.modal.fade textarea[name='validator_comments']", text: "Cal revisar-ho amb administració."
+    assert_select "body > .d-flex.flex-wrap.gap-2.mt-4", 0
+  end
+
+  test "show rejected correction uses feminine label and capitalized relative review age" do
+    manager = create_manager(email: "rejected.validator@example.test")
+    log_in_manager(manager)
+    employee = create_employee
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :rejected,
+      validator: manager,
+      day: Date.new(2026, 7, 4)
+    )
+
+    get admin_correction_path(correction)
+
+    assert_response :success
+    assert_select ".admin-correction-status-banner.is-rejected" do
+      assert_select ".admin-correction-status-banner-copy strong", text: "Rebutjada"
+      assert_select ".admin-correction-status-banner-copy small", text: "Fa menys d'1 minut"
+    end
+    assert_no_match "Resposta:", response.body
+    assert_select ".admin-correction-show-meta p", text: "Creada per Ada Soler fa menys d'1 minut"
+    assert_select ".admin-correction-show-meta p", text: "Rebutjada per Laia Riera fa menys d'1 minut"
+  end
+
+  test "does not edit a reviewed correction" do
+    log_in_manager
+    employee = create_employee
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :approved,
+      day: Date.new(2026, 7, 4)
+    )
+
+    get edit_admin_correction_path(correction)
+
+    assert_redirected_to admin_correction_path(correction)
+    assert_equal I18n.t("admin.flash.correction_already_reviewed"), flash[:alert]
+  end
+
+  test "does not update a reviewed correction" do
+    log_in_manager
+    employee = create_employee
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :rejected,
+      day: Date.new(2026, 7, 4),
+      requester_comments: "Original",
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
+    )
+
+    patch admin_correction_path(correction), params: {
+      swipe_correction: {
+        requester_comments: "Canviat",
+        requested_swipes: [
+          { kind: "entry", hour: "08:00" }
+        ]
+      }
+    }
+
+    assert_redirected_to admin_correction_path(correction)
+    assert_equal I18n.t("admin.flash.correction_already_reviewed"), flash[:alert]
+    correction.reload
+    assert_equal "Original", correction.requester_comments
+    assert_equal [], correction.details.fetch("requested_swipes")
   end
 
   test "returns day swipes for selected admin correction employee and day" do
@@ -497,36 +826,124 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert employee.swipes.where(forged: true, metadata: "admin_correction:#{correction.id}", kind: "exit", swipe_at: Time.zone.local(2026, 7, 4, 16, 30)).exists?
   end
 
-  test "updates a correction and selected swipes to invalidate" do
-    log_in_manager
+  test "approves a pending correction with modifications without overwriting the original request" do
+    manager = create_manager
+    log_in_manager(manager)
     employee = create_employee
     other_employee = create_employee
     swipe = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 4, 8, 45), metadata: "employee_portal")
     correction = employee.swipe_corrections.create!(
       requester: employee,
       status: :pending,
-      day: Date.new(2026, 7, 4)
+      day: Date.new(2026, 7, 4),
+      requester_comments: "Original employee note",
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:10:00" } ]
+      }
+    )
+
+    assert_difference "SwipeCorrection.count", 1 do
+      assert_difference -> { employee.swipes.count }, 1 do
+        patch admin_correction_path(correction), params: {
+          swipe_correction: {
+            employee_id: other_employee.id,
+            day: "2026-07-05",
+            validator_comments: "Hora ajustada per RRHH",
+            invalidated_swipe_ids: [ swipe.id ],
+            requested_swipes: {
+              "0" => { kind: "entry", hour: "08:00" }
+            }
+          }
+        }
+      end
+    end
+
+    correction.reload
+    replacement = SwipeCorrection.find_by!(requester: manager, requester_comments: "Hora ajustada per RRHH")
+    assert_redirected_to admin_correction_path(replacement)
+    assert_predicate correction, :rejected?
+    assert_equal manager, correction.validator
+    assert_equal I18n.t("admin.corrections.review.approved_with_modifications"), correction.validator_comments
+    assert_equal "Original employee note", correction.requester_comments
+    assert_equal [ { "kind" => "entry", "hour" => "08:10:00" } ], correction.details.fetch("requested_swipes")
+    assert_predicate replacement, :approved?
+    assert_equal manager, replacement.validator
+    assert_equal employee, replacement.employee
+    assert_equal Date.new(2026, 7, 4), replacement.day
+    assert_equal [ swipe.id.to_s ], replacement.details.fetch("invalidated_swipe_ids")
+    assert_equal [ { "kind" => "entry", "hour" => "08:00:00" } ], replacement.details.fetch("requested_swipes")
+    assert_predicate swipe.reload, :removed?
+    assert employee.swipes.where(forged: true, metadata: "admin_correction:#{replacement.id}", kind: "entry", swipe_at: Time.zone.local(2026, 7, 4, 8, 0)).exists?
+  end
+
+  test "approves the original pending correction from edit when hours are unchanged" do
+    manager = create_manager
+    log_in_manager(manager)
+    employee = create_employee
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 4),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:10:00" } ]
+      }
+    )
+
+    assert_no_difference "SwipeCorrection.count" do
+      assert_difference -> { employee.swipes.count }, 1 do
+        patch admin_correction_path(correction), params: {
+          swipe_correction: {
+            validator_comments: "Només comentari",
+            requested_swipes: {
+              "0" => { kind: "entry", hour: "08:10" }
+            }
+          }
+        }
+      end
+    end
+
+    assert_redirected_to admin_correction_path(correction)
+    assert_equal I18n.t("admin.flash.correction_approved"), flash[:notice]
+    correction.reload
+    assert_predicate correction, :approved?
+    assert_equal manager, correction.validator
+    assert_equal "Només comentari", correction.validator_comments
+    assert_equal [ { "kind" => "entry", "hour" => "08:10:00" } ], correction.details.fetch("requested_swipes")
+    assert_not SwipeCorrection.where(requester: manager, requester_comments: "Només comentari").exists?
+    assert employee.swipes.where(forged: true, metadata: "admin_correction:#{correction.id}", kind: "entry", swipe_at: Time.zone.local(2026, 7, 4, 8, 10)).exists?
+  end
+
+  test "update keeps employee and day from the original pending correction" do
+    manager = create_manager
+    log_in_manager(manager)
+    employee = create_employee
+    other_employee = create_employee
+    swipe = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 4, 8, 45), metadata: "employee_portal")
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 4),
+      details: { "invalidated_swipe_ids" => [], "requested_swipes" => [] }
     )
 
     patch admin_correction_path(correction), params: {
       swipe_correction: {
         employee_id: other_employee.id,
         day: "2026-07-05",
-        requester_comments: "Revisat",
-        invalidated_swipe_ids: [ swipe.id ],
-        requested_swipes: {
-          "0" => { kind: "entry", hour: "08:00" }
-        }
+        validator_comments: "Manté identitat",
+        invalidated_swipe_ids: [ swipe.id ]
       }
     }
 
-    assert_redirected_to admin_correction_path(correction)
-    correction.reload
-    assert_equal "Revisat", correction.requester_comments
+    replacement = SwipeCorrection.find_by!(requester: manager, requester_comments: "Manté identitat")
+    assert_redirected_to admin_correction_path(replacement)
     assert_equal employee, correction.employee
     assert_equal Date.new(2026, 7, 4), correction.day
-    assert_equal [ swipe.id.to_s ], correction.details.fetch("invalidated_swipe_ids")
-    assert_equal [ { "kind" => "entry", "hour" => "08:00:00" } ], correction.details.fetch("requested_swipes")
+    assert_equal employee, replacement.employee
+    assert_equal Date.new(2026, 7, 4), replacement.day
+    assert_equal [ swipe.id.to_s ], replacement.details.fetch("invalidated_swipe_ids")
   end
 
   test "approves a pending correction and applies requested swipes" do
@@ -548,13 +965,14 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     )
 
     assert_difference "employee.swipes.count", 2 do
-      post approve_admin_correction_path(correction)
+      post approve_admin_correction_path(correction), params: { validator_comments: "Revisat i correcte." }
     end
 
     assert_redirected_to admin_corrections_path
     correction.reload
     assert_predicate correction, :approved?
     assert_equal manager, correction.validator
+    assert_equal "Revisat i correcte.", correction.validator_comments
     assert_predicate old_swipe.reload, :removed?
     assert employee.swipes.where(forged: true, metadata: "admin_correction:#{correction.id}").exists?(kind: "exit")
     assert employee.swipes.where(swipe_at: Time.zone.local(2026, 7, 4, 17, 0)).exists?
@@ -572,13 +990,14 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     )
 
     assert_no_difference "employee.swipes.count" do
-      post reject_admin_correction_path(correction)
+      post reject_admin_correction_path(correction), params: { validator_comments: "No s'accepta el canvi." }
     end
 
     assert_redirected_to admin_corrections_path
     correction.reload
     assert_predicate correction, :rejected?
     assert_equal manager, correction.validator
+    assert_equal "No s'accepta el canvi.", correction.validator_comments
   end
 
   test "review redirects back to referrer when present" do
