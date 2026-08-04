@@ -36,6 +36,14 @@
           action: "input->tag-multi-search#search focus->tag-multi-search#search keydown->tag-multi-search#keydown"
         } %>
     </div>
+    <%= link_to admin_tags_path(open: "new"),
+      class: "btn btn-outline-secondary admin-tag-multi-search-create",
+      target: "_blank",
+      rel: "noopener",
+      title: t("admin.tags.index.new_tag"),
+      aria: { label: t("admin.tags.index.new_tag") } do %>
+      <%= icon "plus" %>
+    <% end %>
   </div>
 
   <div

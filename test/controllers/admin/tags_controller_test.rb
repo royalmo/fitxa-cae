@@ -119,6 +119,16 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "opens new tag form from query parameter" do
+    get admin_tags_path, params: { open: "new" }
+
+    assert_response :success
+    assert_select "#tag_form_modal_new.modal.fade[data-bootstrap-modal-show-value='true']" do
+      assert_select "h2#tag_form_modal_new_label", text: "Nova etiqueta"
+      assert_select "form.admin-tag-form[action='#{admin_tags_path}'][method='post']"
+    end
+  end
+
   test "creates and updates a tag without deleting it" do
     assert_difference "Tag.count", 1 do
       post admin_tags_path, params: {

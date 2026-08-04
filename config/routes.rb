@@ -75,7 +75,9 @@ Rails.application.routes.draw do
         post "bulk/tags/run" => "employee_bulk_actions#run_tags", as: :run_bulk_tags
       end
     end
-    resource :import, controller: "imports", only: %i[new create]
+    resource :import, controller: "imports", only: %i[new create] do
+      post :simulate
+    end
     resources :swipes, only: %i[index]
     resources :calendars, only: %i[index]
     resources :tags, only: %i[index create update] do

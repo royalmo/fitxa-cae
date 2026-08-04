@@ -4,6 +4,7 @@ class Admin::TagsController < Admin::BaseController
   def index
     load_index_tags
     @new_tag ||= Tag.new(active: true, color: "#e30613")
+    @open_tag_form = @new_tag if params[:open] == "new"
   end
 
   def create

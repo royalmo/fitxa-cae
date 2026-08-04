@@ -185,6 +185,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
 
   test "renders new employee form controls" do
     Tag.create!(name: "office", active: true, color: "#2563eb")
+    new_tag_path = admin_tags_path(open: "new")
 
     get new_admin_employee_path
 
@@ -198,6 +199,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type='checkbox'][name='employee[tag_ids][]']", count: 0
     assert_select ".admin-tag-multi-search[data-controller='tag-multi-search'][data-tag-multi-search-url-value='#{admin_tag_search_path}']" do
       assert_select "input.admin-tag-multi-search-input[name='employee_tag_query'][placeholder='Cerca una etiqueta'][role='combobox']"
+      assert_select "a.admin-tag-multi-search-create[href='#{new_tag_path}'][target='_blank'][rel='noopener'][aria-label='Nova etiqueta'] svg.icon"
       assert_select "#admin-employee-tag-results.admin-tag-multi-search-results[role='listbox']"
       assert_select ".admin-tag-multi-search-selections > .admin-tag-multi-search-selection", count: 0
       assert_select "template[data-tag-multi-search-target='selectionTemplate']"

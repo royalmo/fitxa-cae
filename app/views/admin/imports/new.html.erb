@@ -1,29 +1,224 @@
 <% content_for :title, t(".title") %>
 
-<div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "upload", class: "text-primary" %>
-  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2 min-w-0">
+    <%= icon "upload", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+
+  <%= link_to admin_employees_path, class: "btn btn-outline-secondary border-0 d-inline-flex align-items-center gap-2" do %>
+    <%= icon "arrow-left" %>
+    <span><%= t("admin.employee_bulk_actions.back") %></span>
+  <% end %>
 </div>
 
-<section class="card shadow-sm">
-  <div class="card-body">
-    <%= form_with url: admin_import_path do |form| %>
-      <div class="mb-3">
-        <%= form.label :file, t(".file"), class: "form-label" %>
-        <%= form.file_field :file, accept: ".csv", class: "form-control" %>
-        <div class="form-text"><%= t(".columns") %></div>
-      </div>
+<section
+  class="admin-bulk-action"
+  data-controller="bulk-import"
+  data-bulk-import-simulate-url-value="<%= simulate_admin_import_path %>"
+  data-bulk-import-confirm-modal-id-value="adminImportConfirmModal"
+  data-bulk-import-request-error-label-value="<%= t("admin.imports.errors.request_error") %>"
+  data-bulk-import-missing-data-label-value="<%= t("admin.imports.new.missing_data") %>"
+  data-bulk-import-run-requires-simulation-label-value="<%= t("admin.imports.new.run_requires_simulation") %>"
+  data-bulk-import-run-no-affected-label-value="<%= t("admin.imports.errors.no_importable_people") %>"
+  data-bulk-import-confirm-created-body-value="<%= t("admin.imports.new.confirm_created_body", count: "%{count}") %>"
+  data-bulk-import-confirm-created-and-existing-tags-body-value="<%= t("admin.imports.new.confirm_created_and_existing_tags_body", created_count: "%{created_count}", tagged_count: "%{tagged_count}") %>"
+  data-bulk-import-confirm-existing-tags-body-value="<%= t("admin.imports.new.confirm_existing_tags_body", tagged_count: "%{tagged_count}") %>"
+  data-bulk-import-format-label-value="<%= t("admin.imports.new.format") %>"
+  data-bulk-import-second-surname-format-label-value="<%= t("admin.imports.new.second_surname_format") %>"
+  data-bulk-import-pasted-data-placeholder-value="<%= t("admin.imports.new.pasted_data_placeholder") %>"
+  data-bulk-import-second-surname-pasted-data-placeholder-value="<%= t("admin.imports.new.second_surname_pasted_data_placeholder") %>"
+  data-bulk-import-template-content-value="<%= t("admin.imports.new.template_content") %>"
+  data-bulk-import-second-surname-template-content-value="<%= t("admin.imports.new.second_surname_template_content") %>">
+  <%= form_with url: admin_import_path, method: :post, scope: :import, multipart: true do |form| %>
+    <%= form.hidden_field :source, value: "paste", data: { bulk_import_target: "source" } %>
 
-      <div class="d-flex flex-wrap gap-2">
-        <%= link_to admin_employees_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
-          <%= icon "x" %>
-          <span><%= t("shared.cancel") %></span>
-        <% end %>
-        <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.importing") } do %>
-          <%= icon "upload" %>
-          <span><%= t(".submit") %></span>
-        <% end %>
+    <div class="admin-bulk-action-layout">
+      <section class="card shadow-sm admin-bulk-action-form-card">
+        <div class="card-body admin-bulk-action-form">
+          <fieldset class="mb-4">
+            <legend class="form-label small text-body-secondary mb-2"><%= t(".tags") %></legend>
+            <div data-bulk-import-target="tagSelector" data-action="change->bulk-import#tagsChanged">
+              <%= render "admin/shared/tag_multi_search",
+                form: form,
+                field: :tag_ids,
+                query_field: :import_tag_query,
+                selected_tags: [],
+                placeholder: t("admin.shared.tag_search.placeholder"),
+                results_id: "admin-import-tag-results" %>
+            </div>
+          </fieldset>
+
+          <ul class="nav nav-tabs" id="adminImportTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link active"
+                id="admin-import-paste-tab"
+                type="button"
+                role="tab"
+                data-bs-toggle="tab"
+                data-bs-target="#admin-import-paste-pane"
+                data-bulk-import-source-param="paste"
+                data-action="bulk-import#selectSource"
+                aria-controls="admin-import-paste-pane"
+                aria-selected="true">
+                <%= t(".paste_tab") %>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="admin-import-file-tab"
+                type="button"
+                role="tab"
+                data-bs-toggle="tab"
+                data-bs-target="#admin-import-file-pane"
+                data-bulk-import-source-param="file"
+                data-action="bulk-import#selectSource"
+                aria-controls="admin-import-file-pane"
+                aria-selected="false">
+                <%= t(".file_tab") %>
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content border border-top-0 rounded-bottom p-3 mb-3">
+            <div class="tab-pane fade show active" id="admin-import-paste-pane" role="tabpanel" aria-labelledby="admin-import-paste-tab" tabindex="0">
+              <%= form.label :pasted_data, t(".pasted_data_hint"), class: "form-label text-body-secondary" %>
+              <%= form.text_area :pasted_data,
+                class: "form-control admin-import-data-textarea",
+                rows: 10,
+                placeholder: t(".pasted_data_placeholder"),
+                data: {
+                  bulk_import_target: "pastedData",
+                  action: "input->bulk-import#input change->bulk-import#input"
+                } %>
+            </div>
+
+            <div class="tab-pane fade" id="admin-import-file-pane" role="tabpanel" aria-labelledby="admin-import-file-tab" tabindex="0">
+              <%= form.file_field :file,
+                accept: ".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain",
+                class: "form-control",
+                aria: { label: t(".file") },
+                data: {
+                  bulk_import_target: "fileInput",
+                  action: "change->bulk-import#input"
+                } %>
+              <div class="form-text">
+                <%= link_to t(".download_template"),
+                  "#",
+                  download: "persones_import_template.csv",
+                  data: { bulk_import_target: "templateLink" } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-check mb-2">
+            <%= form.check_box :allow_second_surname,
+              class: "form-check-input",
+              data: {
+                bulk_import_target: "allowSecondSurname",
+                action: "change->bulk-import#secondSurnameChanged"
+              } %>
+            <%= form.label :allow_second_surname, t(".allow_second_surname"), class: "form-check-label" %>
+          </div>
+
+          <p class="text-body-secondary small mb-4" data-bulk-import-target="formatText"><%= t(".format") %></p>
+
+          <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2 pe-5" role="alert" data-bulk-import-target="error" hidden>
+            <%= icon "triangle-alert" %>
+            <span data-bulk-import-target="errorText"></span>
+            <button
+              type="button"
+              class="btn-close"
+              aria-label="<%= t("shared.dismiss_flash") %>"
+              data-action="bulk-import#dismissError"></button>
+          </div>
+
+          <div class="admin-bulk-action-footer d-flex flex-wrap align-items-center gap-2">
+            <span
+              class="d-inline-block"
+              data-bulk-import-target="simulateTooltip"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top">
+              <button
+                type="button"
+                class="btn btn-primary d-inline-flex align-items-center gap-2"
+                disabled
+                data-bulk-import-target="simulateButton"
+                data-action="bulk-import#simulate">
+                <%= icon "calculator" %>
+                <span><%= t(".simulate") %></span>
+              </button>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="card shadow-sm admin-bulk-simulation-results is-disabled"
+        aria-disabled="true"
+        data-bulk-import-target="results">
+        <div class="card-body admin-bulk-simulation-body">
+          <h2 class="h5 mb-3"><%= t(".simulation_title") %></h2>
+          <dl class="admin-bulk-simulation-kpis mb-3">
+            <div>
+              <dt><%= t(".importable_ratio") %></dt>
+              <dd data-bulk-import-target="importableRatio">0/0</dd>
+            </div>
+            <div>
+              <dt><%= t(".existing_count") %></dt>
+              <dd data-bulk-import-target="existingCount">0</dd>
+            </div>
+          </dl>
+          <p class="small fst-italic text-body-secondary mb-3"><%= t(".existing_tags_note") %></p>
+          <p class="admin-bulk-affected-summary fw-bold mb-3">
+            <%= t(".affected_prefix") %>
+            <span class="text-primary" data-bulk-import-target="affectedCount">0</span>
+            <%= t(".affected_suffix") %>
+          </p>
+
+          <span
+            class="admin-bulk-disabled-button-tooltip is-disabled d-inline-block"
+            data-bulk-import-target="runTooltip"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top">
+            <button
+              type="button"
+              class="btn btn-danger d-inline-flex align-items-center gap-2"
+              data-bulk-import-target="runButton"
+              data-action="bulk-import#openConfirm"
+              disabled>
+              <%= icon "upload" %>
+              <span><%= t(".run") %></span>
+            </button>
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal fade" id="adminImportConfirmModal" tabindex="-1" aria-labelledby="adminImportConfirmModal_label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="adminImportConfirmModal_label">
+              <%= t(".confirm_title") %>
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0" data-bulk-import-target="confirmBody"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <%= t("shared.cancel") %>
+            </button>
+            <%= button_tag type: :submit, class: "btn btn-danger", data: { submitting_label: t("shared.submitting.importing") } do %>
+              <%= t(".confirm_run") %>
+            <% end %>
+          </div>
+        </div>
       </div>
-    <% end %>
-  </div>
+    </div>
+  <% end %>
 </section>
