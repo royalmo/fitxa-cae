@@ -1,0 +1,78 @@
+<% modal_id = admin_audit_action_modal_id(audit_action) %>
+<% modal_label_id = "#{modal_id}_label" %>
+<% author = audit_action.author %>
+<% author_path = admin_audit_subject_path(author) %>
+<% recipient = audit_action.recipient %>
+<% recipient_path = admin_audit_subject_path(recipient) %>
+
+<div class="modal fade" id="<%= modal_id %>" tabindex="-1" aria-labelledby="<%= modal_label_id %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5 d-inline-flex align-items-center gap-2" id="<%= modal_label_id %>">
+          <%= icon "activity" %>
+          <span><%= t("admin.audit_actions.index.modal_title") %></span>
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+      </div>
+      <div class="modal-body">
+        <dl class="admin-audit-action-modal-summary">
+          <div>
+            <dt><%= t("admin.audit_actions.index.created_at") %></dt>
+            <dd><%= l(audit_action.created_at, format: :short) %></dd>
+          </div>
+          <div>
+            <dt><%= t("admin.audit_actions.index.author") %></dt>
+            <dd>
+              <% if author_path %>
+                <%= link_to author_path, class: "admin-audit-subject-link" do %>
+                  <% if author.is_a?(Manager) %>
+                    <%= icon "user-cog", class: "admin-audit-author-icon" %>
+                  <% end %>
+                  <span><%= admin_audit_subject_text(author) %></span>
+                <% end %>
+              <% else %>
+                <%= admin_audit_subject_text(author) %>
+              <% end %>
+            </dd>
+          </div>
+          <div>
+            <dt><%= t("admin.audit_actions.index.recipient") %></dt>
+            <dd>
+              <% if recipient_path %>
+                <%= link_to recipient_path, class: "admin-audit-subject-link" do %>
+                  <% if recipient.is_a?(Manager) %>
+                    <%= icon "user-cog", class: "admin-audit-author-icon" %>
+                  <% end %>
+                  <span><%= admin_audit_subject_text(recipient) %></span>
+                <% end %>
+              <% else %>
+                <%= admin_audit_subject_text(recipient) %>
+              <% end %>
+            </dd>
+          </div>
+          <div>
+            <dt><%= t("admin.audit_actions.index.activity") %></dt>
+            <dd><%= admin_audit_action_detail_text(audit_action) %></dd>
+          </div>
+        </dl>
+
+        <div class="mt-3">
+          <%= label_tag "#{modal_id}_raw_details",
+            t("admin.audit_actions.index.raw_details"),
+            class: "form-label" %>
+          <%= text_area_tag "#{modal_id}_raw_details",
+            admin_audit_action_raw_details(audit_action),
+            class: "form-control font-monospace admin-audit-action-raw-details",
+            rows: 8,
+            disabled: true %>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <%= t("shared.cancel") %>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

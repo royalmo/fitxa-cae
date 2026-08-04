@@ -1,5 +1,6 @@
 class Admin::AuditActionsController < Admin::BaseController
   AUDIT_ACTIONS_PER_PAGE = 30
+  AUDIT_ACTIONS_EXPORT_LIMIT = 10_000
   AUTHOR_TYPES = %w[Employee Manager].freeze
 
   def index
@@ -19,7 +20,7 @@ class Admin::AuditActionsController < Admin::BaseController
     audit_actions = filtered_audit_actions
       .order(created_at: :desc, id: :desc)
       .includes(:author, :recipient)
-      .limit(10_000)
+      .limit(selected_export_limit)
 
     send_data audit_actions_csv(audit_actions),
       filename: "fitxa-cae-activitat-#{Time.zone.today.strftime("%Y%m%d")}.csv",
@@ -122,33 +123,48 @@ class Admin::AuditActionsController < Admin::BaseController
   def audit_actions_csv(audit_actions)
     CSV.generate(headers: true) do |csv|
       csv << [
-        t("admin.audit_actions.index.created_at"),
-        t("admin.audit_actions.index.kind"),
-        t("admin.audit_actions.index.author"),
-        t("admin.audit_actions.index.recipient"),
-        t("admin.audit_actions.index.extra_info")
+        "datetime",
+        "author",
+        "recipient",
+        "kind",
+        "pretty_activity",
+        "details"
       ]
 
       audit_actions.each do |audit_action|
         csv << [
-          I18n.l(audit_action.created_at, format: :short),
+          audit_action.created_at.iso8601,
+          audit_subject_identifier(audit_action.author),
+          audit_subject_identifier(audit_action.recipient),
           audit_action.kind,
-          audit_subject_text(audit_action.author),
-          audit_subject_text(audit_action.recipient),
-          audit_action.extra_info
+          helpers.admin_audit_action_detail_text(audit_action),
+          audit_action_details_json(audit_action)
         ]
       end
     end
   end
 
-  def audit_subject_text(record)
+  def selected_export_limit
+    limit = Integer(params[:limit], exception: false)
+    return [ 100, AUDIT_ACTIONS_EXPORT_LIMIT ].min unless limit
+
+    limit.clamp(0, AUDIT_ACTIONS_EXPORT_LIMIT)
+  end
+
+  def audit_subject_identifier(record)
     case record
     when Employee
-      record.full_name.presence || record.first_name.presence || t("employee.guest")
+      "employee:#{record.id}"
     when Manager
-      record.full_name.presence || record.email.presence || t("admin.guest")
+      "manager:#{record.id}"
     else
-      record.to_s
+      record.to_s.downcase
     end
+  end
+
+  def audit_action_details_json(audit_action)
+    JSON.generate(audit_action.extra_info.presence || {})
+  rescue JSON::GeneratorError
+    audit_action.extra_info.to_s
   end
 end

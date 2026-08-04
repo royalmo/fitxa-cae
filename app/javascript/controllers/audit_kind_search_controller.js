@@ -33,7 +33,7 @@ export default class extends Controller {
     }
 
     if (this.inputTarget.value.trim() === "") {
-      this.hide()
+      this.fetchResults()
       return
     }
 

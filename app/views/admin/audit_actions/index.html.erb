@@ -6,11 +6,17 @@
     <%= icon "activity", class: "text-primary" %>
     <h1 class="h2 mb-0"><%= t(".heading") %></h1>
   </div>
-  <%= link_to export_admin_audit_actions_path(request.query_parameters), class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
+  <button
+    type="button"
+    class="btn btn-outline-secondary d-inline-flex align-items-center gap-2"
+    data-bs-toggle="modal"
+    data-bs-target="#admin_audit_actions_export_modal">
     <%= icon "download" %>
     <span><%= t(".export") %></span>
-  <% end %>
+  </button>
 </div>
+
+<%= render "export_modal", total_count: @admin_records_count %>
 
 <div data-controller="list-loading">
   <div class="mb-3">
@@ -112,25 +118,52 @@
           <thead class="table-light">
             <tr>
               <th><%= t(".created_at") %></th>
-              <th><%= t(".kind") %></th>
               <th><%= t(".author") %></th>
-              <th><%= t(".recipient") %></th>
-              <th><%= t(".extra_info") %></th>
+              <th><%= t(".activity") %></th>
+              <th class="text-end"><%= t("shared.actions") %></th>
             </tr>
           </thead>
           <tbody>
             <% @audit_actions.each do |audit_action| %>
+              <% author = audit_action.author %>
+              <% author_path = admin_audit_subject_path(author) %>
               <tr>
                 <td class="text-nowrap"><%= l(audit_action.created_at, format: :short) %></td>
-                <td><code><%= audit_action.kind %></code></td>
-                <td><%= admin_audit_subject_text(audit_action.author) %></td>
-                <td><%= admin_audit_subject_text(audit_action.recipient) %></td>
-                <td><%= audit_action.extra_info.presence || "—" %></td>
+                <td class="admin-audit-author-cell">
+                  <% if author_path %>
+                    <%= link_to author_path,
+                      class: "admin-audit-subject-link",
+                      title: admin_audit_subject_text(author) do %>
+                      <% if author.is_a?(Manager) %>
+                        <%= icon "user-cog", class: "admin-audit-author-icon" %>
+                      <% end %>
+                      <span class="admin-audit-subject-name"><%= admin_audit_subject_text(author) %></span>
+                    <% end %>
+                  <% else %>
+                    <span class="admin-audit-subject-name"><%= admin_audit_subject_text(author) %></span>
+                  <% end %>
+                </td>
+                <td><%= admin_audit_action_detail_text(audit_action) %></td>
+                <td class="text-end">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary admin-row-action"
+                    title="<%= t(".view_action") %>"
+                    aria-label="<%= t(".view_action") %>"
+                    data-bs-toggle="modal"
+                    data-bs-target="#<%= admin_audit_action_modal_id(audit_action) %>">
+                    <%= icon "eye" %>
+                  </button>
+                </td>
               </tr>
             <% end %>
           </tbody>
         </table>
       </div>
+
+      <% @audit_actions.each do |audit_action| %>
+        <%= render "detail_modal", audit_action: audit_action %>
+      <% end %>
 
       <% if @audit_actions.empty? %>
         <div class="card-body text-center text-body-secondary">

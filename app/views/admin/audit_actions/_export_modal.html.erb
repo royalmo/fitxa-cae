@@ -1,0 +1,64 @@
+<% modal_id = "admin_audit_actions_export_modal" %>
+<% modal_label_id = "#{modal_id}_label" %>
+<% export_max = [ 10_000, total_count.to_i ].min %>
+<% export_default = [ 100, export_max ].min %>
+<% export_params = request.query_parameters.except("page", "limit") %>
+
+<div class="modal fade" id="<%= modal_id %>" tabindex="-1" aria-labelledby="<%= modal_label_id %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <%= form_with url: export_admin_audit_actions_path,
+      method: :get,
+      class: "modal-content",
+      data: { turbo: false } do %>
+      <% export_params.each do |key, value| %>
+        <%= hidden_field_tag key, value %>
+      <% end %>
+
+      <div class="modal-header">
+        <h2 class="modal-title fs-5 d-inline-flex align-items-center gap-2" id="<%= modal_label_id %>">
+          <%= icon "download" %>
+          <span><%= t("admin.audit_actions.export_modal.title") %></span>
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+      </div>
+      <div class="modal-body" data-controller="audit-export">
+        <p class="mb-1"><%= t("admin.audit_actions.export_modal.body") %></p>
+        <p class="small text-body-secondary fst-italic mb-4">
+          <%= t("admin.audit_actions.export_modal.format") %>
+        </p>
+
+        <div class="admin-audit-export-limit">
+          <div class="mb-2 text-center">
+            <%= label_tag :limit, class: "form-label mb-0" do %>
+              <%= t("admin.audit_actions.export_modal.limit") %>:
+              <strong data-audit-export-target="value"><%= export_default %></strong>
+            <% end %>
+          </div>
+          <%= range_field_tag :limit,
+            export_default,
+            min: 0,
+            max: export_max,
+            step: 1,
+            class: "form-range",
+            data: {
+              audit_export_target: "limit",
+              action: "input->audit-export#update"
+            } %>
+          <div class="d-flex align-items-center justify-content-between small text-body-secondary">
+            <span>0</span>
+            <span><%= export_max %></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <%= t("shared.cancel") %>
+        </button>
+        <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2">
+          <%= icon "download" %>
+          <span><%= t("admin.audit_actions.export_modal.confirm") %></span>
+        </button>
+      </div>
+    <% end %>
+  </div>
+</div>

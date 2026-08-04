@@ -1100,11 +1100,63 @@ html[data-pwa="admin"] .turbo-progress-bar {
   white-space: nowrap;
 }
 
-.admin-audit-kind-search-result code {
-  flex: 0 1 auto;
-  margin-left: auto;
+.admin-audit-author-cell {
+  max-width: 15rem;
+  width: 22%;
+}
+
+.admin-audit-subject-link {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--bs-secondary-color);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.admin-audit-subject-link:hover,
+.admin-audit-subject-link:focus {
+  color: var(--bs-body-color);
+}
+
+.admin-audit-subject-name {
+  display: inline-block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.admin-audit-author-icon {
+  flex: 0 0 auto;
+  color: var(--bs-secondary-color);
+}
+
+.admin-audit-action-modal-summary {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.admin-audit-action-modal-summary > div {
+  display: contents;
+}
+
+.admin-audit-action-modal-summary dt {
+  color: var(--bs-secondary-color);
+  font-weight: 600;
+}
+
+.admin-audit-action-modal-summary dd {
+  min-width: 0;
+  margin: 0;
+}
+
+.admin-audit-action-raw-details {
+  resize: vertical;
 }
 
 .admin-filters-divider {
