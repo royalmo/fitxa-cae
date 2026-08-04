@@ -11,7 +11,7 @@
 <% input_data = {
   tag_search_target: "input",
   action: "input->tag-search#search focus->tag-search#search keydown->tag-search#keydown"
-} %>
+}.merge(local_assigns.fetch(:input_data, {})) %>
 
 <div
   class="admin-tag-search position-relative"

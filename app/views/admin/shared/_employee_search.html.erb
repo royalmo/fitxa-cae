@@ -11,7 +11,7 @@
 <% input_data = {
   employee_search_target: "input",
   action: "input->employee-search#search focus->employee-search#search keydown->employee-search#keydown"
-} %>
+}.merge(local_assigns.fetch(:input_data, {})) %>
 
 <div
   class="admin-employee-search position-relative"

@@ -14,7 +14,7 @@ class Admin::SwipesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", text: "Fitxatges"
-    assert_select "a.btn[href='#{admin_reports_path}']", text: "Exportar" do
+    assert_select "a.btn[href='#{admin_reports_path(month: 7, year: 2026, report_scope: "person", employee_id: employee.id)}']", text: "Exportar" do
       assert_select "svg.icon"
     end
     assert_select "h2", text: "Filtres", count: 0
@@ -158,6 +158,7 @@ class Admin::SwipesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
+    assert_select "a.btn[href='#{admin_reports_path(month: 7, year: 2026)}']", text: "Exportar"
     assert_select "input[name='employee_id'][value='']", 1
     assert_select "input[name='employee_query'][placeholder='Cerca per nom, DNI, correu o telèfon']", 1
     assert_select "select[name='month'] option[selected][value='7']"

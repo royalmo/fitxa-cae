@@ -678,7 +678,29 @@ ca:
       index:
         title: "Informes"
         heading: "Informes"
-        empty: "Pàgina pendent."
+        period: "Període"
+        month: "Mes"
+        year: "Any"
+        period_connector: "de"
+        person:
+          title: "Resum per persona"
+          employee: "Persona"
+          employee_placeholder: "Cerca una persona"
+          clear_employee: "Sense persona"
+          tag: "Etiqueta"
+          tag_placeholder: "Cerca una etiqueta"
+          clear_tag: "Sense etiqueta"
+          scope: "Abast"
+          scopes:
+            person: "Una persona"
+            tag: "Una etiqueta"
+            company: "Tota l'empresa"
+          download_pdf: "Descarregar PDF"
+          download_zip: "Descarregar ZIP"
+        summary:
+          title: "Resum mensual"
+          download: "Descarregar PDF"
+          description: "Informe mensual amb totes les persones actives i les persones que han fitxat durant el període, incloent etiquetes, nombre de fitxatges i hores treballades."
     swipes:
       index:
         title: "Fitxatges"

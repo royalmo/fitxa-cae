@@ -261,6 +261,116 @@ html[data-pwa="admin"] .turbo-progress-bar {
   min-width: 5.25rem;
 }
 
+.admin-reports-period-panel {
+  background: var(--bs-body-bg);
+}
+
+.admin-reports-period-panel {
+  padding: 1rem;
+}
+
+.admin-reports-period-title {
+  color: var(--bs-body-color);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.admin-reports-period-select {
+  width: 100%;
+}
+
+.admin-reports-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.admin-report-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 1rem;
+  background: var(--bs-body-bg);
+}
+
+.admin-report-field {
+  max-width: 48rem;
+}
+
+.admin-report-field + .admin-report-field {
+  margin-top: 1rem;
+}
+
+.admin-report-field[hidden] {
+  display: none !important;
+}
+
+.admin-report-person-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.admin-report-person-filters .admin-report-field {
+  max-width: none;
+}
+
+.admin-report-person-filters .admin-report-field + .admin-report-field {
+  margin-top: 0;
+}
+
+.admin-report-inline-field {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.admin-report-inline-field > .form-label {
+  flex: 0 0 4.25rem;
+  width: auto;
+  margin-bottom: 0;
+  color: var(--bs-secondary-color);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.admin-report-scope-field {
+  flex: 0 0 auto;
+}
+
+.admin-report-scope-filter {
+  width: auto;
+}
+
+.admin-report-scope-filter .btn {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  min-height: 2.375rem;
+  white-space: nowrap;
+}
+
+.admin-report-selector-field {
+  flex: 1 1 18rem;
+  min-width: min(100%, 18rem);
+}
+
+.admin-report-selector-field .admin-employee-search,
+.admin-report-selector-field .admin-tag-search {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-report-actions {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
 .admin-dashboard-chart-shell {
   position: relative;
   min-height: 22rem;
@@ -1840,6 +1950,14 @@ button.admin-calendar-day:hover {
 }
 
 @media (min-width: 992px) {
+  .admin-reports-period-select {
+    width: 24rem;
+  }
+
+  .admin-reports-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
   .admin-employees-filter-form .admin-tags-status-filter {
     width: auto;
   }

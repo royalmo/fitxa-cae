@@ -5,9 +5,160 @@
   <h1 class="h2 mb-0"><%= t(".heading") %></h1>
 </div>
 
-<section class="card shadow-sm">
-  <div class="card-body text-center text-body-secondary py-5">
-    <%= icon "file-text", class: "mb-2" %>
-    <div><%= t(".empty") %></div>
+<%= form_with url: admin_reports_path,
+  method: :get,
+  class: "admin-reports-form",
+  data: { controller: "reports" } do |form| %>
+  <section class="admin-reports-period-panel border rounded shadow-sm mb-3">
+    <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
+      <div class="admin-reports-period-title d-inline-flex align-items-center gap-2">
+        <%= icon "calendar-days", class: "text-primary" %>
+        <span><%= t(".period") %></span>
+      </div>
+
+      <div class="admin-reports-period-select">
+        <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
+        <%= form.label :year, t(".year"), class: "form-label visually-hidden" %>
+        <div class="input-group flex-nowrap">
+          <%= form.select :month,
+            admin_reports_month_options,
+            { selected: @selected_month },
+            class: "form-select",
+            data: {
+              reports_target: "month",
+              action: "change->reports#update"
+            } %>
+          <span class="input-group-text"><%= t(".period_connector") %></span>
+          <%= form.select :year,
+            @year_options.map { |year| [year, year] },
+            { selected: @selected_year },
+            class: "form-select",
+            data: {
+              reports_target: "year",
+              action: "change->reports#update"
+            } %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="admin-reports-grid">
+    <section class="admin-report-card border rounded shadow-sm">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <%= icon "file-user", class: "text-primary" %>
+        <h2 class="h5 mb-0"><%= t(".person.title") %></h2>
+      </div>
+
+      <div class="admin-report-person-filters">
+        <fieldset class="admin-report-field admin-report-inline-field admin-report-scope-field">
+          <legend class="form-label mb-0"><%= t(".person.scope") %></legend>
+          <div class="btn-group admin-report-scope-filter" role="group" aria-label="<%= t(".person.scope") %>">
+            <% [
+              ["person", "user", t(".person.scopes.person")],
+              ["tag", "tag", t(".person.scopes.tag")],
+              ["company", "building-2", t(".person.scopes.company")]
+            ].each do |value, icon_name, label| %>
+              <% option_id = "admin_report_scope_#{value}" %>
+              <%= radio_button_tag :report_scope,
+                value,
+                @selected_report_scope == value,
+                id: option_id,
+                class: "btn-check",
+                autocomplete: "off",
+                data: {
+                  reports_target: "scope",
+                  action: "change->reports#update"
+                } %>
+              <%= label_tag option_id, class: "btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-1" do %>
+                <%= icon icon_name, class: "admin-badge-icon" %>
+                <span><%= label %></span>
+              <% end %>
+            <% end %>
+          </div>
+        </fieldset>
+
+        <div
+          class="admin-report-field admin-report-inline-field admin-report-selector-field"
+          data-reports-target="employeeField"
+          <%= "hidden" unless @selected_report_scope == "person" %>>
+          <%= form.label :employee_query, t(".person.employee"), class: "form-label mb-0" %>
+          <%= render "admin/shared/employee_search",
+            form: form,
+            field: :employee_id,
+            query_field: :employee_query,
+            selected_employee: @selected_employee,
+            placeholder: t(".person.employee_placeholder"),
+            clear_label: t(".person.clear_employee"),
+            results_id: "admin-reports-employee-results",
+            hidden_data: {
+              reports_target: "employeeId",
+              action: "change->reports#update"
+            },
+            input_data: {
+              reports_target: "employeeQuery"
+            },
+            auto_submit: false %>
+        </div>
+
+        <div
+          class="admin-report-field admin-report-inline-field admin-report-selector-field"
+          data-reports-target="tagField"
+          <%= "hidden" unless @selected_report_scope == "tag" %>>
+          <%= form.label :tag_query, t(".person.tag"), class: "form-label mb-0" %>
+          <%= render "admin/shared/tag_search",
+            form: form,
+            field: :tag_id,
+            query_field: :tag_query,
+            selected_tag: @selected_tag,
+            placeholder: t(".person.tag_placeholder"),
+            clear_label: t(".person.clear_tag"),
+            results_id: "admin-reports-tag-results",
+            hidden_data: {
+              reports_target: "tagId",
+              action: "change->reports#update"
+            },
+            input_data: {
+              reports_target: "tagQuery"
+            },
+            auto_submit: false %>
+        </div>
+      </div>
+
+      <div class="admin-report-actions">
+        <button
+          type="button"
+          class="btn btn-primary d-inline-flex align-items-center gap-2"
+          data-reports-target="personButton"
+          data-reports-download-pdf-label="<%= t(".person.download_pdf") %>"
+          data-reports-download-zip-label="<%= t(".person.download_zip") %>"
+          <%= "disabled" unless @selected_period && (@selected_report_scope == "company" || (@selected_report_scope == "person" && @selected_employee) || (@selected_report_scope == "tag" && @selected_tag)) %>>
+          <%= icon "download" %>
+          <span data-reports-target="personButtonLabel">
+            <%= @selected_report_scope == "person" ? t(".person.download_pdf") : t(".person.download_zip") %>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <section class="admin-report-card border rounded shadow-sm">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <%= icon "file-spreadsheet", class: "text-primary" %>
+        <h2 class="h5 mb-0"><%= t(".summary.title") %></h2>
+      </div>
+
+      <p class="text-body-secondary mb-0">
+        <%= t(".summary.description") %>
+      </p>
+
+      <div class="admin-report-actions">
+        <button
+          type="button"
+          class="btn btn-primary d-inline-flex align-items-center gap-2"
+          data-reports-target="summaryButton">
+          <%= icon "download" %>
+          <span><%= t(".summary.download") %></span>
+        </button>
+      </div>
+    </section>
   </div>
-</section>
+<% end %>
