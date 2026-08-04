@@ -164,7 +164,11 @@ module SmsArena
     end
 
     def normalized_phone(phone)
-      phone.to_s.gsub(/[^\d+]/, "")
+      normalized = phone.to_s.gsub(/[^\d+]/, "")
+
+      return normalized if normalized.start_with?("+", "00")
+
+      "+34#{normalized}"
     end
 
     # TODO This is very spaghetti, we can hardcode stuff I think.

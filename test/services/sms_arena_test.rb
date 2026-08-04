@@ -106,9 +106,25 @@ class SmsArenaTest < ActiveSupport::TestCase
 
     assert_equal "queued-1", delivery.message_id
     assert_equal "get", request[:method]
-    assert_equal "600111222", request[:params]["destination"]
+    assert_equal "+34600111222", request[:params]["destination"]
     assert_match "111222", request[:params]["text"]
     assert_equal "secret", request[:params]["token"]
+  end
+
+  test "keeps 00 international prefix when normalizing sms phones" do
+    response = FakeResponse.new(200, "queued-2")
+    http_client = FakeHttpClient.new(response: response)
+    env = {
+      "SMSARENA_ENABLED" => "true",
+      "SMSARENA_API_URL" => "https://panel.smsarena.es/api/send"
+    }
+
+    SmsArena::Client.new(env: env, http_client: http_client).deliver_login_code(
+      phone: "00 351 912 345 678",
+      code: "111222"
+    )
+
+    assert_equal "00351912345678", http_client.requests.first[:params]["to"]
   end
 
   test "supports basic authentication" do
