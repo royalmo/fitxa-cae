@@ -62,6 +62,12 @@ module ApplicationHelper
     "#{hours} h #{remaining_minutes.to_s.rjust(2, "0")} min"
   end
 
+  def duration_hours_text(total_seconds)
+    hours = [ total_seconds.to_i / 3600, 0 ].max
+
+    "#{hours} h"
+  end
+
   def icon(name, options = {})
     title = options.delete(:title).presence
     attributes = options.merge(class: class_names("icon", options[:class]), focusable: "false")

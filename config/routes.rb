@@ -56,6 +56,7 @@ Rails.application.routes.draw do
     delete "logout" => "sessions#destroy", as: :logout
 
     root "dashboard#index"
+    get "dashboard/statistics" => "dashboard#statistics", as: :dashboard_statistics
 
     resource :account, controller: "accounts", only: %i[show]
     patch "account/profile" => "accounts#update_profile", as: :account_profile

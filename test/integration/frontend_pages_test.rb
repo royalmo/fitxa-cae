@@ -146,7 +146,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "body[data-controller~='admin-theme'][data-controller~='submit-feedback']"
     assert_select "meta[name='color-scheme'][content='light']"
     assert_select "title", text: "Resum | FitxaCAE Admin"
-    assert_select "h1", text: "Resum operatiu"
+    assert_select "h1", text: "Hola, Laia Riera."
     assert_select "link[rel='stylesheet'][href*='fonts']", 1
     assert_select "link[rel='stylesheet'][href*='admin_bootstrap']", 1
     assert_select "link[rel='stylesheet'][href$='admin.css'], link[rel='stylesheet'][href*='/admin-']", 1

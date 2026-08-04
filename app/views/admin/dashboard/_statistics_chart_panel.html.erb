@@ -1,0 +1,34 @@
+<section
+  class="<%= class_names("tab-pane fade", "show active": active) %>"
+  id="<%= id %>"
+  role="tabpanel"
+  aria-labelledby="<%= labelledby %>"
+  tabindex="0"
+  data-dashboard-statistics-target="panel"
+  data-dashboard-statistics-metric="<%= metric %>"
+  data-dashboard-statistics-preloaded="<%= preloaded_data.to_json if local_assigns[:preloaded_data] %>"
+  data-dashboard-statistics-empty-message="<%= t("admin.dashboard.index.statistics.empty") %>"
+  data-dashboard-statistics-error-message="<%= t("admin.dashboard.index.statistics.error") %>">
+  <div class="admin-dashboard-tab-panel">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
+      <h2 class="h5 mb-0"><%= title %></h2>
+      <%= render "statistics_period_filter", name: "#{id}_period" %>
+    </div>
+
+    <div class="admin-dashboard-chart-shell">
+      <div class="admin-dashboard-chart-loading" data-dashboard-statistics-target="spinner" hidden>
+        <div class="spinner-border text-primary" aria-hidden="true"></div>
+        <span class="visually-hidden"><%= t("admin.dashboard.index.statistics.loading") %></span>
+      </div>
+
+      <p class="admin-dashboard-chart-empty text-body-secondary" data-dashboard-statistics-target="empty" hidden>
+        <%= t("admin.dashboard.index.statistics.empty") %>
+      </p>
+
+      <canvas
+        data-dashboard-statistics-target="canvas"
+        role="img"
+        aria-label="<%= title %>"></canvas>
+    </div>
+  </div>
+</section>

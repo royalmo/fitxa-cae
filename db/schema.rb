@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_26_085132) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_055935) do
   create_table "audit_actions", force: :cascade do |t|
     t.integer "author_id", null: false
     t.string "author_type", null: false
@@ -22,6 +22,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_085132) do
     t.datetime "updated_at", null: false
     t.index ["author_type", "author_id"], name: "index_audit_actions_on_author"
     t.index ["recipient_type", "recipient_id"], name: "index_audit_actions_on_recipient"
+  end
+
+  create_table "daily_statistics", force: :cascade do |t|
+    t.integer "active_user_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.integer "pending_correction_count", default: 0, null: false
+    t.integer "people_worked", default: 0, null: false
+    t.date "snapshot_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["snapshot_at"], name: "index_daily_statistics_on_snapshot_at", unique: true
   end
 
   create_table "employees", force: :cascade do |t|

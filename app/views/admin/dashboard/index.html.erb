@@ -1,100 +1,135 @@
 <% content_for :title, t(".title") %>
 
 <div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "layout-dashboard", class: "text-primary" %>
-  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  <%= icon "house", class: "text-primary" %>
+  <h1 class="h2 mb-0"><%= t(".heading", name: manager_display_name(@admin_current_manager)) %></h1>
 </div>
 
 <div class="row g-3 mb-4">
   <% @stats.each do |stat| %>
     <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card h-100 shadow-sm stat-card">
+      <%= link_to stat[:path], class: "card h-100 shadow-sm stat-card admin-stat-card-link" do %>
         <div class="card-body">
           <div class="d-flex align-items-center gap-2 text-body-secondary fw-semibold mb-2">
             <%= icon stat[:icon], class: "stat-card-icon text-primary" %>
             <span><%= stat[:label] %></span>
           </div>
           <div class="display-6 fw-semibold"><%= stat[:value] %></div>
-          <div class="small text-primary fw-semibold"><%= stat[:detail] %></div>
         </div>
-      </div>
+      <% end %>
     </div>
   <% end %>
 </div>
 
-<div class="row g-4">
-  <div class="col-12 col-xl-7">
-    <section class="card shadow-sm h-100">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <h2 class="h5 mb-0 d-flex align-items-center gap-2">
-          <%= icon "clock", class: "text-primary" %>
-          <span><%= t(".live_title") %></span>
-        </h2>
-        <%= link_to admin_employees_path, class: "btn btn-outline-secondary btn-sm", title: t("shared.view"), aria: { label: t("shared.view") } do %>
-          <%= icon "arrow-right" %>
-        <% end %>
-      </div>
+<section
+  class="admin-dashboard-tabs"
+  data-controller="dashboard-statistics"
+  data-dashboard-statistics-url-value="<%= admin_dashboard_statistics_path %>">
+  <ul class="nav nav-tabs admin-dashboard-tabs-nav" id="adminDashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link active d-inline-flex align-items-center gap-2"
+        id="admin-dashboard-active-people-tab"
+        type="button"
+        role="tab"
+        data-bs-toggle="tab"
+        data-bs-target="#admin-dashboard-active-people"
+        aria-controls="admin-dashboard-active-people"
+        aria-selected="true">
+        <%= icon "users" %>
+        <span><%= t(".statistics.tabs.active_people") %></span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link d-inline-flex align-items-center gap-2"
+        id="admin-dashboard-pending-corrections-tab"
+        type="button"
+        role="tab"
+        data-bs-toggle="tab"
+        data-bs-target="#admin-dashboard-pending-corrections"
+        aria-controls="admin-dashboard-pending-corrections"
+        aria-selected="false">
+        <%= icon "hourglass" %>
+        <span><%= t(".statistics.tabs.pending_corrections") %></span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link d-inline-flex align-items-center gap-2"
+        id="admin-dashboard-recent-activity-tab"
+        type="button"
+        role="tab"
+        data-bs-toggle="tab"
+        data-bs-target="#admin-dashboard-recent-activity"
+        aria-controls="admin-dashboard-recent-activity"
+        aria-selected="false">
+        <%= icon "activity" %>
+        <span><%= t(".statistics.tabs.recent_activity") %></span>
+      </button>
+    </li>
+  </ul>
 
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th><%= t(".employee") %></th>
-              <th><%= t(".tags") %></th>
-              <th><%= t(".last_clocking") %></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @recent_swipes.each do |swipe| %>
-              <tr>
-                <td><strong><%= employee_display_name(swipe.employee) %></strong></td>
-                <td><%= swipe.employee.tags.any? ? swipe.employee.tags.map(&:name).join(", ") : t(".no_tags") %></td>
-                <td><%= clocking_kind_text(swipe.kind) %> · <%= l(swipe.swipe_at, format: :short) %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+  <div class="tab-content admin-dashboard-tabs-content">
+    <%= render "statistics_chart_panel",
+      id: "admin-dashboard-active-people",
+      labelledby: "admin-dashboard-active-people-tab",
+      metric: "active_user_count",
+      title: t(".statistics.tabs.active_people"),
+      preloaded_data: @active_people_chart_data,
+      active: true %>
 
-      <% if @recent_swipes.empty? %>
-        <div class="card-body text-center text-body-secondary">
-          <%= t(".no_recent_swipes") %>
+    <%= render "statistics_chart_panel",
+      id: "admin-dashboard-pending-corrections",
+      labelledby: "admin-dashboard-pending-corrections-tab",
+      metric: "pending_correction_count",
+      title: t(".statistics.tabs.pending_corrections"),
+      active: false %>
+
+    <section
+      class="tab-pane fade"
+      id="admin-dashboard-recent-activity"
+      role="tabpanel"
+      aria-labelledby="admin-dashboard-recent-activity-tab"
+      tabindex="0">
+      <div class="admin-dashboard-tab-panel">
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+          <h2 class="h5 mb-0"><%= t(".statistics.tabs.recent_activity") %></h2>
+          <%= link_to admin_audit_actions_path, class: "btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" do %>
+            <span><%= t(".statistics.view_all_activity") %></span>
+            <%= icon "arrow-right" %>
+          <% end %>
         </div>
-      <% end %>
-    </section>
-  </div>
 
-  <div class="col-12 col-xl-5">
-    <section class="card shadow-sm h-100">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <h2 class="h5 mb-0 d-flex align-items-center gap-2">
-          <%= icon "square-pen", class: "text-primary" %>
-          <span><%= t(".corrections_title") %></span>
-        </h2>
-        <%= link_to admin_corrections_path, class: "btn btn-outline-secondary btn-sm", title: t("shared.view"), aria: { label: t("shared.view") } do %>
-          <%= icon "arrow-right" %>
-        <% end %>
-      </div>
+        <section class="card shadow-sm">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th><%= t(".statistics.activity.author") %></th>
+                  <th><%= t(".statistics.activity.created_at") %></th>
+                  <th><%= t(".statistics.activity.action") %></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @recent_audit_actions.each do |audit_action| %>
+                  <tr>
+                    <td><%= admin_audit_subject_text(audit_action.author) %></td>
+                    <td class="text-nowrap"><%= l(audit_action.created_at, format: :short) %></td>
+                    <td><%= admin_audit_action_kind_text(audit_action.kind) %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
 
-      <div class="list-group list-group-flush">
-        <% @pending_corrections.each do |correction| %>
-          <article class="list-group-item">
-            <div class="d-flex justify-content-between gap-3">
-              <div>
-                <strong><%= employee_display_name(correction.employee) %></strong>
-                <div class="small text-body-secondary"><%= correction_requested_text(correction) %></div>
-              </div>
-              <small class="text-body-secondary text-nowrap"><%= l(correction.created_at, format: :short) %></small>
+          <% if @recent_audit_actions.empty? %>
+            <div class="card-body text-center text-body-secondary">
+              <%= t(".statistics.activity.empty") %>
             </div>
-          </article>
-        <% end %>
+          <% end %>
+        </section>
       </div>
-
-      <% if @pending_corrections.empty? %>
-        <div class="card-body text-body-secondary">
-          <%= t(".no_pending_corrections") %>
-        </div>
-      <% end %>
     </section>
   </div>
-</div>
+</section>

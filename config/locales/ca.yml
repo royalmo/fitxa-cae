@@ -463,7 +463,7 @@ ca:
     dashboard:
       index:
         title: "Resum"
-        heading: "Resum operatiu"
+        heading: "Hola, %{name}."
         live_title: "Fitxatges recents"
         corrections_title: "Correccions pendents"
         employee: "Persona"
@@ -473,13 +473,36 @@ ca:
         no_recent_swipes: "Encara no hi ha fitxatges."
         no_tags: "Sense etiquetes"
         stats:
-          present: "Ara presents"
+          present: "Treballant"
           pending_corrections: "Correccions pendents"
           month_hours: "Hores del mes"
+          year_hours: "Hores de l'any"
           inactive: "Persones inactives"
           now: "Ara"
           open: "Obertes"
           employees: "Persones"
+        statistics:
+          tabs:
+            active_people: "Persones actives"
+            pending_corrections: "Correccions pendents"
+            recent_activity: "Activitat recent"
+          period_label: "Període"
+          periods:
+            60d: "60 dies"
+            1y: "1 any"
+            total: "Total"
+          metrics:
+            active_user_count: "Persones actives"
+            pending_correction_count: "Correccions pendents"
+          loading: "Carregant dades..."
+          empty: "Encara no hi ha dades per mostrar."
+          error: "No s'han pogut carregar les dades."
+          view_all_activity: "Veure activitat"
+          activity:
+            author: "Causant"
+            created_at: "Data"
+            action: "Acció"
+            empty: "No hi ha activitat recent."
     employees:
       index:
         title: "Persones"
@@ -657,6 +680,14 @@ ca:
         recipient: "Destinatari"
         extra_info: "Detall"
         empty: "No hi ha activitat registrada."
+      kinds:
+        employee:
+          updated: "Persona actualitzada"
+        swipe_correction:
+          approved: "Correcció aprovada"
+          rejected: "Correcció rebutjada"
+          created: "Correcció creada"
+          updated: "Correcció actualitzada"
     managers:
       index:
         title: "Responsables"

@@ -1,0 +1,17 @@
+<div class="btn-group admin-dashboard-period-filter" role="group" aria-label="<%= t("admin.dashboard.index.statistics.period_label") %>">
+  <% [
+    [ "60d", t("admin.dashboard.index.statistics.periods.60d") ],
+    [ "1y", t("admin.dashboard.index.statistics.periods.1y") ],
+    [ "total", t("admin.dashboard.index.statistics.periods.total") ]
+  ].each do |period, label| %>
+    <% field_id = "#{name}_#{period}" %>
+    <%= radio_button_tag name,
+      period,
+      period == "60d",
+      id: field_id,
+      autocomplete: "off",
+      class: "btn-check",
+      data: { action: "dashboard-statistics#changePeriod" } %>
+    <%= label_tag field_id, label, class: "btn btn-outline-secondary" %>
+  <% end %>
+</div>
