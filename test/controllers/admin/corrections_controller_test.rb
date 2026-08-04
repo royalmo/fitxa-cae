@@ -274,7 +274,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       assert_select "select[name='swipe_correction[employee_id]']", 0
       assert_select "input[type='hidden'][name='swipe_correction[employee_id]'][value=''][data-correction-form-target='employeeId']"
       assert_select "input[type='date'][name='swipe_correction[day]'][data-correction-form-target='date']"
-      assert_select "[data-correction-form-target='emptyPrompt']", text: "Selecciona una treballadora i un dia per veure els fitxatges."
+      assert_select "[data-correction-form-target='emptyPrompt']", text: "Selecciona una persona i un dia per veure els fitxatges."
       assert_select "[data-correction-form-target='emptyPrompt'][hidden]", 0
       assert_select "[data-correction-form-target='formContent'][hidden]"
       assert_select "[data-correction-form-target='submitActions'][hidden]"
@@ -752,7 +752,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_select ".error-summary", text: /Ja hi ha una correcció per aquest treballador i dia/
+    assert_select ".error-summary", text: /Ja hi ha una correcció per aquesta persona i dia/
     assert_select "[data-correction-form-target='existingCorrectionPrompt']:not([hidden])"
   end
 

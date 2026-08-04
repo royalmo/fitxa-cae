@@ -7,6 +7,7 @@ ca:
   date:
     formats:
       short: "%-d/%-m/%Y"
+      numeric: "%d/%m/%Y"
       long: "%-d %B %Y"
       month_year: "%B %Y"
       weekday_day_month: "%A, %-d de %B"
@@ -95,13 +96,22 @@ ca:
 
   activerecord:
     models:
+      employee: "Persona"
       manager: "Responsable"
       tag: "Etiqueta"
     attributes:
+      employee:
+        active: "Estat"
+        email: "Correu"
+        first_name: "Nom"
+        last_name: "Cognoms"
+        national_id: "DNI"
+        password: "Contrasenya"
+        phone: "Telèfon"
       manager:
         active: "Estat"
         email: "Correu"
-        employee_id: "Treballador vinculat"
+        employee_id: "Persona vinculada"
         first_name: "Nom"
         last_name: "Cognoms"
         password: "Contrasenya"
@@ -114,7 +124,7 @@ ca:
         manager:
           attributes:
             employee_id:
-              taken: "ja està assignat a un altre responsable"
+              taken: "ja està assignada a un altre responsable"
         tag:
           attributes:
             name:
@@ -174,7 +184,7 @@ ca:
       destroy:
         signed_out: "Sessió tancada."
     nav:
-      label: "Navegació de treballador"
+      label: "Navegació de personal"
       account: "Compte"
       admin: "Accés admin"
       clockings: "Fitxatges"
@@ -363,8 +373,11 @@ ca:
       tag_deactivated: "Etiqueta desactivada."
       tag_updated: "Etiqueta actualitzada."
       account_updated: "Compte actualitzat."
-      employee_created: "Treballador creat."
-      employee_updated: "Treballador actualitzat."
+      employee_activated: "Persona activada."
+      employee_activation_failed: "No s'ha pogut actualitzar l'estat de la persona."
+      employee_created: "Persona creada."
+      employee_deactivated: "Persona desactivada."
+      employee_updated: "Persona actualitzada."
       import_started: "Importació iniciada."
       manager_created: "Responsable creat."
       manager_activated: "Responsable activat."
@@ -388,7 +401,7 @@ ca:
       swipes: "Fitxatges"
     topbar:
       account: "Compte"
-      employee_side: "Anar a la part de treballador"
+      employee_side: "Anar a la part de la persona"
       pending_corrections:
         one: "1 correcció pendent"
         other: "%{count} correccions pendents"
@@ -396,13 +409,15 @@ ca:
       title: "Filtres"
     shared:
       employee_search:
-        clear: "Esborrar treballador"
+        clear: "Esborrar persona"
         placeholder: "Cerca per nom, DNI, correu o telèfon"
       tag_search:
         clear: "Esborrar etiqueta"
         placeholder: "Cerca una etiqueta"
+      tag_multi_search:
+        remove: "Eliminar etiqueta %{name}"
     employee_search:
-      no_results: "Cap treballadora trobada."
+      no_results: "Cap persona trobada."
     tag_search:
       no_results: "Cap etiqueta activa trobada."
     pagination:
@@ -451,7 +466,7 @@ ca:
         heading: "Resum operatiu"
         live_title: "Fitxatges recents"
         corrections_title: "Correccions pendents"
-        employee: "Treballador"
+        employee: "Persona"
         tags: "Etiquetes"
         last_clocking: "Últim fitxatge"
         no_pending_corrections: "No hi ha correccions pendents."
@@ -461,30 +476,31 @@ ca:
           present: "Ara presents"
           pending_corrections: "Correccions pendents"
           month_hours: "Hores del mes"
-          inactive: "Inactius"
+          inactive: "Persones inactives"
           now: "Ara"
           open: "Obertes"
-          employees: "Treballadors"
+          employees: "Persones"
     employees:
       index:
-        title: "Personal"
-        heading: "Personal"
-        new_employee: "Nou treballador"
+        title: "Persones"
+        heading: "Persones"
+        bulk_actions: "Accions massives"
+        new_employee: "Nova persona"
         search_placeholder: "Nom, DNI/NIE o correu"
         tags: "Etiquetes"
         all_tags: "Totes les etiquetes"
-        no_tags: "Sense etiquetes"
-        no_contact: "Sense contacte"
-        no_clockings: "Sense fitxatges"
         status: "Estat"
-        all_statuses: "Tots"
+        all_statuses: "Totes"
         national_id: "DNI/NIE"
         name: "Nom"
         last_clocking: "Últim fitxatge"
-        month_hours: "Hores del mes"
-        empty: "No hi ha treballadors amb aquests filtres."
+        view_calendar: "Veure calendari de %{name}"
+        view_swipes: "Veure fitxatges de %{name}"
+        empty: "No hi ha persones amb aquests filtres."
       form:
-        error_title: "Revisa el treballador"
+        error_title: "Revisa la persona"
+        back_to_list: "Tornar a persones"
+        create: "Crear"
         email: "Correu"
         first_name: "Nom"
         last_name: "Cognoms"
@@ -494,11 +510,24 @@ ca:
         status: "Estat"
         tags: "Etiquetes"
       new:
-        title: "Nou treballador"
-        heading: "Nou treballador"
+        title: "Nova persona"
+        heading: "Nova persona"
       edit:
-        title: "Editar treballador"
-        heading: "Editar treballador"
+        title: "Editar persona"
+        heading: "Editar persona"
+      activation:
+        activate:
+          button: "Activar persona %{name}"
+          title: "Activar persona"
+          body: "Vols activar %{name}?"
+          description: "Podrà iniciar sessió i fitxar de nou."
+          confirm: "Activar"
+        deactivate:
+          button: "Desactivar persona %{name}"
+          title: "Desactivar persona"
+          body: "Vols desactivar %{name}?"
+          description: "No podrà iniciar sessió ni fitxar mentre estigui inactiva."
+          confirm: "Desactivar"
     imports:
       new:
         title: "Importació"
@@ -516,7 +545,7 @@ ca:
         title: "Fitxatges"
         heading: "Fitxatges"
         export: "Exportar"
-        employee: "Treballador"
+        employee: "Persona"
         employee_search_placeholder: "Cerca per nom, DNI, correu o telèfon"
         month: "Mes"
         period_connector: "de"
@@ -525,7 +554,7 @@ ca:
         hours: "Hores"
         swipes: "Fitxatges"
         status: "Estat"
-        empty: "Selecciona una treballadora per veure els fitxatges."
+        empty: "Selecciona una persona per veure els fitxatges."
         empty_day: "Sense fitxatges"
         create_day: "Crear fitxatges el %{date}"
         edit_day: "Editar fitxatges el %{date}"
@@ -534,7 +563,7 @@ ca:
           title: "Correccions del %{date}"
           no_comments: "Sense comentari."
         review:
-          employee: "Treballadora"
+          employee: "Persona"
           day: "Dia"
           request: "Sol·licitud"
           comments: "Comentaris"
@@ -552,13 +581,13 @@ ca:
       index:
         title: "Calendaris"
         heading: "Calendaris"
-        employee: "Treballador"
+        employee: "Persona"
         employee_search_placeholder: "Cerca per nom, DNI, correu o telèfon"
         year: "Any"
         previous_year: "Any anterior"
         next_year: "Any següent"
         loading: "Carregant calendari..."
-        empty: "Selecciona una treballadora per veure el calendari."
+        empty: "Selecciona una persona per veure el calendari."
         correct: "Corregir"
         create_swipes: "Crear"
         review: "Revisar"
@@ -590,10 +619,10 @@ ca:
         disabled_statuses: "Inactives"
         name: "Nom"
         status: "Estat"
-        employees: "Treballadores"
+        employees: "Persones"
         employees_count:
-          one: "Veure 1 treballador amb l'etiqueta %{name}"
-          other: "Veure %{count} treballadors amb l'etiqueta %{name}"
+          one: "Veure 1 persona amb l'etiqueta %{name}"
+          other: "Veure %{count} persones amb l'etiqueta %{name}"
         empty: "No hi ha etiquetes amb aquests filtres."
       statuses:
         active: "Activa"
@@ -602,12 +631,12 @@ ca:
         activate:
           button: "Activar etiqueta %{name}"
           title: "Activar etiqueta"
-          body: "Els treballadors que tenien aquesta etiqueta abans de desactivar-la la tornaran a veure."
+          body: "Les persones que tenien aquesta etiqueta abans de desactivar-la la tornaran a veure."
           confirm: "Activar"
         deactivate:
           button: "Desactivar etiqueta %{name}"
           title: "Desactivar etiqueta"
-          body: "Aquesta etiqueta no es podrà assignar a cap treballadora."
+          body: "Aquesta etiqueta no es podrà assignar a cap persona."
           confirm: "Desactivar"
       form:
         error_title: "Revisa l'etiqueta"
@@ -679,9 +708,9 @@ ca:
         email: "Correu"
         password: "Contrasenya"
         password_keep_blank: "deixar en blanc per no modificar"
-        employee: "Treballador vinculat"
+        employee: "Persona vinculada"
         employee_search_placeholder: "Cerca per nom, DNI, correu o telèfon"
-        no_employee: "Sense treballador vinculat"
+        no_employee: "Sense persona vinculada"
         status: "Estat"
       new:
         title: "Nou responsable"
@@ -783,20 +812,20 @@ ca:
         heading: "Editar correcció"
       form:
         error_title: "Revisa la correcció"
-        invalid: "Indica un treballador i una data vàlids."
-        employee: "Treballador"
+        invalid: "Indica una persona i una data vàlides."
+        employee: "Persona"
         employee_search_placeholder: "Cerca per nom, DNI, correu o telèfon"
-        clear_employee: "Esborrar treballador"
-        select_employee: "Selecciona un treballador"
+        clear_employee: "Esborrar persona"
+        select_employee: "Selecciona una persona"
         day: "Dia"
         swipes: "Fitxatges"
         existing_swipes: "Fitxatges existents"
         invalidate: "Invalidar"
         keep_swipe: "Restaurar"
         no_existing_swipes: "No hi ha fitxatges per aquest dia."
-        select_employee_day_empty: "Selecciona una treballadora i un dia per veure els fitxatges."
+        select_employee_day_empty: "Selecciona una persona i un dia per veure els fitxatges."
         loading_day: "Carregant fitxatges..."
-        existing_correction: "Ja hi ha una correcció per aquest treballador i dia."
+        existing_correction: "Ja hi ha una correcció per aquesta persona i dia."
         existing_correction_title: "Aquest dia ja té una correcció"
         existing_reviewed_correction:
           approved: "Aquest dia ja té una correcció aprovada."

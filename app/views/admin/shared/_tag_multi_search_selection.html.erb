@@ -1,0 +1,13 @@
+<span class="admin-tag-multi-search-selection admin-tag-label" style="<%= admin_tag_name_style(tag) %>" data-tag-multi-search-id="<%= tag.id %>">
+  <%= hidden_field_tag field_name, tag.id, data: { tag_multi_search_selected_input: true } %>
+  <%= icon "tag", class: "admin-tag-label-icon" %>
+  <span><%= tag.name %></span>
+  <button
+    type="button"
+    class="admin-tag-multi-search-remove"
+    title="<%= t("admin.shared.tag_multi_search.remove", name: tag.name) %>"
+    aria-label="<%= t("admin.shared.tag_multi_search.remove", name: tag.name) %>"
+    data-action="tag-multi-search#remove">
+    <%= icon "x", class: "admin-tag-multi-search-remove-icon" %>
+  </button>
+</span>

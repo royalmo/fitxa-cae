@@ -2,14 +2,13 @@ class Admin::EmployeesController < Admin::BaseController
   EMPLOYEES_PER_PAGE = 20
 
   def index
-    @tags = Tag.order(:name)
+    @selected_tag = selected_tag
     @employees = paginate_admin_relation(
       filtered_employees.order(:last_name, :first_name, :id),
       per_page: EMPLOYEES_PER_PAGE
     ).includes(:tags).to_a
     employee_ids = @employees.map(&:id)
     @last_swipes_by_employee_id = last_swipes_by_employee_id(employee_ids)
-    @month_work_seconds_by_employee_id = month_work_seconds_by_employee_id(employee_ids)
   end
 
   def new
@@ -19,6 +18,7 @@ class Admin::EmployeesController < Admin::BaseController
 
   def create
     @employee = Employee.new(employee_params)
+    @employee.active = true
     @employee.tag_ids = selected_tag_ids
 
     if @employee.save
@@ -47,13 +47,25 @@ class Admin::EmployeesController < Admin::BaseController
     end
   end
 
+  def activation
+    @employee = Employee.find(params[:id])
+    target_active = ActiveModel::Type::Boolean.new.cast(employee_activation_params[:active])
+
+    if @employee.update(active: target_active)
+      redirect_back fallback_location: admin_employees_path,
+        notice: t(target_active ? "admin.flash.employee_activated" : "admin.flash.employee_deactivated")
+    else
+      redirect_back fallback_location: admin_employees_path, alert: t("admin.flash.employee_activation_failed")
+    end
+  end
+
   private
 
   def filtered_employees
     employees = Employee.all
     employees = employees.where(active: true) if params[:status] == "active"
     employees = employees.where(active: false) if params[:status] == "disabled"
-    employees = employees.joins(:tags).where(tags: { id: params[:tag_id] }) if params[:tag_id].present?
+    employees = employees.joins(:tags).where(tags: { id: @selected_tag.id }) if @selected_tag
 
     if params[:q].present?
       query = "%#{params[:q].to_s.downcase}%"
@@ -66,10 +78,18 @@ class Admin::EmployeesController < Admin::BaseController
     employees.distinct
   end
 
+  def selected_tag
+    Tag.find_by(id: params[:tag_id].presence) if params[:tag_id].present?
+  end
+
   def employee_params
     attributes = params.require(:employee).permit(:first_name, :last_name, :national_id, :email, :phone, :active, :password)
     attributes.delete(:password) if attributes[:password].blank?
     attributes
+  end
+
+  def employee_activation_params
+    params.require(:employee).permit(:active)
   end
 
   def selected_tag_ids
@@ -86,17 +106,5 @@ class Admin::EmployeesController < Admin::BaseController
       .order(swipe_at: :desc, id: :desc)
       .group_by(&:employee_id)
       .transform_values(&:first)
-  end
-
-  def month_work_seconds_by_employee_id(employee_ids)
-    range = Time.zone.today.beginning_of_month.beginning_of_day..Time.zone.today.end_of_month.end_of_day
-
-    Swipe.kept
-      .where(employee_id: employee_ids, swipe_at: range)
-      .chronological
-      .group_by { |swipe| [ swipe.employee_id, swipe.swipe_at.to_date ] }
-      .each_with_object(Hash.new(0)) do |((employee_id, _day), swipes), totals|
-        totals[employee_id] += Swipe.paired_work_seconds(swipes)
-      end
   end
 end

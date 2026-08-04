@@ -106,7 +106,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select ".admin-employee-search[data-controller='employee-search'][data-employee-search-url-value='#{admin_employee_search_path}'][data-employee-search-auto-submit-value='false']" do
       assert_select "input[name='manager_employee_query'][placeholder='Cerca per nom, DNI, correu o telèfon'][role='combobox']"
-      assert_select "button[type='button'][aria-label='Sense treballador vinculat'][data-action='employee-search#clear'] svg.icon"
+      assert_select "button[type='button'][aria-label='Sense persona vinculada'][data-action='employee-search#clear'] svg.icon"
     end
     assert_select "select[name='manager[employee_id]']", count: 0
     assert_select "select[name='manager[active]']", count: 0
@@ -175,9 +175,9 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_no_match "Aquesta treballadora ja està vinculada a un altre responsable.", response.body
+    assert_no_match "Aquesta persona ja està vinculada a un altre responsable.", response.body
     assert_select ".error-summary", count: 1
-    assert_select ".error-summary li", text: "Treballador vinculat ja està assignat a un altre responsable"
+    assert_select ".error-summary li", text: "Persona vinculada ja està assignada a un altre responsable"
     assert_nil manager.reload.employee
   end
 

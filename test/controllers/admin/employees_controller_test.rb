@@ -7,8 +7,26 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
 
   test "lists employees from the database" do
     tag = Tag.create!(name: "office", active: true, color: "#2563eb")
-    employee = create_employee(first_name: "Nora", last_name: "Vidal", email: "nora@example.test")
+    employee = create_employee(
+      first_name: "Nora",
+      last_name: "Vidal",
+      email: "nora@example.test",
+      phone: "+34 600 111 222"
+    )
+    inactive_employee = create_employee(
+      first_name: "Ona",
+      last_name: "Costa",
+      national_id: valid_dni(41_000_006),
+      active: false
+    )
+    untagged_employee = create_employee(
+      first_name: "Lia",
+      last_name: "Bosc",
+      national_id: valid_dni(41_000_007)
+    )
     employee.tags << tag
+    inactive_employee.tags << tag
+    employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 2, 16, 0), metadata: "employee_portal")
 
     get admin_employees_path
 
@@ -18,13 +36,92 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_match "office", response.body
     assert_select "[data-controller='list-loading']"
     assert_select "h2", text: "Filtres", count: 0
+    assert_no_match "Sense contacte", response.body
+    assert_no_match "Sense etiquetes", response.body
+    assert_no_match "Sense fitxatges", response.body
     assert_select ".admin-result-count[data-list-loading-target='results']",
       text: "Mostrant 1-#{[ Employee.count, 20 ].min} de #{Employee.count}"
     assert_select ".text-center .admin-result-count",
       text: "Mostrant 1-#{[ Employee.count, 20 ].min} de #{Employee.count}"
-    assert_select "button[type='submit'][data-submitting-label='Filtrant...'] svg.icon"
+    assert_select "button.btn[type='button']", text: "Accions massives" do
+      assert_select "svg.icon"
+    end
+    assert_select "a.btn[href='#{new_admin_employee_path}']", text: "Nova persona"
+    assert_select "form.admin-employees-filter-form[action='#{admin_employees_path}'][method='get']" do
+      assert_select "input[type='search'][name='q'][placeholder='Nom, DNI/NIE o correu']"
+      assert_select "button[type='submit'][aria-label='Cercar'] svg.icon"
+      assert_select ".admin-tag-search[data-tag-search-url-value='#{admin_tag_search_path}']" do
+        assert_select "input[type='hidden'][name='tag_id'][value='']"
+        assert_select "input[name='tag_query'][placeholder='Cerca una etiqueta']"
+        assert_select "button[type='button'][aria-label='Totes les etiquetes'][data-action='tag-search#clear'] svg.icon"
+      end
+      assert_select "select[name='tag_id']", count: 0
+      assert_select "select[name='status']", count: 0
+      assert_select "input[type='radio'][name='status'][value=''][checked='checked'][autocomplete='off'] + label", text: "Totes"
+      assert_select "input[type='radio'][name='status'][value='active'][autocomplete='off'] + label", text: "Actives"
+      assert_select "input[type='radio'][name='status'][value='disabled'][autocomplete='off'] + label", text: "Inactives"
+      assert_select "button", text: "Filtrar", count: 0
+    end
+    assert_select "thead th", text: "Estat", count: 0
+    assert_select "thead th", text: "Hores del mes", count: 0
+    assert_select "thead th:nth-child(1)", text: "Nom"
+    assert_select "thead th:nth-child(5)", text: "Accions"
+    assert_select "tbody tr.admin-employee-row.is-inactive", count: 1
+    assert_select "tbody .admin-employee-name strong[title='Nora Vidal']", text: "Nora Vidal"
+    assert_select "tbody .admin-employee-name svg.admin-employee-status-icon.is-active", count: 0
+    assert_select "tbody tr.admin-employee-row.is-inactive .admin-employee-name svg.admin-employee-status-icon.is-inactive[aria-label='Inactiu'] + strong[title='Ona Costa']",
+      text: "Ona Costa"
+    assert_select ".admin-employee-contact[title='+34 600 111 222 · nora@example.test']", text: "+34 600 111 222 · nora@example.test"
+    assert_select ".admin-employee-tags .admin-tag-label[style*='#2563eb']" do
+      assert_select "svg.admin-tag-label-icon + span", text: "office"
+    end
+    assert_select "tbody tr.admin-employee-row .admin-employee-contact", count: 1
+    assert_select "tbody tr.admin-employee-row .admin-employee-tags-empty", text: "-", count: 1
+    assert_select ".admin-employee-last-clocking.is-exit[title='Sortida 02/07/2026 16:00']",
+      text: /02\/07\/2026\s+16:00/ do
+      assert_select "svg.admin-employee-last-clocking-icon[aria-label='Sortida'][title='Sortida']"
+    end
+    assert_select "tbody tr.admin-employee-row .admin-employee-last-clocking-empty", text: "-", count: 2
+    assert_select "tbody tr.admin-employee-row.is-inactive .admin-employee-tags .admin-tag-label[style*='#2563eb']" do
+      assert_select "svg.admin-tag-label-icon + span", text: "office"
+    end
+    activation_modal_id = "employee_activation_modal_#{employee.id}"
+    assert_select "button.admin-row-action[data-bs-toggle='modal'][data-bs-target='##{activation_modal_id}'][aria-label='Desactivar persona Nora Vidal'] svg.icon"
+    assert_select "##{activation_modal_id}.modal.fade[aria-labelledby='#{activation_modal_id}_label']" do
+      assert_select "h2##{activation_modal_id}_label", text: "Desactivar persona"
+      assert_select ".modal-body", text: /Vols desactivar Nora Vidal\?/
+      assert_select ".modal-body", text: /No podrà iniciar sessió ni fitxar mentre estigui inactiva/
+      assert_select "form[action='#{activation_admin_employee_path(employee)}'][method='post']" do
+        assert_select "input[name='_method'][value='patch']"
+        assert_select "input[name='employee[active]'][value='false']"
+        assert_select "button[type='submit']", text: "Desactivar"
+      end
+    end
+    activation_modal_id = "employee_activation_modal_#{inactive_employee.id}"
+    assert_select "button.admin-row-action[data-bs-toggle='modal'][data-bs-target='##{activation_modal_id}'][aria-label='Activar persona Ona Costa'] svg.icon"
+    assert_select "##{activation_modal_id}.modal.fade[aria-labelledby='#{activation_modal_id}_label']" do
+      assert_select "h2##{activation_modal_id}_label", text: "Activar persona"
+      assert_select ".modal-body", text: /Vols activar Ona Costa\?/
+      assert_select ".modal-body", text: /Podrà iniciar sessió i fitxar de nou/
+      assert_select "form[action='#{activation_admin_employee_path(inactive_employee)}'][method='post']" do
+        assert_select "input[name='_method'][value='patch']"
+        assert_select "input[name='employee[active]'][value='true']"
+        assert_select "button[type='submit']", text: "Activar"
+      end
+    end
+    assert_select "tbody td", text: "Actiu", count: 0
+    assert_select "tbody td", text: "Inactiu", count: 0
+    today = Time.zone.today
+    calendar_path = admin_calendars_path(employee_id: employee.id, employee_query: "Nora Vidal", year: today.year)
+    swipes_path = admin_swipes_path(employee_id: employee.id, employee_query: "Nora Vidal", month: today.month, year: today.year)
+    assert_select "a.btn.admin-row-action[href='#{calendar_path}'][aria-label='Veure calendari de Nora Vidal'] svg.icon"
+    assert_select "a.btn.admin-row-action[href='#{swipes_path}'][aria-label='Veure fitxatges de Nora Vidal'] svg.icon"
+    action_links = css_select("a[href='#{edit_admin_employee_path(employee)}']").first.parent.css("a").map { |link| link["href"] }
+    assert_equal [ calendar_path, swipes_path, edit_admin_employee_path(employee) ], action_links
     assert_select "a.btn.admin-row-action[href='#{edit_admin_employee_path(employee)}'][aria-label='Editar'] svg.icon"
-    assert_select ".badge.text-bg-success svg.admin-badge-icon"
+    assert_select "a.btn.admin-row-action[href='#{edit_admin_employee_path(inactive_employee)}'][aria-label='Editar'] svg.icon"
+    assert_select "a.btn.admin-row-action[href='#{edit_admin_employee_path(untagged_employee)}'][aria-label='Editar'] svg.icon"
+    assert_select ".badge.text-bg-success", count: 0
   end
 
   test "filters employees by search status and tag" do
@@ -39,6 +136,15 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Marc Riera", response.body
     assert_no_match "Ada Riera", response.body
     assert_no_match hidden.national_id, response.body
+    assert_select "input[type='search'][name='q'][value='marc']"
+    assert_select "input[name='tag_id'][value='#{tag.id}']"
+    assert_select "input[name='tag_query'][value='warehouse']"
+    assert_select ".admin-tag-search-field.has-selected-tag" do
+      assert_select ".admin-tag-search-selection.admin-tag-label[style*='#16a34a']" do
+        assert_select "svg.admin-tag-label-icon + span", text: "warehouse"
+      end
+    end
+    assert_select "input[type='radio'][name='status'][value='active'][checked='checked'] + label", text: "Actives"
   end
 
   test "paginates employee list" do
@@ -66,7 +172,86 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Persona P24", response.body
   end
 
-  test "creates an employee with tags and optional password" do
+  test "renders new employee form controls" do
+    Tag.create!(name: "office", active: true, color: "#2563eb")
+
+    get new_admin_employee_path
+
+    assert_response :success
+    assert_select "a.admin-page-close-action[href='#{admin_employees_path}'][aria-label='Tornar a persones'] svg.icon"
+    assert_select "button[type='submit']", text: "Crear"
+    assert_select "button[type='submit']", text: "Desar", count: 0
+    assert_select "input[type='password'][name='employee[password]']", count: 0
+    assert_select "select[name='employee[active]']", count: 0
+    assert_select "input[name='employee[active]']", count: 0
+    assert_select "input[type='checkbox'][name='employee[tag_ids][]']", count: 0
+    assert_select ".admin-tag-multi-search[data-controller='tag-multi-search'][data-tag-multi-search-url-value='#{admin_tag_search_path}']" do
+      assert_select "input.admin-tag-multi-search-input[name='employee_tag_query'][placeholder='Cerca una etiqueta'][role='combobox']"
+      assert_select "#admin-employee-tag-results.admin-tag-multi-search-results[role='listbox']"
+      assert_select ".admin-tag-multi-search-selections > .admin-tag-multi-search-selection", count: 0
+      assert_select "template[data-tag-multi-search-target='selectionTemplate']"
+    end
+  end
+
+  test "renders edit employee form controls" do
+    active_tag = Tag.create!(name: "office", active: true, color: "#2563eb")
+    inactive_tag = Tag.create!(name: "archived", active: false, color: "#16a34a")
+    employee = create_employee(first_name: "Iria", last_name: "Mas", national_id: valid_dni(41_000_009), active: false)
+    employee.tags << active_tag
+    employee.tags << inactive_tag
+
+    get edit_admin_employee_path(employee)
+
+    assert_response :success
+    assert_select "a.admin-page-close-action[href='#{admin_employees_path}'][aria-label='Tornar a persones'] svg.icon"
+    assert_select "button[type='submit']", text: "Desar"
+    assert_select "button[type='submit']", text: "Crear", count: 0
+    assert_select "input[type='password'][name='employee[password]']", count: 1
+    assert_select "select[name='employee[active]']", count: 0
+    assert_select "fieldset.admin-status-radio-fieldset" do
+      assert_select "legend.form-label", text: "Estat"
+      assert_select ".admin-status-radio-group.btn-group.w-100" do
+        assert_select "input[type='radio'][name='employee[active]'][value='true'] + label.admin-status-radio-option.is-active" do
+          assert_select "svg.admin-status-radio-icon"
+          assert_select "span", text: "Activa"
+        end
+        assert_select "input[type='radio'][name='employee[active]'][value='false'][checked='checked'] + label.admin-status-radio-option.is-inactive" do
+          assert_select "svg.admin-status-radio-icon"
+          assert_select "span", text: "Inactiva"
+        end
+      end
+    end
+    assert_select "input[type='checkbox'][name='employee[tag_ids][]']", count: 0
+    assert_select ".admin-tag-multi-search-selections > .admin-tag-multi-search-selection.admin-tag-label", count: 2
+    assert_select ".admin-tag-multi-search-selection[style*='#2563eb']" do
+      assert_select "input[type='hidden'][name='employee[tag_ids][]'][value='#{active_tag.id}']"
+      assert_select "button.admin-tag-multi-search-remove[aria-label='Eliminar etiqueta office'] svg.icon"
+    end
+    assert_select ".admin-tag-multi-search-selection[style*='#16a34a']" do
+      assert_select "input[type='hidden'][name='employee[tag_ids][]'][value='#{inactive_tag.id}']"
+      assert_select "button.admin-tag-multi-search-remove[aria-label='Eliminar etiqueta archived'] svg.icon"
+    end
+  end
+
+  test "tag search renders multi select results" do
+    selected = Tag.create!(name: "office", active: true, color: "#2563eb")
+    visible = Tag.create!(name: "offsite", active: true, color: "#16a34a")
+    inactive = Tag.create!(name: "offline", active: false, color: "#6b7280")
+
+    get admin_tag_search_path, params: { q: "off", multiple: "true", selected_tag_ids: selected.id.to_s }
+
+    assert_response :success
+    assert_no_match inactive.name, response.body
+    assert_select "button.admin-tag-search-result[data-action='tag-multi-search#select'][data-tag-multi-search-id-param='#{selected.id}'][disabled]" do
+      assert_select ".admin-tag-label", text: "office"
+    end
+    assert_select "button.admin-tag-search-result[data-action='tag-multi-search#select'][data-tag-multi-search-id-param='#{visible.id}']:not([disabled])" do
+      assert_select ".admin-tag-label", text: "offsite"
+    end
+    assert_select "button[data-action='tag-search#select']", count: 0
+  end
+
+  test "creates an active employee with tags" do
     tag = Tag.create!(name: "office", active: true, color: "#2563eb")
 
     assert_difference "Employee.count", 1 do
@@ -77,8 +262,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
           national_id: valid_dni(41_000_003),
           email: "pau@example.test",
           phone: "+34 600 111 222",
-          active: "1",
-          password: "1234",
+          active: "0",
           tag_ids: [ tag.id ]
         }
       }
@@ -86,8 +270,9 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to admin_employees_path
     employee = Employee.last
+    assert_predicate employee, :active?
     assert_equal [ tag ], employee.tags.to_a
-    assert employee.authenticate("1234")
+    assert_not employee.password_login_enabled?
   end
 
   test "renders validation errors when employee data is invalid" do
@@ -101,6 +286,8 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select ".error-summary"
+    assert_select ".error-summary li", text: "DNI no és vàlid"
+    assert_no_match "National no és vàlid", response.body
     assert_select "button[type='submit'][data-submitting-label='Desant...']"
   end
 
@@ -125,5 +312,21 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "irene@example.test", employee.email
     assert_not employee.active?
     assert_empty employee.tags
+  end
+
+  test "activates and deactivates employees" do
+    employee = create_employee(first_name: "Nora", last_name: "Vidal", national_id: valid_dni(41_000_008), active: true)
+
+    patch activation_admin_employee_path(employee), params: { employee: { active: "false" } }
+
+    assert_redirected_to admin_employees_path
+    assert_not employee.reload.active?
+    assert_equal "Persona desactivada.", flash[:notice]
+
+    patch activation_admin_employee_path(employee), params: { employee: { active: "true" } }
+
+    assert_redirected_to admin_employees_path
+    assert_predicate employee.reload, :active?
+    assert_equal "Persona activada.", flash[:notice]
   end
 end

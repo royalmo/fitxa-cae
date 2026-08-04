@@ -1,8 +1,17 @@
 <% content_for :title, t(".title") %>
 
-<div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "user-plus", class: "text-primary" %>
-  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <%= icon "user-plus", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+
+  <%= link_to admin_employees_path,
+    class: "btn admin-page-close-action",
+    title: t("admin.employees.form.back_to_list"),
+    aria: { label: t("admin.employees.form.back_to_list") } do %>
+    <%= icon "x" %>
+  <% end %>
 </div>
 
 <section class="card shadow-sm">

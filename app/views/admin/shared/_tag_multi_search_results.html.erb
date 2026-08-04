@@ -1,0 +1,23 @@
+<% selected_tag_ids = Array(selected_tag_ids).map(&:to_s) %>
+
+<% if tags.any? %>
+  <% tags.each do |tag| %>
+    <% selected = selected_tag_ids.include?(tag.id.to_s) %>
+    <button
+      type="button"
+      class="<%= class_names("list-group-item list-group-item-action admin-tag-search-result", "active": selected) %>"
+      data-action="tag-multi-search#select"
+      data-tag-multi-search-id-param="<%= tag.id %>"
+      data-tag-multi-search-label-param="<%= tag.name %>"
+      data-tag-multi-search-style-param="<%= admin_tag_name_style(tag) %>"
+      role="option"
+      aria-selected="<%= selected %>"
+      <%= "disabled" if selected %>>
+      <%= render "admin/tags/label", tag: tag %>
+    </button>
+  <% end %>
+<% else %>
+  <div class="list-group-item text-body-secondary">
+    <%= t("admin.tag_search.no_results") %>
+  </div>
+<% end %>

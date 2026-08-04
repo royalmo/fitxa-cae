@@ -24,7 +24,7 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-color-swatch", count: 0
     assert_select "thead th:nth-child(1).admin-tags-status-column", text: "Estat"
     assert_select "thead th:nth-child(2)", text: "Nom"
-    assert_select "thead th:nth-child(3):not(.text-center)", text: "Treballadores"
+    assert_select "thead th:nth-child(3):not(.text-center)", text: "Persones"
     assert_select "thead th:nth-child(4)", text: "Accions"
     assert_select "#tag_form_modal_new.modal.fade[data-controller='bootstrap-modal']" do
       assert_select "h2#tag_form_modal_new_label", text: "Nova etiqueta"
@@ -60,7 +60,7 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     assert_select "tbody .admin-tag-status.is-active", text: "Activa", count: 1
     assert_select "tbody td:nth-child(1).admin-tags-status-column .admin-tag-status svg.admin-badge-icon + span", text: "Activa"
     assert_select "tbody tr.admin-tag-row.is-inactive", count: 0
-    assert_select "tbody td:nth-child(3):not(.text-center) a.admin-tag-employees-count[href='#{admin_employees_path(tag_id: visible.id)}'][aria-label=\"Veure 2 treballadors amb l'etiqueta Producció\"]" do
+    assert_select "tbody td:nth-child(3):not(.text-center) a.admin-tag-employees-count[href='#{admin_employees_path(tag_id: visible.id)}'][aria-label=\"Veure 2 persones amb l'etiqueta Producció\"]" do
       assert_select "svg.admin-tag-employees-count-icon"
       assert_select "span", text: "2"
     end
@@ -69,7 +69,7 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     assert_select "##{activation_modal_id}.modal.fade[aria-labelledby='#{activation_modal_id}_label']" do
       assert_select "h2##{activation_modal_id}_label", text: "Desactivar etiqueta"
       assert_select ".modal-body .admin-tag-label svg.admin-tag-label-icon + span", text: "Producció"
-      assert_select ".modal-body", text: /Aquesta etiqueta no es podrà assignar a cap treballadora/
+      assert_select ".modal-body", text: /Aquesta etiqueta no es podrà assignar a cap persona/
       assert_select "form[action='#{activation_admin_tag_path(visible)}'][method='post']" do
         assert_select "input[name='_method'][value='patch']"
         assert_select "input[name='tag[active]'][value='false']"
@@ -101,7 +101,7 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     assert_select "tbody .admin-tag-status.is-inactive", text: "Inactiva", count: 1
     assert_select "tbody td:nth-child(1).admin-tags-status-column .admin-tag-status svg.admin-badge-icon + span", text: "Inactiva"
     assert_select "tbody tr.admin-tag-row.is-inactive", count: 1
-    assert_select "tbody td:nth-child(3):not(.text-center) a.admin-tag-employees-count[href='#{admin_employees_path(tag_id: inactive.id)}'][aria-label=\"Veure 1 treballador amb l'etiqueta Oficina\"]" do
+    assert_select "tbody td:nth-child(3):not(.text-center) a.admin-tag-employees-count[href='#{admin_employees_path(tag_id: inactive.id)}'][aria-label=\"Veure 1 persona amb l'etiqueta Oficina\"]" do
       assert_select "svg.admin-tag-employees-count-icon"
       assert_select "span", text: "1"
     end

@@ -163,7 +163,7 @@ class Admin::SwipesControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='month'] option[selected][value='7']"
     assert_select "select[name='year'] option[selected][value='2026']"
     assert_select ".admin-calendar-empty .icon", 1
-    assert_select ".admin-calendar-empty p.small", text: "Selecciona una treballadora per veure els fitxatges."
+    assert_select ".admin-calendar-empty p.small", text: "Selecciona una persona per veure els fitxatges."
     assert_select "tbody tr", 0
   end
 

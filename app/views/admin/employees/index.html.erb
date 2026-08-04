@@ -1,49 +1,66 @@
 <% content_for :title, t(".title") %>
 <% pagination_path = ->(page) { admin_employees_path(request.query_parameters.except("page").merge(page: page)) } %>
+<% current_admin_date = Time.zone.today %>
 
 <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
   <div class="d-flex align-items-center gap-2">
     <%= icon "users", class: "text-primary" %>
     <h1 class="h2 mb-0"><%= t(".heading") %></h1>
   </div>
-  <%= link_to new_admin_employee_path, class: "btn btn-primary d-inline-flex align-items-center gap-2" do %>
-    <%= icon "user-plus" %>
-    <span><%= t(".new_employee") %></span>
-  <% end %>
+  <div class="d-flex flex-wrap justify-content-end gap-2">
+    <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+      <%= icon "list-checks" %>
+      <span><%= t(".bulk_actions") %></span>
+    </button>
+
+    <%= link_to new_admin_employee_path, class: "btn btn-primary d-inline-flex align-items-center gap-2" do %>
+      <%= icon "user-plus" %>
+      <span><%= t(".new_employee") %></span>
+    <% end %>
+  </div>
 </div>
 
 <div data-controller="list-loading">
   <div class="mb-3">
     <%= form_with url: admin_employees_path,
       method: :get,
-      class: "row g-2 align-items-end mb-2",
+      class: "admin-employees-filter-form d-flex flex-column flex-xl-row align-items-stretch gap-2 w-100 mb-2",
       data: { action: "submit->list-loading#showLoading" } do |form| %>
-      <div class="col-12 col-lg-5">
+      <div class="admin-employees-search-filter">
         <%= form.label :q, t("shared.search"), class: "form-label visually-hidden" %>
-        <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder"), class: "form-control" %>
+        <div class="input-group">
+          <%= form.search_field :q, value: params[:q], placeholder: t(".search_placeholder"), class: "form-control" %>
+          <%= button_tag type: :submit, class: "btn btn-outline-secondary", title: t("shared.search"), aria: { label: t("shared.search") } do %>
+            <%= icon "search" %>
+          <% end %>
+        </div>
       </div>
-      <div class="col-12 col-sm-6 col-lg-3">
+
+      <div class="admin-employees-tag-filter">
         <%= form.label :tag_id, t(".tags"), class: "form-label visually-hidden" %>
-        <%= form.select :tag_id,
-          [[t(".all_tags"), ""]] + @tags.map { |tag| [tag.name, tag.id] },
-          { selected: params[:tag_id] },
-          class: "form-select",
-          data: { action: "change->list-loading#filter" } %>
+        <%= render "admin/shared/tag_search",
+          form: form,
+          field: :tag_id,
+          query_field: :tag_query,
+          selected_tag: @selected_tag,
+          placeholder: t("admin.shared.tag_search.placeholder"),
+          clear_label: t(".all_tags"),
+          results_id: "admin-employees-tag-results" %>
       </div>
-      <div class="col-12 col-sm-6 col-lg-2">
-        <%= form.label :status, t(".status"), class: "form-label visually-hidden" %>
-        <%= form.select :status,
-          [[t(".all_statuses"), ""], [status_text(:active), "active"], [status_text(:disabled), "disabled"]],
-          { selected: params[:status] },
-          class: "form-select",
-          data: { action: "change->list-loading#filter" } %>
-      </div>
-      <div class="col-12 col-lg-auto">
-        <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
-          <%= icon "filter" %>
-          <span><%= t("shared.filter") %></span>
+
+      <fieldset class="admin-tags-status-filter btn-group" role="group" aria-label="<%= t(".status") %>">
+        <% [[t("admin.tags.index.all_statuses"), ""], [t("admin.tags.index.active_statuses"), "active"], [t("admin.tags.index.disabled_statuses"), "disabled"]].each do |(label, value)| %>
+          <% option_id = "employee_status_#{value.presence || "all"}" %>
+          <%= form.radio_button :status,
+            value,
+            id: option_id,
+            checked: params[:status].to_s == value,
+            class: "btn-check",
+            autocomplete: "off",
+            data: { action: "change->list-loading#filter" } %>
+          <%= form.label :status, label, for: option_id, class: "btn btn-outline-secondary" %>
         <% end %>
-      </div>
+      </fieldset>
     <% end %>
 
     <div class="text-center">
@@ -64,42 +81,87 @@
               <th><%= t(".national_id") %></th>
               <th><%= t(".tags") %></th>
               <th><%= t(".last_clocking") %></th>
-              <th><%= t(".month_hours") %></th>
-              <th><%= t(".status") %></th>
               <th class="text-end"><%= t("shared.actions") %></th>
             </tr>
           </thead>
           <tbody>
             <% @employees.each do |employee| %>
               <% employee_status = admin_employee_status(employee) %>
-              <tr>
-                <td>
-                  <strong><%= employee_display_name(employee) %></strong>
-                  <div class="small text-body-secondary"><%= [employee.email, employee.phone].compact_blank.join(" · ").presence || t(".no_contact") %></div>
+              <% employee_name = employee_display_name(employee) %>
+              <% employee_contact = [employee.phone, employee.email].compact_blank.join(" · ") %>
+              <% activation_action = admin_employee_activation_action(employee) %>
+              <% activation_modal_id = admin_employee_activation_modal_id(employee) %>
+              <tr class="<%= class_names("admin-employee-row", "is-inactive": employee_status == :disabled) %>">
+                <td class="admin-employee-name-cell">
+                  <span class="admin-employee-name">
+                    <% if employee_status == :disabled %>
+                      <%= icon admin_employee_status_icon(employee),
+                        class: admin_employee_status_icon_class(employee),
+                        title: status_text(employee_status) %>
+                    <% end %>
+                    <strong title="<%= employee_name %>"><%= employee_name %></strong>
+                  </span>
+                  <% if employee_contact.present? %>
+                    <div class="admin-employee-contact small text-body-secondary" title="<%= employee_contact %>">
+                      <%= employee_contact %>
+                    </div>
+                  <% end %>
                 </td>
                 <td><%= employee.national_id %></td>
-                <td><%= admin_employee_tags(employee) %></td>
-                <td><%= admin_last_clocking_text(employee, @last_swipes_by_employee_id) %></td>
-                <td><%= duration_text(@month_work_seconds_by_employee_id.fetch(employee.id, 0)) %></td>
-                <td>
-                  <span class="<%= bootstrap_status_badge_class(employee_status) %>">
-                    <%= icon admin_employee_status_icon(employee), class: "admin-badge-icon" %>
-                    <span><%= status_text(employee_status) %></span>
-                  </span>
-                </td>
-                <td class="text-end">
-                  <%= link_to edit_admin_employee_path(employee),
-                    class: "btn btn-sm btn-outline-secondary admin-row-action",
-                    title: t("shared.edit"),
-                    aria: { label: t("shared.edit") } do %>
-                    <%= icon "pencil" %>
+                <td class="admin-employee-tags-cell">
+                  <% if employee.tags.any? %>
+                    <div class="admin-employee-tags">
+                      <% employee.tags.sort_by(&:name).each do |tag| %>
+                        <%= render "admin/tags/label", tag: tag %>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <%= admin_employee_empty_value(css_class: "admin-employee-tags-empty") %>
                   <% end %>
+                </td>
+                <td class="admin-employee-last-clocking-cell"><%= admin_last_clocking_pill(employee, @last_swipes_by_employee_id) %></td>
+                <td class="text-end">
+                  <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                    <button type="button"
+                      class="<%= admin_employee_activation_button_class(employee) %>"
+                      title="<%= t("admin.employees.activation.#{activation_action}.button", name: employee_name) %>"
+                      aria-label="<%= t("admin.employees.activation.#{activation_action}.button", name: employee_name) %>"
+                      data-bs-toggle="modal"
+                      data-bs-target="#<%= activation_modal_id %>">
+                      <%= icon admin_employee_activation_icon(employee) %>
+                    </button>
+
+                    <%= link_to admin_calendars_path(employee_id: employee.id, employee_query: employee_name, year: current_admin_date.year),
+                      class: "btn btn-sm btn-outline-secondary admin-row-action",
+                      title: t(".view_calendar", name: employee_name),
+                      aria: { label: t(".view_calendar", name: employee_name) } do %>
+                      <%= icon "calendar-days" %>
+                    <% end %>
+
+                    <%= link_to admin_swipes_path(employee_id: employee.id, employee_query: employee_name, month: current_admin_date.month, year: current_admin_date.year),
+                      class: "btn btn-sm btn-outline-secondary admin-row-action",
+                      title: t(".view_swipes", name: employee_name),
+                      aria: { label: t(".view_swipes", name: employee_name) } do %>
+                      <%= icon "clock" %>
+                    <% end %>
+
+                    <%= link_to edit_admin_employee_path(employee),
+                      class: "btn btn-sm btn-outline-secondary admin-row-action",
+                      title: t("shared.edit"),
+                      aria: { label: t("shared.edit") } do %>
+                      <%= icon "pencil" %>
+                    <% end %>
+                  </div>
                 </td>
               </tr>
             <% end %>
           </tbody>
         </table>
       </div>
+
+      <% @employees.each do |employee| %>
+        <%= render "activation_modal", employee: employee, action: admin_employee_activation_action(employee) %>
+      <% end %>
 
       <% if @employees.empty? %>
         <div class="card-body text-center text-body-secondary">

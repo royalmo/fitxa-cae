@@ -21,7 +21,7 @@ class Admin::CalendarsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".card h2", text: "Filtres", count: 0
     assert_select ".admin-calendar-grid", 0
     assert_select ".admin-calendar-empty .icon", 1
-    assert_select ".admin-calendar-empty p.small", text: "Selecciona una treballadora per veure el calendari."
+    assert_select ".admin-calendar-empty p.small", text: "Selecciona una persona per veure el calendari."
   end
 
   test "renders year calendar with status colors and correction links" do

@@ -1,0 +1,61 @@
+<% selected_tags ||= [] %>
+<% field ||= :tag_ids %>
+<% query_field ||= :tag_query %>
+<% results_id ||= "admin-tag-multi-search-results" %>
+<% placeholder ||= t("admin.shared.tag_search.placeholder") %>
+<% field_name = "#{form.object_name}[#{field}][]" %>
+<% selected_tags = Array(selected_tags).compact.sort_by(&:name) %>
+
+<div
+  class="admin-tag-multi-search position-relative"
+  data-controller="tag-multi-search"
+  data-tag-multi-search-url-value="<%= admin_tag_search_path %>"
+  data-tag-multi-search-remove-label-value="<%= t("admin.shared.tag_multi_search.remove") %>">
+  <div class="input-group">
+    <span class="input-group-text"><%= icon "tag" %></span>
+    <div class="form-control admin-tag-multi-search-field" data-tag-multi-search-target="field">
+      <div class="admin-tag-multi-search-selections" data-tag-multi-search-target="selections">
+        <% selected_tags.each do |tag| %>
+          <%= render "admin/shared/tag_multi_search_selection", tag: tag, field_name: field_name %>
+        <% end %>
+      </div>
+
+      <%= text_field_tag query_field,
+        nil,
+        class: "admin-tag-multi-search-input",
+        placeholder: placeholder,
+        autocomplete: "off",
+        role: "combobox",
+        aria: {
+          autocomplete: "list",
+          controls: results_id,
+          expanded: "false"
+        },
+        data: {
+          tag_multi_search_target: "input",
+          action: "input->tag-multi-search#search focus->tag-multi-search#search keydown->tag-multi-search#keydown"
+        } %>
+    </div>
+  </div>
+
+  <div
+    id="<%= results_id %>"
+    class="admin-tag-search-results admin-tag-multi-search-results list-group shadow-sm"
+    data-tag-multi-search-target="results"
+    role="listbox"
+    hidden></div>
+
+  <template data-tag-multi-search-target="selectionTemplate">
+    <span class="admin-tag-multi-search-selection admin-tag-label" data-tag-multi-search-id="">
+      <input type="hidden" name="<%= field_name %>" value="" data-tag-multi-search-selected-input>
+      <%= icon "tag", class: "admin-tag-label-icon" %>
+      <span data-tag-multi-search-label></span>
+      <button
+        type="button"
+        class="admin-tag-multi-search-remove"
+        data-action="tag-multi-search#remove">
+        <%= icon "x", class: "admin-tag-multi-search-remove-icon" %>
+      </button>
+    </span>
+  </template>
+</div>

@@ -9,6 +9,8 @@
   </div>
 <% end %>
 
+<% status_id_suffix = employee.persisted? ? employee.id : "new" %>
+
 <%= form_with model: [:admin, employee] do |form| %>
   <div class="row g-3">
     <div class="col-12 col-md-6">
@@ -24,10 +26,28 @@
       <%= form.label :national_id, t("admin.employees.form.national_id"), class: "form-label" %>
       <%= form.text_field :national_id, class: "form-control" %>
     </div>
-    <div class="col-12 col-md-6">
-      <%= form.label :active, t("admin.employees.form.status"), class: "form-label" %>
-      <%= form.select :active, [[status_text(:active), true], [status_text(:disabled), false]], {}, class: "form-select" %>
-    </div>
+
+    <% if employee.persisted? %>
+      <fieldset class="col-12 col-md-6 admin-status-radio-fieldset">
+        <legend class="form-label"><%= t("admin.employees.form.status") %></legend>
+        <div class="btn-group w-100 admin-status-radio-group" role="group" aria-label="<%= t("admin.employees.form.status") %>">
+          <% [[t("admin.tags.statuses.active"), true], [t("admin.tags.statuses.disabled"), false]].each do |(label, value)| %>
+            <% option_id = "employee_active_#{status_id_suffix}_#{value}" %>
+            <%= form.radio_button :active,
+              value,
+              id: option_id,
+              checked: value ? employee.active? : !employee.active?,
+              class: "btn-check" %>
+            <%= form.label :active,
+              for: option_id,
+              class: class_names("btn admin-status-radio-option", "is-active": value, "is-inactive": !value) do %>
+              <%= icon value ? "circle-check" : "circle-off", class: "admin-status-radio-icon" %>
+              <span><%= label %></span>
+            <% end %>
+          <% end %>
+        </div>
+      </fieldset>
+    <% end %>
 
     <div class="col-12 col-md-6">
       <%= form.label :email, t("admin.employees.form.email"), class: "form-label" %>
@@ -38,21 +58,22 @@
       <%= form.telephone_field :phone, autocomplete: "tel", class: "form-control" %>
     </div>
 
-    <div class="col-12">
-      <%= form.label :password, t("admin.employees.form.password"), class: "form-label" %>
-      <%= form.password_field :password, autocomplete: "new-password", class: "form-control" %>
-    </div>
+    <% if employee.persisted? %>
+      <div class="col-12">
+        <%= form.label :password, t("admin.employees.form.password"), class: "form-label" %>
+        <%= form.password_field :password, autocomplete: "new-password", class: "form-control" %>
+      </div>
+    <% end %>
 
     <fieldset class="col-12">
       <legend class="form-label"><%= t("admin.employees.form.tags") %></legend>
-      <div class="d-flex flex-wrap gap-3">
-        <% @tags.each do |tag| %>
-          <div class="form-check">
-            <%= check_box_tag "employee[tag_ids][]", tag.id, employee.tag_ids.include?(tag.id), class: "form-check-input", id: "employee_tag_#{tag.id}" %>
-            <%= label_tag "employee_tag_#{tag.id}", tag.name, class: "form-check-label" %>
-          </div>
-        <% end %>
-      </div>
+      <%= render "admin/shared/tag_multi_search",
+        form: form,
+        field: :tag_ids,
+        query_field: :employee_tag_query,
+        selected_tags: employee.tags,
+        placeholder: t("admin.shared.tag_search.placeholder"),
+        results_id: "admin-employee-tag-results" %>
     </fieldset>
   </div>
 
@@ -63,7 +84,7 @@
     <% end %>
     <%= button_tag type: :submit, class: "btn btn-primary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.saving") } do %>
       <%= icon "save" %>
-      <span><%= t("shared.save") %></span>
+      <span><%= t(employee.persisted? ? "shared.save" : "admin.employees.form.create") %></span>
     <% end %>
   </div>
 <% end %>

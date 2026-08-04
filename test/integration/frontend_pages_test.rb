@@ -155,7 +155,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "script[src*='bootstrap']", 1
     assert_select "nav.navbar a.admin-topbar-corrections-button[href='#{admin_corrections_path(status: "pending")}'][aria-label='#{pending_corrections_label}'] .admin-topbar-count-badge", text: pending_corrections_count.to_s
     assert_select "nav.navbar a.admin-topbar-corrections-button", text: /Correccions/, count: 0
-    assert_select "nav.navbar a.admin-topbar-employee-button[href='#{root_path}'][aria-label='Anar a la part de treballador'] svg.icon"
+    assert_select "nav.navbar a.admin-topbar-employee-button[href='#{root_path}'][aria-label='Anar a la part de la persona'] svg.icon"
     assert_select "nav.navbar a.admin-topbar-button[href='#{admin_account_path}'][aria-label='Compte']", text: /Laia Riera/
     assert_select "nav.navbar form[action='#{admin_logout_path}'] button.admin-topbar-button[aria-label='Tancar sessió'] svg.icon"
     assert_select "aside#adminSidebar.admin-sidebar.offcanvas-lg nav ul.nav.nav-pills"
@@ -184,15 +184,17 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
 
     get admin_employees_path
     assert_response :success
-    assert_select "title", text: "Personal | FitxaCAE Admin"
-    assert_select "h1", text: "Personal"
+    assert_select "title", text: "Persones | FitxaCAE Admin"
+    assert_select "h1", text: "Persones"
     assert_select "table"
-    assert_select "button.btn[type='submit'][data-submitting-label='Filtrant...']"
+    assert_select "button.btn[type='button']", text: "Accions massives"
+    assert_select "[data-controller='tag-search']"
+    assert_select "button[type='submit'][data-submitting-label='Filtrant...']", 0
     assert_no_match "Horari", response.body
 
     get new_admin_employee_path
     assert_response :success
-    assert_select "title", text: "Nou treballador | FitxaCAE Admin"
+    assert_select "title", text: "Nova persona | FitxaCAE Admin"
     assert_select "form"
     assert_select "button[type='submit'][data-submitting-label='Desant...']"
     assert_no_match "Horari", response.body
@@ -209,7 +211,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Fitxatges | FitxaCAE Admin"
     assert_select "a[href='#{admin_reports_path}']", text: "Exportar"
-    assert_select ".admin-calendar-empty p.small", text: "Selecciona una treballadora per veure els fitxatges."
+    assert_select ".admin-calendar-empty p.small", text: "Selecciona una persona per veure els fitxatges."
     assert_select "table", 0
     assert_select "button[type='submit'][data-submitting-label='Filtrant...']", 0
 

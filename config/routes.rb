@@ -62,7 +62,9 @@ Rails.application.routes.draw do
     patch "account/password" => "accounts#update_password", as: :account_password
     get "employee-search" => "employee_search#index", as: :employee_search
     get "tag-search" => "tag_search#index", as: :tag_search
-    resources :employees, only: %i[index new create edit update]
+    resources :employees, only: %i[index new create edit update] do
+      patch :activation, on: :member
+    end
     resource :import, controller: "imports", only: %i[new create]
     resources :swipes, only: %i[index]
     resources :calendars, only: %i[index]
