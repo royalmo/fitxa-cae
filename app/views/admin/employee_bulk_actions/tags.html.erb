@@ -1,16 +1,19 @@
 <% content_for :title, t(".title") %>
 
-<div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "tags", class: "text-primary" %>
-  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2 min-w-0">
+    <%= icon "tags", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+
+  <%= link_to admin_employees_path, class: "btn btn-outline-secondary border-0 d-inline-flex align-items-center gap-2" do %>
+    <%= icon "arrow-left" %>
+    <span><%= t("admin.employee_bulk_actions.back") %></span>
+  <% end %>
 </div>
 
 <section class="card shadow-sm">
   <div class="card-body">
-    <p class="text-body-secondary mb-4"><%= t(".empty") %></p>
-    <%= link_to admin_employees_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2" do %>
-      <%= icon "arrow-left" %>
-      <span><%= t("admin.employees.form.back_to_list") %></span>
-    <% end %>
+    <p class="text-body-secondary mb-0"><%= t(".empty") %></p>
   </div>
 </section>

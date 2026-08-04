@@ -1,0 +1,155 @@
+<% field_id = "admin_bulk_national_ids" %>
+<% action_group_id = "admin_bulk_action_group" %>
+
+<section
+  class="admin-bulk-action"
+  data-controller="bulk-national-ids"
+  data-bulk-national-ids-simulate-url-value="<%= simulate_path %>"
+  data-bulk-national-ids-confirm-modal-id-value="<%= confirm_modal_id %>"
+  data-bulk-national-ids-request-error-label-value="<%= t("admin.employee_bulk_actions.national_ids.request_error") %>"
+  data-bulk-national-ids-missing-national-ids-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_national_ids") %>"
+  data-bulk-national-ids-missing-action-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_action") %>"
+  data-bulk-national-ids-missing-both-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_both") %>"
+  data-bulk-national-ids-confirm-activate-value="<%= t("admin.employee_bulk_actions.national_ids.confirm_activate", count: "%{count}") %>"
+  data-bulk-national-ids-confirm-deactivate-value="<%= t("admin.employee_bulk_actions.national_ids.confirm_deactivate", count: "%{count}") %>"
+  data-bulk-national-ids-run-requires-simulation-label-value="<%= t("admin.employee_bulk_actions.national_ids.run_requires_simulation") %>"
+  data-bulk-national-ids-run-no-affected-label-value="<%= t("admin.employee_bulk_actions.errors.no_affected_employees") %>">
+  <%= form_with url: run_path, method: :post do %>
+    <div class="admin-bulk-action-layout">
+      <section class="card shadow-sm admin-bulk-action-form-card">
+        <div class="card-body admin-bulk-action-form">
+          <div class="admin-bulk-action-options mb-4" role="group" aria-labelledby="<%= action_group_id %>">
+            <span class="form-label admin-bulk-action-label" id="<%= action_group_id %>"><%= t("admin.employee_bulk_actions.national_ids.action_label") %></span>
+            <div class="btn-group admin-status-radio-group">
+              <% action_options.each do |option| %>
+                <% option_id = "admin_bulk_action_#{option.fetch(:value)}" %>
+                <%= radio_button_tag "bulk_action[action]",
+                  option.fetch(:value),
+                  false,
+                  id: option_id,
+                  class: "btn-check",
+                  autocomplete: "off",
+                  data: {
+                    bulk_national_ids_target: "action",
+                    action: "change->bulk-national-ids#actionChanged"
+                  } %>
+                <%= label_tag option_id, class: class_names("btn admin-status-radio-option", option[:class]) do %>
+                  <%= icon option.fetch(:icon), class: "admin-status-radio-icon" %>
+                  <span><%= option.fetch(:label) %></span>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <%= label_tag field_id, t("admin.employee_bulk_actions.national_ids.label"), class: "form-label" %>
+            <%= text_area_tag :national_ids_text,
+              nil,
+              id: field_id,
+              class: "form-control admin-bulk-national-ids-textarea",
+              rows: 8,
+              placeholder: t("admin.employee_bulk_actions.national_ids.placeholder"),
+              data: {
+                bulk_national_ids_target: "textarea",
+                action: "input->bulk-national-ids#input change->bulk-national-ids#input"
+              } %>
+          </div>
+
+          <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2 pe-5" role="alert" data-bulk-national-ids-target="error" hidden>
+            <%= icon "triangle-alert" %>
+            <span data-bulk-national-ids-target="errorText"></span>
+            <button
+              type="button"
+              class="btn-close"
+              aria-label="<%= t("shared.dismiss_flash") %>"
+              data-action="bulk-national-ids#dismissError"></button>
+          </div>
+
+          <div class="admin-bulk-action-footer d-flex flex-wrap align-items-center gap-2">
+            <span
+              class="d-inline-block"
+              data-bulk-national-ids-target="simulateTooltip"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top">
+              <button
+                type="button"
+                class="btn btn-primary d-inline-flex align-items-center gap-2"
+                disabled
+                data-bulk-national-ids-target="simulateButton"
+                data-action="bulk-national-ids#simulate">
+                <%= icon "calculator" %>
+                <span><%= t("admin.employee_bulk_actions.national_ids.simulate") %></span>
+              </button>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="card shadow-sm admin-bulk-simulation-results is-disabled"
+        aria-disabled="true"
+        data-bulk-national-ids-target="results">
+        <div class="card-body admin-bulk-simulation-body">
+          <h2 class="h5 mb-3"><%= t("admin.employee_bulk_actions.national_ids.simulation_title") %></h2>
+          <dl class="admin-bulk-simulation-kpis mb-3">
+            <div>
+              <dt><%= t("admin.employee_bulk_actions.national_ids.found_ratio") %></dt>
+              <dd data-bulk-national-ids-target="foundRatio">0/0</dd>
+            </div>
+            <div>
+              <dt><%= t("admin.employee_bulk_actions.national_ids.active_ratio") %></dt>
+              <dd data-bulk-national-ids-target="activeRatio">0/0</dd>
+            </div>
+          </dl>
+          <p class="admin-bulk-affected-summary fw-bold mb-3">
+            <%= t("admin.employee_bulk_actions.national_ids.affected_prefix") %>
+            <span class="text-primary" data-bulk-national-ids-target="affectedCount">0</span>
+            <%= t("admin.employee_bulk_actions.national_ids.affected_suffix") %>
+          </p>
+
+          <span
+            class="admin-bulk-disabled-button-tooltip is-disabled d-inline-block"
+            data-bulk-national-ids-target="runTooltip"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top">
+            <button
+              type="button"
+              class="btn btn-danger d-inline-flex align-items-center gap-2"
+              data-bulk-national-ids-target="runButton"
+              data-action="bulk-national-ids#openConfirm"
+              disabled>
+              <%= icon "play" %>
+              <span><%= submit_label %></span>
+            </button>
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <div data-bulk-national-ids-target="hiddenIds"></div>
+
+    <div class="modal fade" id="<%= confirm_modal_id %>" tabindex="-1" aria-labelledby="<%= confirm_modal_id %>_label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="<%= confirm_modal_id %>_label">
+              <%= t("admin.employee_bulk_actions.national_ids.confirm_title") %>
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0" data-bulk-national-ids-target="confirmBody"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <%= t("shared.cancel") %>
+            </button>
+            <%= button_tag type: :submit, class: "btn btn-danger", data: { submitting_label: t("shared.submitting.saving") } do %>
+              <%= t("admin.employee_bulk_actions.national_ids.confirm_run") %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</section>

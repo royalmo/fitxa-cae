@@ -68,6 +68,8 @@ Rails.application.routes.draw do
 
       collection do
         get "bulk/activation" => "employee_bulk_actions#activation", as: :bulk_activation
+        post "bulk/activation/simulate" => "employee_bulk_actions#simulate_activation", as: :simulate_bulk_activation
+        post "bulk/activation/run" => "employee_bulk_actions#run_activation", as: :run_bulk_activation
         get "bulk/tags" => "employee_bulk_actions#tags", as: :bulk_tags
       end
     end
