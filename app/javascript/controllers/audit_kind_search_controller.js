@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "employeeId", "results", "clearButton"]
+  static targets = ["input", "kind", "results", "clearButton"]
   static values = {
     url: String,
     autoSubmit: Boolean
@@ -29,7 +29,7 @@ export default class extends Controller {
     clearTimeout(this.searchTimeout)
 
     if (this.inputTarget.value !== this.selectedLabel) {
-      this.setEmployeeId("")
+      this.setKind("")
     }
 
     if (this.inputTarget.value.trim() === "") {
@@ -54,7 +54,7 @@ export default class extends Controller {
 
   clear(event) {
     event.preventDefault()
-    this.setEmployeeId("")
+    this.setKind("")
     this.inputTarget.value = ""
     this.selectedLabel = ""
     this.hide()
@@ -74,28 +74,28 @@ export default class extends Controller {
   }
 
   chooseFirstAvailableResult() {
-    const result = this.resultsTarget.querySelector(".admin-employee-search-result")
+    const result = this.resultsTarget.querySelector(".admin-audit-kind-search-result")
     if (!result) return false
 
-    this.choose(result.dataset.employeeSearchIdParam, result.dataset.employeeSearchLabelParam)
+    this.choose(result.dataset.auditKindSearchIdParam, result.dataset.auditKindSearchLabelParam)
     return true
   }
 
   choose(id, label) {
-    this.setEmployeeId(id)
+    this.setKind(id)
     this.inputTarget.value = label
     this.selectedLabel = label
     this.hide()
     if (this.autoSubmitEnabled) this.inputTarget.form?.requestSubmit()
   }
 
-  setEmployeeId(id) {
-    const previousId = this.employeeIdTarget.value
+  setKind(id) {
+    const previousId = this.kindTarget.value
 
-    this.employeeIdTarget.value = id
+    this.kindTarget.value = id
     this.updateClearButton()
     if (previousId !== id) {
-      this.employeeIdTarget.dispatchEvent(new Event("change", { bubbles: true }))
+      this.kindTarget.dispatchEvent(new Event("change", { bubbles: true }))
     }
   }
 
@@ -105,8 +105,8 @@ export default class extends Controller {
 
     const url = new URL(this.urlValue, window.location.origin)
     url.searchParams.set("q", this.inputTarget.value)
-    if (this.employeeIdTarget.value) {
-      url.searchParams.set("selected_employee_id", this.employeeIdTarget.value)
+    if (this.kindTarget.value) {
+      url.searchParams.set("selected_kind", this.kindTarget.value)
     }
 
     fetch(url, {
@@ -114,7 +114,7 @@ export default class extends Controller {
       signal: this.abortController.signal
     })
       .then((response) => {
-        if (!response.ok) throw new Error(`Employee search failed: ${response.status}`)
+        if (!response.ok) throw new Error(`Audit kind search failed: ${response.status}`)
         return response.text()
       })
       .then((html) => {
@@ -142,7 +142,7 @@ export default class extends Controller {
   }
 
   updateClearButton() {
-    if (this.hasClearButtonTarget) this.clearButtonTarget.disabled = this.employeeIdTarget.value === ""
+    if (this.hasClearButtonTarget) this.clearButtonTarget.disabled = this.kindTarget.value === ""
   }
 
   get autoSubmitEnabled() {

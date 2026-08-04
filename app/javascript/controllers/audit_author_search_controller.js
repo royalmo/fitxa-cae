@@ -1,10 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "employeeId", "results", "clearButton"]
+  static targets = ["input", "author", "results", "clearButton"]
   static values = {
     url: String,
-    autoSubmit: Boolean
+    autoSubmit: Boolean,
+    useAuthorType: Boolean
   }
 
   connect() {
@@ -29,7 +30,7 @@ export default class extends Controller {
     clearTimeout(this.searchTimeout)
 
     if (this.inputTarget.value !== this.selectedLabel) {
-      this.setEmployeeId("")
+      this.setAuthor("")
     }
 
     if (this.inputTarget.value.trim() === "") {
@@ -54,7 +55,7 @@ export default class extends Controller {
 
   clear(event) {
     event.preventDefault()
-    this.setEmployeeId("")
+    this.setAuthor("")
     this.inputTarget.value = ""
     this.selectedLabel = ""
     this.hide()
@@ -74,28 +75,28 @@ export default class extends Controller {
   }
 
   chooseFirstAvailableResult() {
-    const result = this.resultsTarget.querySelector(".admin-employee-search-result")
+    const result = this.resultsTarget.querySelector(".admin-audit-author-search-result")
     if (!result) return false
 
-    this.choose(result.dataset.employeeSearchIdParam, result.dataset.employeeSearchLabelParam)
+    this.choose(result.dataset.auditAuthorSearchIdParam, result.dataset.auditAuthorSearchLabelParam)
     return true
   }
 
   choose(id, label) {
-    this.setEmployeeId(id)
+    this.setAuthor(id)
     this.inputTarget.value = label
     this.selectedLabel = label
     this.hide()
     if (this.autoSubmitEnabled) this.inputTarget.form?.requestSubmit()
   }
 
-  setEmployeeId(id) {
-    const previousId = this.employeeIdTarget.value
+  setAuthor(id) {
+    const previousId = this.authorTarget.value
 
-    this.employeeIdTarget.value = id
+    this.authorTarget.value = id
     this.updateClearButton()
     if (previousId !== id) {
-      this.employeeIdTarget.dispatchEvent(new Event("change", { bubbles: true }))
+      this.authorTarget.dispatchEvent(new Event("change", { bubbles: true }))
     }
   }
 
@@ -105,8 +106,11 @@ export default class extends Controller {
 
     const url = new URL(this.urlValue, window.location.origin)
     url.searchParams.set("q", this.inputTarget.value)
-    if (this.employeeIdTarget.value) {
-      url.searchParams.set("selected_employee_id", this.employeeIdTarget.value)
+    if (this.authorTarget.value) {
+      url.searchParams.set("selected_author", this.authorTarget.value)
+    }
+    if (this.authorType) {
+      url.searchParams.set("author_type", this.authorType)
     }
 
     fetch(url, {
@@ -114,7 +118,7 @@ export default class extends Controller {
       signal: this.abortController.signal
     })
       .then((response) => {
-        if (!response.ok) throw new Error(`Employee search failed: ${response.status}`)
+        if (!response.ok) throw new Error(`Audit author search failed: ${response.status}`)
         return response.text()
       })
       .then((html) => {
@@ -142,7 +146,17 @@ export default class extends Controller {
   }
 
   updateClearButton() {
-    if (this.hasClearButtonTarget) this.clearButtonTarget.disabled = this.employeeIdTarget.value === ""
+    if (this.hasClearButtonTarget) this.clearButtonTarget.disabled = this.authorTarget.value === ""
+  }
+
+  get authorType() {
+    if (!this.useAuthorTypeEnabled) return ""
+
+    return this.inputTarget.form?.querySelector("input[name='author_type']:checked")?.value || ""
+  }
+
+  get useAuthorTypeEnabled() {
+    return this.hasUseAuthorTypeValue ? this.useAuthorTypeValue : true
   }
 
   get autoSubmitEnabled() {

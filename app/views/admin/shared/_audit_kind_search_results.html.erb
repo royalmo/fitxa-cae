@@ -1,0 +1,20 @@
+<% if kinds.any? %>
+  <% kinds.each do |kind| %>
+    <% selected = kind.to_s == selected_kind.to_s %>
+    <button
+      type="button"
+      class="<%= class_names("list-group-item list-group-item-action admin-tag-search-result admin-audit-kind-search-result", "active": selected) %>"
+      data-action="audit-kind-search#select"
+      data-audit-kind-search-id-param="<%= kind %>"
+      data-audit-kind-search-label-param="<%= admin_audit_action_kind_text(kind) %>"
+      role="option"
+      aria-selected="<%= selected %>">
+      <span><%= admin_audit_action_kind_text(kind) %></span>
+      <code><%= kind %></code>
+    </button>
+  <% end %>
+<% else %>
+  <div class="list-group-item text-body-secondary">
+    <%= t("admin.audit_kind_search.no_results") %>
+  </div>
+<% end %>

@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "tagId", "results", "field", "selection", "selectionLabel"]
+  static targets = ["input", "tagId", "results", "field", "selection", "selectionLabel", "clearButton"]
   static values = {
     url: String,
     autoSubmit: Boolean
@@ -15,6 +15,7 @@ export default class extends Controller {
     this.closeFromOutsideClick = this.closeFromOutsideClick.bind(this)
     document.addEventListener("click", this.closeFromOutsideClick)
     document.addEventListener("turbo:before-cache", this.hide)
+    this.updateClearButton()
   }
 
   disconnect() {
@@ -99,6 +100,7 @@ export default class extends Controller {
     const previousId = this.tagIdTarget.value
 
     this.tagIdTarget.value = id
+    this.updateClearButton()
     if (previousId !== id) {
       this.tagIdTarget.dispatchEvent(new Event("change", { bubbles: true }))
     }
@@ -162,6 +164,10 @@ export default class extends Controller {
 
   closeFromOutsideClick(event) {
     if (!this.element.contains(event.target)) this.hide()
+  }
+
+  updateClearButton() {
+    if (this.hasClearButtonTarget) this.clearButtonTarget.disabled = this.tagIdTarget.value === ""
   }
 
   get autoSubmitEnabled() {

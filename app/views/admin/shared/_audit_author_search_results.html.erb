@@ -1,0 +1,24 @@
+<% if authors.any? %>
+  <% authors.each do |author| %>
+    <% author_value = admin_audit_author_value(author) %>
+    <% selected = author_value == selected_author_value.to_s %>
+    <button
+      type="button"
+      class="<%= class_names("list-group-item list-group-item-action admin-employee-search-result admin-audit-author-search-result", "active": selected) %>"
+      data-action="audit-author-search#select"
+      data-audit-author-search-id-param="<%= author_value %>"
+      data-audit-author-search-label-param="<%= admin_audit_subject_text(author) %>"
+      role="option"
+      aria-selected="<%= selected %>">
+      <%= icon admin_audit_author_icon(author), class: "admin-audit-author-search-result-icon" %>
+      <strong><%= admin_audit_subject_text(author) %></strong>
+      <% if admin_audit_author_secondary_text(author).present? %>
+        <span class="text-body-secondary">- <%= admin_audit_author_secondary_text(author) %></span>
+      <% end %>
+    </button>
+  <% end %>
+<% else %>
+  <div class="list-group-item text-body-secondary">
+    <%= t("admin.audit_author_search.no_results") %>
+  </div>
+<% end %>

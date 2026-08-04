@@ -67,7 +67,9 @@
                 class="btn btn-outline-secondary"
                 title="<%= t("admin.managers.form.no_employee") %>"
                 aria-label="<%= t("admin.managers.form.no_employee") %>"
-                data-action="employee-search#clear">
+                data-employee-search-target="clearButton"
+                data-action="employee-search#clear"
+                <%= "disabled" unless selected_employee %>>
                 <%= icon "x" %>
               </button>
             </div>

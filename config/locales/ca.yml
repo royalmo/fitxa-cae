@@ -436,6 +436,10 @@ ca:
       no_results: "Cap persona trobada."
     tag_search:
       no_results: "Cap etiqueta activa trobada."
+    audit_author_search:
+      no_results: "Cap autor trobat."
+    audit_kind_search:
+      no_results: "Cap tipus d'activitat trobat."
     pagination:
       label: "Paginació"
       showing_count: "Mostrant %{from}-%{to} de %{count}"
@@ -787,6 +791,22 @@ ca:
         export: "Exportar"
         kind: "Tipus"
         kind_placeholder: "Tipus d'acció"
+        clear_kind: "Esborrar tipus d'acció"
+        author_kind: "Tipus d'autor"
+        author_filter: "Fet per"
+        author_placeholder: "Cerca per nom, DNI, correu o telèfon"
+        clear_author: "Esborrar autor"
+        recipient_filter: "Receptor/a:"
+        clear_recipient: "Esborrar receptor/a"
+        author_kind_filters:
+          all: "Tots"
+          employees: "Persones"
+          managers: "Responsables"
+        month: "Mes"
+        all_months: "Tots els mesos"
+        year: "Any"
+        all_years: "Tots els anys"
+        period_connector: "de"
         created_at: "Data"
         author: "Autor"
         recipient: "Destinatari"

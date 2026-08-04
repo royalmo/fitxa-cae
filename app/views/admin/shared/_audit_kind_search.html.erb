@@ -1,0 +1,49 @@
+<% selected_kind ||= nil %>
+<% field ||= :kind %>
+<% query_field ||= :kind_query %>
+<% results_id ||= "admin-audit-kind-search-results" %>
+<% placeholder ||= t("admin.audit_actions.index.kind_placeholder") %>
+<% clear_label ||= t("admin.audit_actions.index.clear_kind") %>
+
+<div
+  class="admin-audit-kind-search position-relative"
+  data-controller="audit-kind-search"
+  data-audit-kind-search-url-value="<%= admin_audit_kind_search_path %>">
+  <%= form.hidden_field field,
+    value: selected_kind,
+    data: { audit_kind_search_target: "kind" } %>
+  <div class="input-group">
+    <span class="input-group-text"><%= icon "list-filter" %></span>
+    <%= text_field_tag query_field,
+      (admin_audit_action_kind_text(selected_kind) if selected_kind.present?),
+      class: "form-control",
+      placeholder: placeholder,
+      autocomplete: "off",
+      role: "combobox",
+      aria: {
+        autocomplete: "list",
+        controls: results_id,
+        expanded: "false"
+      },
+      data: {
+        audit_kind_search_target: "input",
+        action: "input->audit-kind-search#search focus->audit-kind-search#search keydown->audit-kind-search#keydown"
+      } %>
+    <button
+      type="button"
+      class="btn btn-outline-secondary"
+      title="<%= clear_label %>"
+      aria-label="<%= clear_label %>"
+      data-audit-kind-search-target="clearButton"
+      data-action="audit-kind-search#clear"
+      <%= "disabled" unless selected_kind.present? %>>
+      <%= icon "x" %>
+    </button>
+  </div>
+  <div
+    id="<%= results_id %>"
+    class="admin-tag-search-results admin-audit-kind-search-results list-group shadow-sm"
+    data-audit-kind-search-target="results"
+    role="listbox"
+    hidden></div>
+</div>

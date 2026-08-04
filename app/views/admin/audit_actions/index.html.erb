@@ -16,19 +16,86 @@
   <div class="mb-3">
     <%= form_with url: admin_audit_actions_path,
       method: :get,
-      class: "row g-2 align-items-end mb-2",
-      data: { action: "submit->list-loading#showLoading" } do |form| %>
-      <div class="col-12 col-lg-6">
-        <%= form.label :kind, t(".kind"), class: "form-label visually-hidden" %>
-        <%= form.search_field :kind, value: params[:kind], placeholder: t(".kind_placeholder"), class: "form-control" %>
+      class: "admin-audit-actions-filter-form d-flex flex-column gap-2 w-100 mb-2",
+      data: {
+        controller: "audit-filters",
+        action: "submit->list-loading#showLoading"
+      } do |form| %>
+      <div class="admin-audit-actions-primary-filters d-flex flex-column flex-xl-row align-items-stretch gap-2">
+        <fieldset class="admin-audit-actions-author-kind-filter btn-group" role="group" aria-label="<%= t(".author_kind") %>">
+          <% [["", "all"], ["Employee", "employees"], ["Manager", "managers"]].each do |author_type, key| %>
+            <% option_id = "audit_author_type_#{key}" %>
+            <%= form.radio_button :author_type,
+              author_type,
+              id: option_id,
+              checked: @selected_author_type.to_s == author_type,
+              class: "btn-check",
+              autocomplete: "off",
+              data: { action: "change->audit-filters#clearAuthor change->list-loading#filter" } %>
+            <%= form.label :author_type, for: option_id, class: "btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-1" do %>
+              <%= icon admin_audit_author_kind_filter_icon(author_type), class: "admin-badge-icon" %>
+              <span><%= admin_audit_author_kind_filter_label(author_type) %></span>
+            <% end %>
+          <% end %>
+        </fieldset>
+
+        <div class="admin-audit-actions-kind-filter flex-grow-1">
+          <%= form.label :kind, t(".kind"), class: "form-label visually-hidden" %>
+          <%= render "admin/shared/audit_kind_search",
+            form: form,
+            selected_kind: @selected_kind,
+            results_id: "admin-audit-actions-kind-results" %>
+        </div>
+
+        <div class="admin-audit-actions-period-filter">
+          <%= form.label :month, t(".month"), class: "form-label visually-hidden" %>
+          <%= form.label :year, t(".year"), class: "form-label visually-hidden" %>
+          <div class="input-group flex-nowrap">
+            <%= form.select :month,
+              [[t(".all_months"), ""]] + admin_audit_actions_month_options,
+              { selected: @selected_month || "" },
+              class: "form-select",
+              data: { action: "change->list-loading#filter" } %>
+            <span class="input-group-text"><%= t(".period_connector") %></span>
+            <%= form.select :year,
+              [[t(".all_years"), ""]] + @year_options.map { |year| [year, year] },
+              { selected: @selected_year || "" },
+              class: "form-select",
+              data: { action: "change->list-loading#filter" } %>
+          </div>
+        </div>
       </div>
-      <div class="col-12 col-sm-auto">
-        <%= button_tag type: :submit, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2", data: { submitting_label: t("shared.submitting.filtering") } do %>
-          <%= icon "filter" %>
-          <span><%= t("shared.filter") %></span>
-        <% end %>
+
+      <div class="admin-audit-actions-subject-filters d-flex flex-column flex-xl-row align-items-stretch gap-2">
+        <div class="admin-audit-actions-subject-filter">
+          <%= form.label :author, t(".author_filter"), class: "form-label mb-0 admin-audit-actions-subject-label" %>
+          <div class="admin-audit-actions-subject-search">
+            <%= render "admin/shared/audit_author_search",
+              form: form,
+              selected_author: @selected_author,
+              hidden_data: { audit_filters_target: "author" },
+              input_data: { audit_filters_target: "authorInput" },
+              results_id: "admin-audit-actions-author-results" %>
+          </div>
+        </div>
+
+        <div class="admin-audit-actions-subject-filter">
+          <%= form.label :recipient, t(".recipient_filter"), class: "form-label mb-0 admin-audit-actions-subject-label" %>
+          <div class="admin-audit-actions-subject-search">
+            <%= render "admin/shared/audit_author_search",
+              form: form,
+              field: :recipient,
+              query_field: :recipient_query,
+              selected_author: @selected_recipient,
+              clear_label: t(".clear_recipient"),
+              results_id: "admin-audit-actions-recipient-results",
+              use_author_type: false %>
+          </div>
+        </div>
       </div>
     <% end %>
+
+    <hr class="admin-filters-divider">
 
     <div class="text-center">
       <%= render "admin/shared/result_count",
