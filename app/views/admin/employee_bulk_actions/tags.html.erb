@@ -12,8 +12,7 @@
   <% end %>
 </div>
 
-<section class="card shadow-sm">
-  <div class="card-body">
-    <p class="text-body-secondary mb-0"><%= t(".empty") %></p>
-  </div>
-</section>
+<%= render "tags_bulk_form",
+  run_path: run_bulk_tags_admin_employees_path,
+  simulate_path: simulate_bulk_tags_admin_employees_path,
+  confirm_modal_id: "adminEmployeeBulkTagsConfirmModal" %>

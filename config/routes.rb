@@ -71,6 +71,8 @@ Rails.application.routes.draw do
         post "bulk/activation/simulate" => "employee_bulk_actions#simulate_activation", as: :simulate_bulk_activation
         post "bulk/activation/run" => "employee_bulk_actions#run_activation", as: :run_bulk_activation
         get "bulk/tags" => "employee_bulk_actions#tags", as: :bulk_tags
+        post "bulk/tags/simulate" => "employee_bulk_actions#simulate_tags", as: :simulate_bulk_tags
+        post "bulk/tags/run" => "employee_bulk_actions#run_tags", as: :run_bulk_tags
       end
     end
     resource :import, controller: "imports", only: %i[new create]

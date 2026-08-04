@@ -381,6 +381,9 @@ ca:
       employee_bulk_deactivated:
         one: "S'ha desactivat 1 persona."
         other: "S'han desactivat %{count} persones."
+      employee_bulk_tags_updated:
+        one: "S'han actualitzat les etiquetes d'1 persona."
+        other: "S'han actualitzat les etiquetes de %{count} persones."
       employee_created: "Persona creada."
       employee_deactivated: "Persona desactivada."
       employee_updated: "Persona actualitzada."
@@ -563,7 +566,9 @@ ca:
     employee_bulk_actions:
       back: "Tornar"
       errors:
+        conflicting_tags: "No pots afegir i treure la mateixa etiqueta."
         duplicate_national_id: "No s'ha pogut simular la llista. El DNI/NIE %{national_id} està duplicat %{count} vegades."
+        invalid_tags: "Selecciona com a mínim una etiqueta activa vàlida."
         invalid_national_ids: "La llista de DNI/NIE no és vàlida."
         invalid_national_id: "No s'ha pogut simular la llista. Primer DNI/NIE no vàlid: %{national_id}."
         invalid_request: "Revisa la llista de DNI/NIE i l'acció seleccionada."
@@ -597,7 +602,24 @@ ca:
       tags:
         title: "Afegir etiquetes"
         heading: "Afegir etiquetes"
-        empty: "Pàgina pendent."
+        add_tags: "Etiquetes a afegir"
+        remove_tags: "Etiquetes a treure"
+        include_inactive: "Incloure persones inactives"
+        search_add_placeholder: "Cerca etiquetes per afegir"
+        search_remove_placeholder: "Cerca etiquetes per treure"
+        simulate: "Simular"
+        simulation_title: "Simulació"
+        found_ratio: "DNI/NIEs trobats"
+        tag_kpi_prefix: "Persones amb"
+        affected_prefix: "Aquesta acció afectarà a"
+        affected_suffix: "persones."
+        missing_tags: "Selecciona com a mínim una etiqueta per afegir o treure."
+        missing_national_ids_and_tags: "Enganxa el llistat de DNI/NIEs i selecciona com a mínim una etiqueta."
+        run: "Executar acció massiva"
+        run_requires_simulation: "Simula el llistat abans d'executar l'acció massiva."
+        confirm_title: "Executar acció massiva"
+        confirm_body: "S'actualitzaran les etiquetes de %{count} persones. Vols continuar?"
+        confirm_run: "Sí, executar"
     imports:
       new:
         title: "Importació"

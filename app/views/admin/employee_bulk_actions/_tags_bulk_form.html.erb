@@ -1,0 +1,168 @@
+<% field_id = "admin_bulk_tag_national_ids" %>
+
+<section
+  class="admin-bulk-action"
+  data-controller="bulk-tags"
+  data-bulk-tags-simulate-url-value="<%= simulate_path %>"
+  data-bulk-tags-confirm-modal-id-value="<%= confirm_modal_id %>"
+  data-bulk-tags-request-error-label-value="<%= t("admin.employee_bulk_actions.national_ids.request_error") %>"
+  data-bulk-tags-missing-national-ids-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_national_ids") %>"
+  data-bulk-tags-missing-tags-label-value="<%= t("admin.employee_bulk_actions.tags.missing_tags") %>"
+  data-bulk-tags-missing-both-label-value="<%= t("admin.employee_bulk_actions.tags.missing_national_ids_and_tags") %>"
+  data-bulk-tags-run-requires-simulation-label-value="<%= t("admin.employee_bulk_actions.tags.run_requires_simulation") %>"
+  data-bulk-tags-run-no-affected-label-value="<%= t("admin.employee_bulk_actions.errors.no_affected_employees") %>"
+  data-bulk-tags-tag-kpi-prefix-value="<%= t("admin.employee_bulk_actions.tags.tag_kpi_prefix") %>"
+  data-bulk-tags-confirm-body-value="<%= t("admin.employee_bulk_actions.tags.confirm_body", count: "%{count}") %>">
+  <%= form_with url: run_path, method: :post, scope: :bulk_tags do |form| %>
+    <div class="admin-bulk-action-layout">
+      <section class="card shadow-sm admin-bulk-action-form-card">
+        <div class="card-body admin-bulk-action-form">
+          <div class="row g-3 mb-4">
+            <fieldset class="col-12">
+              <legend class="form-label"><%= t("admin.employee_bulk_actions.tags.add_tags") %></legend>
+              <div data-bulk-tags-target="addTagSelector" data-action="change->bulk-tags#tagsChanged">
+                <%= render "admin/shared/tag_multi_search",
+                  form: form,
+                  field: :add_tag_ids,
+                  query_field: :bulk_add_tag_query,
+                  selected_tags: [],
+                  placeholder: t("admin.employee_bulk_actions.tags.search_add_placeholder"),
+                  results_id: "admin-bulk-add-tag-results" %>
+              </div>
+            </fieldset>
+
+            <fieldset class="col-12">
+              <legend class="form-label"><%= t("admin.employee_bulk_actions.tags.remove_tags") %></legend>
+              <div data-bulk-tags-target="removeTagSelector" data-action="change->bulk-tags#tagsChanged">
+                <%= render "admin/shared/tag_multi_search",
+                  form: form,
+                  field: :remove_tag_ids,
+                  query_field: :bulk_remove_tag_query,
+                  selected_tags: [],
+                  placeholder: t("admin.employee_bulk_actions.tags.search_remove_placeholder"),
+                  results_id: "admin-bulk-remove-tag-results" %>
+              </div>
+            </fieldset>
+
+            <div class="col-12">
+              <%= label_tag field_id, t("admin.employee_bulk_actions.national_ids.label"), class: "form-label" %>
+              <%= text_area_tag :national_ids_text,
+                nil,
+                id: field_id,
+                class: "form-control admin-bulk-national-ids-textarea",
+                rows: 8,
+                placeholder: t("admin.employee_bulk_actions.national_ids.placeholder"),
+                data: {
+                  bulk_tags_target: "textarea",
+                  action: "input->bulk-tags#input change->bulk-tags#input"
+                } %>
+            </div>
+          </div>
+
+          <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2 pe-5" role="alert" data-bulk-tags-target="error" hidden>
+            <%= icon "triangle-alert" %>
+            <span data-bulk-tags-target="errorText"></span>
+            <button
+              type="button"
+              class="btn-close"
+              aria-label="<%= t("shared.dismiss_flash") %>"
+              data-action="bulk-tags#dismissError"></button>
+          </div>
+
+          <div class="admin-bulk-action-footer d-flex flex-column align-items-start gap-2">
+            <div class="form-check">
+              <%= form.check_box :include_inactive,
+                class: "form-check-input",
+                data: {
+                  bulk_tags_target: "includeInactive",
+                  action: "change->bulk-tags#includeInactiveChanged"
+                } %>
+              <%= form.label :include_inactive,
+                t("admin.employee_bulk_actions.tags.include_inactive"),
+                class: "form-check-label" %>
+            </div>
+
+            <span
+              class="d-inline-block"
+              data-bulk-tags-target="simulateTooltip"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top">
+              <button
+                type="button"
+                class="btn btn-primary d-inline-flex align-items-center gap-2"
+                disabled
+                data-bulk-tags-target="simulateButton"
+                data-action="bulk-tags#simulate">
+                <%= icon "calculator" %>
+                <span><%= t("admin.employee_bulk_actions.tags.simulate") %></span>
+              </button>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="card shadow-sm admin-bulk-simulation-results is-disabled"
+        aria-disabled="true"
+        data-bulk-tags-target="results">
+        <div class="card-body admin-bulk-simulation-body">
+          <h2 class="h5 mb-3"><%= t("admin.employee_bulk_actions.tags.simulation_title") %></h2>
+          <dl class="admin-bulk-simulation-kpis mb-3">
+            <div>
+              <dt><%= t("admin.employee_bulk_actions.tags.found_ratio") %></dt>
+              <dd data-bulk-tags-target="foundRatio">0/0</dd>
+            </div>
+          </dl>
+          <dl class="admin-bulk-simulation-kpis mb-3" data-bulk-tags-target="tagKpis"></dl>
+          <p class="admin-bulk-affected-summary fw-bold mb-3">
+            <%= t("admin.employee_bulk_actions.tags.affected_prefix") %>
+            <span class="text-primary" data-bulk-tags-target="affectedCount">0</span>
+            <%= t("admin.employee_bulk_actions.tags.affected_suffix") %>
+          </p>
+
+          <span
+            class="admin-bulk-disabled-button-tooltip is-disabled d-inline-block"
+            data-bulk-tags-target="runTooltip"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top">
+            <button
+              type="button"
+              class="btn btn-danger d-inline-flex align-items-center gap-2"
+              data-bulk-tags-target="runButton"
+              data-action="bulk-tags#openConfirm"
+              disabled>
+              <%= icon "play" %>
+              <span><%= t("admin.employee_bulk_actions.tags.run") %></span>
+            </button>
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <div data-bulk-tags-target="hiddenIds"></div>
+
+    <div class="modal fade" id="<%= confirm_modal_id %>" tabindex="-1" aria-labelledby="<%= confirm_modal_id %>_label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="<%= confirm_modal_id %>_label">
+              <%= t("admin.employee_bulk_actions.tags.confirm_title") %>
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0" data-bulk-tags-target="confirmBody"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <%= t("shared.cancel") %>
+            </button>
+            <%= button_tag type: :submit, class: "btn btn-danger", data: { submitting_label: t("shared.submitting.saving") } do %>
+              <%= t("admin.employee_bulk_actions.tags.confirm_run") %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</section>

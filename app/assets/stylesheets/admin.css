@@ -859,9 +859,18 @@ html[data-pwa="admin"] .turbo-progress-bar {
 }
 
 .admin-bulk-simulation-kpis dt {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
   color: var(--bs-secondary-color);
   font-size: 0.8125rem;
   font-weight: 600;
+}
+
+.admin-bulk-simulation-kpis dt .admin-tag-label {
+  max-width: 100%;
 }
 
 .admin-bulk-simulation-kpis dd {

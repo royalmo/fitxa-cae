@@ -67,6 +67,32 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Afegir etiquetes | FitxaCAE Admin"
     assert_select "h1", text: "Afegir etiquetes"
     assert_select "a.btn.border-0[href='#{admin_employees_path}']", text: "Tornar"
+    assert_select ".admin-bulk-action[data-controller='bulk-tags'][data-bulk-tags-simulate-url-value='#{simulate_bulk_tags_admin_employees_path}']" do
+      assert_select "form[action='#{run_bulk_tags_admin_employees_path}'][method='post']" do
+        assert_select ".admin-bulk-action-form-card" do
+          assert_select "legend.form-label", text: "Etiquetes a afegir"
+          assert_select "legend.form-label", text: "Etiquetes a treure"
+          assert_select ".admin-tag-multi-search[data-controller='tag-multi-search']", count: 2
+          assert_select ".admin-tag-multi-search-selections > .admin-tag-multi-search-selection", count: 0
+          assert_select "input.admin-tag-multi-search-input[name='bulk_add_tag_query'][placeholder='Cerca etiquetes per afegir']"
+          assert_select "input.admin-tag-multi-search-input[name='bulk_remove_tag_query'][placeholder='Cerca etiquetes per treure']"
+          assert_select "textarea#admin_bulk_tag_national_ids[name='national_ids_text'][data-bulk-tags-target='textarea']"
+          assert_select "input[type='checkbox'][name='bulk_tags[include_inactive]'][data-bulk-tags-target='includeInactive']:not([checked])"
+          assert_select "label", text: "Incloure persones inactives"
+          assert_select "button[type='button'][disabled][data-bulk-tags-target='simulateButton']", text: "Simular"
+        end
+        assert_select ".admin-bulk-simulation-results.card.shadow-sm.is-disabled[data-bulk-tags-target='results']" do
+          assert_select "[data-bulk-tags-target='foundRatio']", text: "0/0"
+          assert_select "[data-bulk-tags-target='tagKpis']"
+          assert_select ".admin-bulk-affected-summary .text-primary[data-bulk-tags-target='affectedCount']", text: "0"
+          assert_select "button[type='button'][disabled][data-bulk-tags-target='runButton']", text: "Executar acció massiva"
+        end
+        assert_select "#adminEmployeeBulkTagsConfirmModal.modal.fade" do
+          assert_select ".modal-title", text: "Executar acció massiva"
+          assert_select "button[type='submit']", text: "Sí, executar"
+        end
+      end
+    end
     assert_select "a[href='#{admin_employees_path}']", text: "Tornar a persones", count: 0
   end
 
@@ -108,6 +134,106 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_equal "No s'ha pogut simular la llista. El DNI/NIE #{duplicated_national_id} està duplicat 2 vegades.",
       JSON.parse(response.body).fetch("error")
+  end
+
+  test "simulates bulk tag changes for active employees by default" do
+    add_tag = Tag.create!(name: "Office", color: "#2563eb", active: true)
+    remove_tag = Tag.create!(name: "Warehouse", color: "#16a34a", active: true)
+    active_employee = create_employee(national_id: valid_dni(44_100_001), active: true)
+    inactive_employee = create_employee(national_id: valid_dni(44_100_002), active: false)
+    active_employee.tags << remove_tag
+    inactive_employee.tags << remove_tag
+
+    post simulate_bulk_tags_admin_employees_path,
+      params: {
+        national_ids: [ active_employee.national_id, inactive_employee.national_id, valid_dni(44_100_003) ],
+        bulk_tags: { add_tag_ids: [ add_tag.id ], remove_tag_ids: [ remove_tag.id ], include_inactive: "0" }
+      },
+      as: :json
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal 3, payload.fetch("total_count")
+    assert_equal 1, payload.fetch("found_count")
+    assert_equal 1, payload.fetch("affected_count")
+    add_payload = payload.fetch("tags").find { |tag| tag.fetch("id") == add_tag.id }
+    remove_payload = payload.fetch("tags").find { |tag| tag.fetch("id") == remove_tag.id }
+    assert_equal 0, add_payload.fetch("count")
+    assert_includes add_payload.fetch("html"), "Office"
+    assert_equal 1, remove_payload.fetch("count")
+    assert_includes remove_payload.fetch("html"), "Warehouse"
+  end
+
+  test "simulates bulk tag changes including inactive employees when requested" do
+    remove_tag = Tag.create!(name: "Warehouse", color: "#16a34a", active: true)
+    active_employee = create_employee(national_id: valid_dni(44_100_004), active: true)
+    inactive_employee = create_employee(national_id: valid_dni(44_100_005), active: false)
+    active_employee.tags << remove_tag
+    inactive_employee.tags << remove_tag
+
+    post simulate_bulk_tags_admin_employees_path,
+      params: {
+        national_ids: [ active_employee.national_id, inactive_employee.national_id ],
+        bulk_tags: { remove_tag_ids: [ remove_tag.id ], include_inactive: "1" }
+      },
+      as: :json
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal 2, payload.fetch("total_count")
+    assert_equal 2, payload.fetch("found_count")
+    assert_equal 2, payload.fetch("affected_count")
+    assert_equal 2, payload.fetch("tags").first.fetch("count")
+  end
+
+  test "rejects conflicting bulk tag simulation selections" do
+    tag = Tag.create!(name: "Office", color: "#2563eb", active: true)
+    employee = create_employee(national_id: valid_dni(44_100_006), active: true)
+
+    post simulate_bulk_tags_admin_employees_path,
+      params: {
+        national_ids: [ employee.national_id ],
+        bulk_tags: { add_tag_ids: [ tag.id ], remove_tag_ids: [ tag.id ] }
+      },
+      as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal "No pots afegir i treure la mateixa etiqueta.", JSON.parse(response.body).fetch("error")
+  end
+
+  test "runs bulk tag changes for active employees by default" do
+    add_tag = Tag.create!(name: "Office", color: "#2563eb", active: true)
+    remove_tag = Tag.create!(name: "Warehouse", color: "#16a34a", active: true)
+    active_employee = create_employee(national_id: valid_dni(44_100_007), active: true)
+    inactive_employee = create_employee(national_id: valid_dni(44_100_008), active: false)
+    active_employee.tags << remove_tag
+    inactive_employee.tags << remove_tag
+
+    post run_bulk_tags_admin_employees_path, params: {
+      national_ids: [ active_employee.national_id, inactive_employee.national_id ],
+      bulk_tags: { add_tag_ids: [ add_tag.id ], remove_tag_ids: [ remove_tag.id ], include_inactive: "0" }
+    }
+
+    assert_redirected_to admin_employees_path
+    assert_includes active_employee.reload.tags, add_tag
+    assert_not_includes active_employee.tags, remove_tag
+    assert_not_includes inactive_employee.reload.tags, add_tag
+    assert_includes inactive_employee.tags, remove_tag
+    assert_equal "S'han actualitzat les etiquetes d'1 persona.", flash[:notice]
+  end
+
+  test "redirects bulk tag changes with no affected employees" do
+    tag = Tag.create!(name: "Office", color: "#2563eb", active: true)
+    employee = create_employee(national_id: valid_dni(44_100_009), active: true)
+    employee.tags << tag
+
+    post run_bulk_tags_admin_employees_path, params: {
+      national_ids: [ employee.national_id ],
+      bulk_tags: { add_tag_ids: [ tag.id ] }
+    }
+
+    assert_redirected_to bulk_tags_admin_employees_path
+    assert_equal "Aquesta acció no afectarà cap persona.", flash[:alert]
   end
 
   test "runs activation bulk action" do
