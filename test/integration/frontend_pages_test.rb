@@ -138,6 +138,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     )
     log_in_manager(manager)
     pending_corrections_count = SwipeCorrection.pending.count
+    pending_corrections_badge = pending_corrections_count > 99 ? "99+" : pending_corrections_count.to_s
     pending_corrections_label = I18n.t("admin.topbar.pending_corrections", count: pending_corrections_count)
 
     get admin_root_path
@@ -153,7 +154,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='stylesheet'][href*='application']", 0
     assert_select "script[src*='popper']", 1
     assert_select "script[src*='bootstrap']", 1
-    assert_select "nav.navbar a.admin-topbar-corrections-button[href='#{admin_corrections_path(status: "pending")}'][aria-label='#{pending_corrections_label}'] .admin-topbar-count-badge", text: pending_corrections_count.to_s
+    assert_select "nav.navbar a.admin-topbar-corrections-button[href='#{admin_corrections_path(status: "pending")}'][aria-label='#{pending_corrections_label}'] .admin-topbar-count-badge", text: pending_corrections_badge
     assert_select "nav.navbar a.admin-topbar-corrections-button", text: /Correccions/, count: 0
     assert_select "nav.navbar a.admin-topbar-employee-button[href='#{root_path}'][aria-label='Anar a la part de la persona'] svg.icon"
     assert_select "nav.navbar a.admin-topbar-button[href='#{admin_account_path}'][aria-label='Compte']", text: /Laia Riera/
@@ -213,7 +214,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get admin_swipes_path
     assert_response :success
     assert_select "title", text: "Fitxatges | FitxaCAE Admin"
-    assert_select "a[href='#{admin_reports_path}']", text: "Exportar"
+    assert_select "a.btn[href='#{admin_reports_path(month: Date.current.month, year: Date.current.year)}']", text: "Exportar"
     assert_select ".admin-calendar-empty p.small", text: "Selecciona una persona per veure els fitxatges."
     assert_select "table", 0
     assert_select "button[type='submit'][data-submitting-label='Filtrant...']", 0
