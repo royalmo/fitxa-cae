@@ -65,6 +65,11 @@ Rails.application.routes.draw do
     get "tag-search" => "tag_search#index", as: :tag_search
     resources :employees, only: %i[index new create edit update] do
       patch :activation, on: :member
+
+      collection do
+        get "bulk/activation" => "employee_bulk_actions#activation", as: :bulk_activation
+        get "bulk/tags" => "employee_bulk_actions#tags", as: :bulk_tags
+      end
     end
     resource :import, controller: "imports", only: %i[new create]
     resources :swipes, only: %i[index]

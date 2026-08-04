@@ -187,7 +187,10 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Persones | FitxaCAE Admin"
     assert_select "h1", text: "Persones"
     assert_select "table"
-    assert_select "button.btn[type='button']", text: "Accions massives"
+    assert_select "button.dropdown-toggle[data-bs-toggle='dropdown']", text: "Accions massives"
+    assert_select "a.dropdown-item[href='#{new_admin_import_path}']", text: "Importar persones"
+    assert_select "a.dropdown-item[href='#{bulk_activation_admin_employees_path}']", text: "Activar i desactivar"
+    assert_select "a.dropdown-item[href='#{bulk_tags_admin_employees_path}']", text: "Afegir etiquetes"
     assert_select "[data-controller='tag-search']"
     assert_select "button[type='submit'][data-submitting-label='Filtrant...']", 0
     assert_no_match "Horari", response.body

@@ -508,6 +508,9 @@ ca:
         title: "Persones"
         heading: "Persones"
         bulk_actions: "Accions massives"
+        bulk_action_import: "Importar persones"
+        bulk_action_activation: "Activar i desactivar"
+        bulk_action_tags: "Afegir etiquetes"
         new_employee: "Nova persona"
         search_placeholder: "Nom, DNI/NIE o correu"
         tags: "Etiquetes"
@@ -551,6 +554,15 @@ ca:
           body: "Vols desactivar %{name}?"
           description: "No podrà iniciar sessió ni fitxar mentre estigui inactiva."
           confirm: "Desactivar"
+    employee_bulk_actions:
+      activation:
+        title: "Activar i desactivar"
+        heading: "Activar i desactivar"
+        empty: "Pàgina pendent."
+      tags:
+        title: "Afegir etiquetes"
+        heading: "Afegir etiquetes"
+        empty: "Pàgina pendent."
     imports:
       new:
         title: "Importació"

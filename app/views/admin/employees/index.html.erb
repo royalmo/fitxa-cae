@@ -8,10 +8,37 @@
     <h1 class="h2 mb-0"><%= t(".heading") %></h1>
   </div>
   <div class="d-flex flex-wrap justify-content-end gap-2">
-    <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
-      <%= icon "list-checks" %>
-      <span><%= t(".bulk_actions") %></span>
-    </button>
+    <div class="dropdown">
+      <button
+        type="button"
+        id="adminEmployeeBulkActionsMenu"
+        class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-2"
+        data-bs-toggle="dropdown"
+        aria-expanded="false">
+        <%= icon "list-checks" %>
+        <span><%= t(".bulk_actions") %></span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminEmployeeBulkActionsMenu">
+        <li>
+          <%= link_to new_admin_import_path, class: "dropdown-item d-flex align-items-center gap-2" do %>
+            <%= icon "upload" %>
+            <span><%= t(".bulk_action_import") %></span>
+          <% end %>
+        </li>
+        <li>
+          <%= link_to bulk_activation_admin_employees_path, class: "dropdown-item d-flex align-items-center gap-2" do %>
+            <%= icon "toggle-left" %>
+            <span><%= t(".bulk_action_activation") %></span>
+          <% end %>
+        </li>
+        <li>
+          <%= link_to bulk_tags_admin_employees_path, class: "dropdown-item d-flex align-items-center gap-2" do %>
+            <%= icon "tags" %>
+            <span><%= t(".bulk_action_tags") %></span>
+          <% end %>
+        </li>
+      </ul>
+    </div>
 
     <%= link_to new_admin_employee_path, class: "btn btn-primary d-inline-flex align-items-center gap-2" do %>
       <%= icon "user-plus" %>

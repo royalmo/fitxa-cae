@@ -43,8 +43,19 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       text: "Mostrant 1-#{[ Employee.count, 20 ].min} de #{Employee.count}"
     assert_select ".text-center .admin-result-count",
       text: "Mostrant 1-#{[ Employee.count, 20 ].min} de #{Employee.count}"
-    assert_select "button.btn[type='button']", text: "Accions massives" do
+    assert_select "button#adminEmployeeBulkActionsMenu.dropdown-toggle[data-bs-toggle='dropdown'][aria-expanded='false']", text: "Accions massives" do
       assert_select "svg.icon"
+    end
+    assert_select "ul.dropdown-menu[aria-labelledby='adminEmployeeBulkActionsMenu']" do
+      assert_select "a.dropdown-item[href='#{new_admin_import_path}']", text: "Importar persones" do
+        assert_select "svg.icon"
+      end
+      assert_select "a.dropdown-item[href='#{bulk_activation_admin_employees_path}']", text: "Activar i desactivar" do
+        assert_select "svg.icon"
+      end
+      assert_select "a.dropdown-item[href='#{bulk_tags_admin_employees_path}']", text: "Afegir etiquetes" do
+        assert_select "svg.icon"
+      end
     end
     assert_select "a.btn[href='#{new_admin_employee_path}']", text: "Nova persona"
     assert_select "form.admin-employees-filter-form[action='#{admin_employees_path}'][method='get']" do
