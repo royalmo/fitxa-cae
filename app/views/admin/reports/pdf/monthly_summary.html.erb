@@ -44,9 +44,8 @@
           </td>
           <td class="report-text-end"><%= row.fetch(:swipes_count) %></td>
           <td class="report-text-end report-nowrap">
-            <span class="<%= "report-duration-zero" if row.fetch(:worked_seconds).zero? %>">
-              <%= duration_text(row.fetch(:worked_seconds)) %>
-            </span>
+            <%= tag.span duration_text(row.fetch(:worked_seconds)),
+              class: class_names("report-duration-zero": row.fetch(:worked_seconds).zero?) %>
           </td>
         </tr>
       <% end %>

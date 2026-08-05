@@ -12,6 +12,17 @@ class Admin::ReportsController < Admin::BaseController
     @selected_tag = selected_tag
   end
 
+  def monthly_summary
+    period_start = Date.new(selected_year || Time.zone.today.year, selected_month || Time.zone.today.month, 1)
+    report = Reports::MonthlySummaryReport.new(month: period_start.month, year: period_start.year).to_h
+    csv = Reports::MonthlySummaryCsv.new(report: report).to_csv
+
+    send_data csv,
+      filename: Reports::Filenames.monthly_summary_csv(period_start),
+      type: "text/csv; charset=utf-8",
+      disposition: :attachment
+  end
+
   private
 
   def selected_month

@@ -14,6 +14,7 @@ export default class extends Controller {
     "personButton",
     "personButtonLabel",
     "summaryButton",
+    "summaryCsvLink",
     "modal",
     "progress",
     "progressBar",
@@ -21,7 +22,8 @@ export default class extends Controller {
     "downloadLink"
   ]
   static values = {
-    exportUrl: String
+    exportUrl: String,
+    summaryCsvUrl: String
   }
 
   connect() {
@@ -43,6 +45,7 @@ export default class extends Controller {
     if (this.hasPersonButtonTarget) this.personButtonTarget.disabled = !this.personReportReady(scope)
     if (this.hasPersonButtonLabelTarget) this.personButtonLabelTarget.textContent = this.personButtonLabel(scope)
     if (this.hasSummaryButtonTarget) this.summaryButtonTarget.disabled = !this.periodReady
+    if (this.hasSummaryCsvLinkTarget) this.updateSummaryCsvLink()
   }
 
   personReportReady(scope) {
@@ -111,6 +114,23 @@ export default class extends Controller {
       ...this.basePayload(),
       kind: "monthly_summary_pdf"
     })
+  }
+
+  updateSummaryCsvLink() {
+    if (!this.periodReady) {
+      this.summaryCsvLinkTarget.removeAttribute("href")
+      this.summaryCsvLinkTarget.classList.add("disabled")
+      this.summaryCsvLinkTarget.setAttribute("aria-disabled", "true")
+      return
+    }
+
+    const url = new URL(this.summaryCsvUrlValue, window.location.origin)
+    url.searchParams.set("month", this.monthTarget.value)
+    url.searchParams.set("year", this.yearTarget.value)
+
+    this.summaryCsvLinkTarget.href = `${url.pathname}${url.search}`
+    this.summaryCsvLinkTarget.classList.remove("disabled")
+    this.summaryCsvLinkTarget.removeAttribute("aria-disabled")
   }
 
   basePayload() {

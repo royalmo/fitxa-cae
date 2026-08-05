@@ -10,7 +10,8 @@
   class: "admin-reports-form",
   data: {
     controller: "reports",
-    reports_export_url_value: admin_report_exports_path
+    reports_export_url_value: admin_report_exports_path,
+    reports_summary_csv_url_value: admin_reports_monthly_summary_path(format: :csv)
   } do |form| %>
   <section class="admin-reports-period-panel border rounded shadow-sm mb-3">
     <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
@@ -163,6 +164,15 @@
           <%= icon "download" %>
           <span><%= t(".summary.download") %></span>
         </button>
+        <%= link_to admin_reports_monthly_summary_path(format: :csv, month: @selected_month, year: @selected_year),
+          class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2",
+          data: {
+            reports_target: "summaryCsvLink",
+            turbo: false
+          } do %>
+          <%= icon "file-down" %>
+          <span><%= t(".summary.download_csv") %></span>
+        <% end %>
       </div>
     </section>
   </div>

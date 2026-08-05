@@ -10,6 +10,7 @@ module Reports
       @report_export = report_export
       @parameters = report_export.parameters.symbolize_keys
       @period_start = Date.new(@parameters.fetch(:year).to_i, @parameters.fetch(:month).to_i, 1)
+      @generated_at = Time.current
     end
 
     def generate!
@@ -29,7 +30,7 @@ module Reports
 
     private
 
-    attr_reader :report_export, :parameters, :period_start
+    attr_reader :report_export, :parameters, :period_start, :generated_at
 
     def generate_person_pdf
       employee = Employee.includes(:tags).find(parameters.fetch(:employee_id))
@@ -62,7 +63,7 @@ module Reports
     def generate_monthly_summary_pdf
       report_export.update!(progress: 35)
       report = MonthlySummaryReport.new(month: period_start.month, year: period_start.year).to_h
-      pdf = PdfRenderer.render(template: "admin/reports/pdf/monthly_summary", assigns: { report: report })
+      pdf = PdfRenderer.render(template: "admin/reports/pdf/monthly_summary", assigns: pdf_assigns(report))
       filename = Filenames.monthly_summary_pdf(period_start)
 
       attach_artifact(pdf, filename: filename, content_type: PDF_CONTENT_TYPE)
@@ -72,7 +73,15 @@ module Reports
       report = MonthlyEmployeeReport.new(employee: employee, month: period_start.month, year: period_start.year).to_h
       report_export.update!(progress: [ report_export.progress, 55 ].max)
 
-      PdfRenderer.render(template: "admin/reports/pdf/employee", assigns: { report: report })
+      PdfRenderer.render(template: "admin/reports/pdf/employee", assigns: pdf_assigns(report))
+    end
+
+    def pdf_assigns(report)
+      {
+        report: report,
+        report_generated_by: report_export.manager,
+        report_generated_at: generated_at
+      }
     end
 
     def with_zip_for(employees)

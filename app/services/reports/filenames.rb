@@ -18,6 +18,10 @@ module Reports
       "fitxa-cae-resum-mensual-#{period_start.strftime("%Y-%m")}.pdf"
     end
 
+    def monthly_summary_csv(period_start)
+      "fitxa-cae-resum-mensual-#{period_start.strftime("%Y-%m")}.csv"
+    end
+
     def slug(value)
       I18n.transliterate(value.to_s)
         .downcase

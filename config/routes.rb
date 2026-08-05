@@ -91,6 +91,7 @@ Rails.application.routes.draw do
     resources :managers, only: %i[index new create edit update] do
       patch :activation, on: :member
     end
+    get "reports/monthly_summary", to: "reports#monthly_summary", as: :reports_monthly_summary
     resources :reports, only: %i[index]
     resources :report_exports, path: "reports/exports", only: %i[create show] do
       get :download, on: :member

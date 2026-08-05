@@ -700,6 +700,7 @@ ca:
         summary:
           title: "Resum mensual"
           download: "Descarregar PDF"
+          download_csv: "Descarregar CSV"
           description: "Informe mensual amb totes les persones actives i les persones que han fitxat durant el període, incloent etiquetes, nombre de fitxatges i hores treballades."
     report_exports:
       modal:

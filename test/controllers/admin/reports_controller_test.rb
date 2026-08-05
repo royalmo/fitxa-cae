@@ -1,4 +1,5 @@
 require "test_helper"
+require "csv"
 
 class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
   setup do
@@ -11,7 +12,7 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "Informes"
     assert_no_match "Pàgina pendent.", response.body
-    assert_select "form.admin-reports-form[action='#{admin_reports_path}'][method='get'][data-controller='reports'][data-reports-export-url-value='#{admin_report_exports_path}']" do
+    assert_select "form.admin-reports-form[action='#{admin_reports_path}'][method='get'][data-controller='reports'][data-reports-export-url-value='#{admin_report_exports_path}'][data-reports-summary-csv-url-value='#{admin_reports_monthly_summary_path(format: :csv)}']" do
       assert_select ".admin-reports-period-panel" do
         assert_select "select[name='month'][data-reports-target='month'] option[selected][value='#{Time.zone.today.month}']"
         assert_select "select[name='year'][data-reports-target='year'] option[selected][value='#{Time.zone.today.year}']"
@@ -39,6 +40,7 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
         assert_match "hores treballades", response.body
         assert_select "button[data-reports-target='summaryButton'][disabled]", count: 0
         assert_select "button[data-reports-target='summaryButton'][data-action='reports#startSummaryReport']", text: "Descarregar PDF"
+        assert_select "a[data-reports-target='summaryCsvLink'][data-turbo='false'][href='#{admin_reports_monthly_summary_path(format: :csv, month: Time.zone.today.month, year: Time.zone.today.year)}']", text: "Descarregar CSV"
       end
       assert_select "#adminReportExportModal[data-reports-target='modal']" do
         assert_select "[data-reports-target='progress']"
@@ -119,5 +121,32 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-reports-target='employeeField'][hidden]"
     assert_select "[data-reports-target='tagField'][hidden]"
     assert_select "button[data-reports-target='personButton'][disabled]", count: 0, text: "Descarregar ZIP"
+  end
+
+  test "downloads monthly summary csv" do
+    employee = create_employee(first_name: "Clara", last_name: "Pons", national_id: valid_dni(12_345_681))
+    obra = Tag.create!(name: "Obra", color: "#0f766e", active: true)
+    oficina = Tag.create!(name: "Oficina", color: "#2563eb", active: true)
+    employee.tags << [ oficina, obra ]
+    employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 9, 0))
+    employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 2, 17, 0))
+    create_employee(first_name: "Aina", last_name: "Sense hores", national_id: valid_dni(12_345_682))
+
+    get admin_reports_monthly_summary_path(format: :csv), params: { month: 7, year: 2026 }
+
+    assert_response :success
+    assert_equal "text/csv", response.media_type
+    assert_includes response.headers.fetch("Content-Disposition"), "fitxa-cae-resum-mensual-2026-07.csv"
+
+    csv = CSV.parse(response.body, headers: true)
+    assert_equal [ "Persona", "DNI/NIE", "Etiquetes", "Fitxatges", "Hores" ], csv.headers
+    assert_equal 2, csv.size
+    assert_equal "Clara Pons", csv[0]["Persona"]
+    assert_equal employee.national_id, csv[0]["DNI/NIE"]
+    assert_equal "Obra;Oficina", csv[0]["Etiquetes"]
+    assert_equal "2", csv[0]["Fitxatges"]
+    assert_equal "8 h 00 min", csv[0]["Hores"]
+    assert_equal "Aina Sense hores", csv[1]["Persona"]
+    assert_equal "0 h 00 min", csv[1]["Hores"]
   end
 end

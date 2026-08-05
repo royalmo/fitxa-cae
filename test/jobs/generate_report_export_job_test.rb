@@ -12,9 +12,16 @@ class GenerateReportExportJobTest < ActiveJob::TestCase
       parameters: { month: 7, year: 2026, employee_id: employee.id }
     )
     purge_stale_artifact(report_export)
+    generated_at = Time.zone.local(2026, 8, 5, 12, 30)
+    captured_assigns = nil
 
-    with_pdf_renderer_result("%PDF person") do
-      GenerateReportExportJob.perform_now(report_export)
+    travel_to generated_at do
+      with_pdf_renderer(->(**kwargs) {
+        captured_assigns = kwargs.fetch(:assigns)
+        "%PDF person"
+      }) do
+        GenerateReportExportJob.perform_now(report_export)
+      end
     end
 
     report_export.reload
@@ -23,6 +30,8 @@ class GenerateReportExportJobTest < ActiveJob::TestCase
     assert_equal "aina-martinez-2026-07.pdf", report_export.filename
     assert_equal "application/pdf", report_export.content_type
     assert_equal "%PDF person", report_export.artifact.download
+    assert_equal manager, captured_assigns.fetch(:report_generated_by)
+    assert_equal generated_at, captured_assigns.fetch(:report_generated_at)
   end
 
   test "generates a tag zip export artifact" do
@@ -77,11 +86,11 @@ class GenerateReportExportJobTest < ActiveJob::TestCase
   private
 
   def with_pdf_renderer_result(result, &block)
-    with_pdf_renderer(-> { result }, &block)
+    with_pdf_renderer(->(**_kwargs) { result }, &block)
   end
 
   def with_pdf_renderer_error(message, &block)
-    with_pdf_renderer(-> { raise message }, &block)
+    with_pdf_renderer(->(**_kwargs) { raise message }, &block)
   end
 
   def with_pdf_renderer(replacement)
@@ -90,7 +99,7 @@ class GenerateReportExportJobTest < ActiveJob::TestCase
     end
     original_method = Reports::PdfRenderer.method(:render)
 
-    singleton.define_method(:render) { |**_kwargs| replacement.call }
+    singleton.define_method(:render) { |**kwargs| replacement.call(**kwargs) }
     yield
   ensure
     singleton.define_method(:render, original_method) if original_method

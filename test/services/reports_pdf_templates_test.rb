@@ -22,20 +22,31 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
   end
 
   test "renders employee pdf html" do
+    manager = create_manager(first_name: "Marta", last_name: "Serra")
     employee = create_employee(first_name: "Aina", last_name: "Martinez")
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 1, 8, 0))
     employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 1, 16, 0))
     report = Reports::MonthlyEmployeeReport.new(employee: employee, month: 7, year: 2026).to_h
+    generated_at = Time.zone.local(2026, 8, 5, 14, 30)
 
-    html = ApplicationController.render(
-      template: "admin/reports/pdf/employee",
-      layout: "pdf",
-      assigns: { report: report }
-    )
+    html = travel_to generated_at do
+      ApplicationController.render(
+        template: "admin/reports/pdf/employee",
+        layout: "pdf",
+        assigns: {
+          report: report,
+          report_generated_by: manager,
+          report_generated_at: generated_at
+        }
+      )
+    end
 
     assert_includes html, "Aina Martinez"
     assert_includes html, "8 h 00 min"
     assert_includes html, "Detall diari"
+    assert_includes html, "Informe generat per Marta Serra"
+    assert_includes html, "el dia #{I18n.l(generated_at.to_date, format: :long)}"
+    assert_includes html, "a les 14:30."
   end
 
   test "renders monthly summary pdf html" do
