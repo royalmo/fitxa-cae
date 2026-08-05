@@ -34,10 +34,11 @@ module Reports
     def day_rows
       (period_start..period_end).map do |date|
         day_swipes = swipes_by_date.fetch(date, [])
+        display_day_swipes = display_swipes_by_date.fetch(date, [])
 
         {
           date: date,
-          swipes: day_swipes.map { |swipe| swipe_payload(swipe) },
+          swipes: display_day_swipes.map { |swipe| swipe_payload(swipe) },
           swipes_count: day_swipes.size,
           worked_seconds: Swipe.paired_work_seconds(day_swipes),
           corrections: corrections_by_date.fetch(date, [])
@@ -49,7 +50,9 @@ module Reports
       {
         kind: swipe.kind,
         swipe_at: swipe.swipe_at,
-        forged: swipe.forged?
+        forged: swipe.forged?,
+        removed: swipe.removed?,
+        invalidated: approved_invalidated_swipe_ids.include?(swipe.id.to_s)
       }
     end
 
@@ -61,8 +64,19 @@ module Reports
       @corrections ||= employee.swipe_corrections.where(day: period_start..period_end).order(:day, :created_at).to_a
     end
 
+    def display_swipes
+      @display_swipes ||= employee.swipes
+        .where(swipe_at: period_start.beginning_of_day..period_end.end_of_day)
+        .chronological
+        .select { |swipe| !swipe.removed? || approved_invalidated_swipe_ids.include?(swipe.id.to_s) }
+    end
+
     def swipes_by_date
       @swipes_by_date ||= swipes.group_by { |swipe| swipe.swipe_at.in_time_zone.to_date }
+    end
+
+    def display_swipes_by_date
+      @display_swipes_by_date ||= display_swipes.group_by { |swipe| swipe.swipe_at.in_time_zone.to_date }
     end
 
     def corrections_by_date
@@ -71,6 +85,12 @@ module Reports
 
     def correction_counts
       SwipeCorrection.statuses.keys.index_with { |status| corrections.count { |correction| correction.status == status } }
+    end
+
+    def approved_invalidated_swipe_ids
+      @approved_invalidated_swipe_ids ||= corrections.select(&:approved?).flat_map do |correction|
+        Array(correction.details&.fetch("invalidated_swipe_ids", nil))
+      end.compact_blank.map(&:to_s)
     end
   end
 end

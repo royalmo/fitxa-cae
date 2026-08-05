@@ -1,21 +1,35 @@
 <% employee = @report.fetch(:employee) %>
 <% totals = @report.fetch(:totals) %>
 
-<header class="report-header">
-  <div>
-    <div class="report-brand">FitxaCAE</div>
-    <h1><%= employee_display_name(employee) %></h1>
-    <p class="report-muted">
+<% content_for :report_footer_legend do %>
+  <span class="report-footer-legend-item"><%= icon "log-in", class: "report-footer-icon" %> Entrada</span>
+  <span class="report-footer-legend-item"><%= icon "log-out", class: "report-footer-icon" %> Sortida</span>
+  <span class="report-footer-legend-item"><%= icon "asterisk", class: "report-footer-icon" %> Corregida</span>
+  <span class="report-footer-legend-item"><span class="report-footer-deleted-example">08:00</span> Eliminada</span>
+<% end %>
+
+<header class="report-header report-summary-header">
+  <%= pdf_brand_logo %>
+  <div class="report-employee-period">Fitxatges - <%= pdf_month_year_title(@report.fetch(:period_start)) %></div>
+</header>
+
+<section class="report-section">
+  <h1><%= employee_display_name(employee) %></h1>
+  <div class="report-muted report-employee-metadata">
+    <div class="report-employee-contact">
       <em><%= employee.national_id %></em>
       <% if employee.email.present? %> · <%= employee.email %><% end %>
       <% if employee.phone.present? %> · <%= employee.phone %><% end %>
-    </p>
+    </div>
+    <% if @report.fetch(:tags).any? %>
+      <div class="report-tags report-employee-tags">
+        <% @report.fetch(:tags).each do |tag| %>
+          <span class="report-tag"><%= tag.name %></span>
+        <% end %>
+      </div>
+    <% end %>
   </div>
-  <div class="report-period">
-    <strong>Informe mensual</strong><br>
-    <%= l(@report.fetch(:period_start), format: :month_year) %>
-  </div>
-</header>
+</section>
 
 <section class="report-section">
   <div class="report-kpis">
@@ -39,68 +53,36 @@
 </section>
 
 <section class="report-section">
-  <h2>Etiquetes</h2>
-  <% if @report.fetch(:tags).any? %>
-    <div class="report-tags">
-      <% @report.fetch(:tags).each do |tag| %>
-        <span class="report-tag"><%= tag.name %></span>
-      <% end %>
-    </div>
-  <% else %>
-    <p class="report-muted">---</p>
-  <% end %>
-</section>
-
-<section class="report-section">
-  <h2>Detall diari</h2>
   <table>
     <thead>
       <tr>
         <th>Dia</th>
         <th>Fitxatges</th>
         <th class="report-text-end">Hores</th>
-        <th class="report-text-end">Correccions</th>
       </tr>
     </thead>
     <tbody>
       <% @report.fetch(:days).each do |day| %>
-        <tr>
+        <tr class="<%= "report-empty-day" unless day.fetch(:swipes).any? %>">
           <td class="report-nowrap"><%= l(day.fetch(:date), format: :weekday_day_month) %></td>
           <td>
             <% if day.fetch(:swipes).any? %>
               <% day.fetch(:swipes).each do |swipe| %>
-                <span class="report-swipe report-swipe-<%= swipe.fetch(:kind) %>">
-                  <%= clocking_kind_text(swipe.fetch(:kind)) %>
-                  <%= l(swipe.fetch(:swipe_at), format: :hour_minute) %>
-                  <% if swipe.fetch(:forged) %><span class="report-forged">(corregit)</span><% end %>
+                <span class="report-swipe report-swipe-<%= swipe.fetch(:kind) %> <%= "report-swipe-deleted" if swipe.fetch(:invalidated) %>">
+                  <%= icon clocking_icon_name(swipe.fetch(:kind)), class: "report-swipe-icon" %>
+                  <span class="<%= class_names("report-swipe-time", "report-swipe-deleted-time": swipe.fetch(:invalidated)) %>">
+                    <%= l(swipe.fetch(:swipe_at), format: :hour_minute) %>
+                    <% if swipe.fetch(:forged) %>
+                      <%= icon "asterisk", class: "report-correction-icon report-swipe-corrected" %>
+                    <% end %>
+                  </span>
                 </span>
               <% end %>
             <% else %>
-              <span class="report-muted">Sense fitxatges</span>
+              <span class="report-muted">---</span>
             <% end %>
           </td>
           <td class="report-text-end report-nowrap"><%= duration_text(day.fetch(:worked_seconds)) %></td>
-          <td class="report-text-end"><%= day.fetch(:corrections).size %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-</section>
-
-<section class="report-section">
-  <h2>Correccions del mes</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Estat</th>
-        <th class="report-text-end">Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @report.fetch(:correction_counts).each do |status, count| %>
-        <tr>
-          <td><%= status_text(status) %></td>
-          <td class="report-text-end"><%= count %></td>
         </tr>
       <% end %>
     </tbody>

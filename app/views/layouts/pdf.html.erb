@@ -111,6 +111,33 @@
         text-align: right;
       }
 
+      .report-employee-period {
+        color: #000000;
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1.1;
+        text-align: right;
+      }
+
+      .report-employee-metadata {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        width: 99%;
+      }
+
+      .report-employee-contact {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .report-employee-tags {
+        flex: 0 1 48%;
+        justify-content: flex-end;
+        text-align: right;
+      }
+
       .report-period {
         color: #4b5563;
         font-size: 11px;
@@ -121,13 +148,15 @@
       }
 
       .report-kpis {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        display: flex;
         gap: 8px;
+        width: 99%;
         margin-bottom: 16px;
       }
 
       .report-kpi {
+        flex: 1 1 0;
+        min-width: 0;
         padding: 9px;
         border: 1px solid #d8dee8;
         border-radius: 6px;
@@ -198,25 +227,88 @@
         font-weight: 700;
       }
 
-      .report-generation-note {
+      .report-generation-footer {
         position: fixed;
         right: 0;
         bottom: 0;
         left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
         color: #9ca3af;
         font-size: 8.5px;
         font-style: italic;
-        text-align: center;
+      }
+
+      .report-generation-note {
+        margin-left: auto;
+        text-align: right;
+      }
+
+      .report-footer-legend {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .report-footer-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+      }
+
+      .report-footer-icon,
+      .report-swipe-icon,
+      .report-correction-icon {
+        width: 10px;
+        height: 10px;
+        stroke-width: 2;
+        vertical-align: -1px;
+      }
+
+      .report-footer-deleted-example,
+      .report-swipe-deleted-time {
+        text-decoration: line-through;
+      }
+
+      .report-swipe-time {
+        position: relative;
+        display: inline-block;
+      }
+
+      .report-swipe-deleted {
+        color: #9ca3af;
+      }
+
+      .report-swipe-corrected {
+        position: absolute;
+        top: -0.2em;
+        right: -0.55em;
+        width: 7px;
+        height: 7px;
+        margin-left: 0;
+        color: #6b7280;
+      }
+
+      .report-empty-day {
+        color: #9ca3af;
+        opacity: 0.62;
       }
     </style>
   </head>
   <body>
     <%= yield %>
     <% if @report_generated_by.present? && @report_generated_at.present? %>
-      <footer class="report-generation-note">
-        Informe generat per <%= manager_display_name(@report_generated_by) %>
-        el dia <%= l(@report_generated_at.to_date, format: :long) %>
-        a les <%= l(@report_generated_at, format: :hour_minute) %>.
+      <footer class="report-generation-footer">
+        <div class="report-footer-legend"><%= yield :report_footer_legend %></div>
+        <div class="report-generation-note">
+          Informe generat per <%= manager_display_name(@report_generated_by) %>
+          el dia <%= l(@report_generated_at.to_date, format: :long) %>
+          a les <%= l(@report_generated_at, format: :hour_minute) %>.
+        </div>
       </footer>
     <% end %>
   </body>

@@ -23,9 +23,35 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
 
   test "renders employee pdf html" do
     manager = create_manager(first_name: "Marta", last_name: "Serra")
-    employee = create_employee(first_name: "Aina", last_name: "Martinez")
+    employee = create_employee(
+      first_name: "Aina",
+      last_name: "Martinez",
+      email: "aina@example.test",
+      phone: "600 111 222"
+    )
+    tag = Tag.create!(name: "Obra", color: "#0f766e", active: true)
+    employee.tags << tag
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 1, 8, 0))
-    employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 1, 16, 0))
+    invalidated_swipe = employee.swipes.create!(
+      kind: :exit,
+      swipe_at: Time.zone.local(2026, 7, 1, 15, 0),
+      removed: true
+    )
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :approved,
+      day: Date.new(2026, 7, 1),
+      details: {
+        "invalidated_swipe_ids" => [ invalidated_swipe.id ],
+        "requested_swipes" => [ { "kind" => "exit", "hour" => "16:00:00" } ]
+      }
+    )
+    employee.swipes.create!(
+      kind: :exit,
+      swipe_at: Time.zone.local(2026, 7, 1, 16, 0),
+      forged: true,
+      metadata: "admin_correction:#{correction.id}"
+    )
     report = Reports::MonthlyEmployeeReport.new(employee: employee, month: 7, year: 2026).to_h
     generated_at = Time.zone.local(2026, 8, 5, 14, 30)
 
@@ -42,11 +68,29 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
     end
 
     assert_includes html, "Aina Martinez"
+    assert_includes html, "Fitxatges - Juliol de 2026"
+    assert_includes html, "600 111 222"
+    assert_includes html, "Obra"
+    assert_includes html, "report-employee-tags"
     assert_includes html, "8 h 00 min"
-    assert_includes html, "Detall diari"
+    refute_includes html, "Detall diari"
+    refute_includes html, "Etiquetes"
+    refute_includes html, "Correccions del mes"
+    refute_includes html, "<th class=\"report-text-end\">Correccions</th>"
+    refute_includes html, "Sense fitxatges"
+    assert_includes html, "report-empty-day"
+    assert_includes html, "---"
+    assert_includes html, "report-swipe-deleted"
+    assert_includes html, "report-swipe-time"
+    assert_includes html, "report-swipe-deleted-time"
+    assert_includes html, "report-swipe-corrected"
     assert_includes html, "Informe generat per Marta Serra"
     assert_includes html, "el dia #{I18n.l(generated_at.to_date, format: :long)}"
     assert_includes html, "a les 14:30."
+    assert_includes html, "Entrada"
+    assert_includes html, "Sortida"
+    assert_includes html, "Corregida"
+    assert_includes html, "Eliminada"
   end
 
   test "renders monthly summary pdf html" do
