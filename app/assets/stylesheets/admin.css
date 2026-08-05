@@ -371,6 +371,10 @@ html[data-pwa="admin"] .turbo-progress-bar {
   padding-top: 1rem;
 }
 
+.admin-report-export-progress {
+  height: 1.25rem;
+}
+
 .admin-dashboard-chart-shell {
   position: relative;
   min-height: 22rem;

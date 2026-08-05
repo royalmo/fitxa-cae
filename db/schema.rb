@@ -10,7 +10,35 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_055935) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_220234) do
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
   create_table "audit_actions", force: :cascade do |t|
     t.integer "author_id", null: false
     t.string "author_type", null: false
@@ -67,6 +95,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_055935) do
     t.index ["employee_id"], name: "index_managers_on_employee_id", unique: true
   end
 
+  create_table "report_exports", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.datetime "expires_at"
+    t.datetime "failed_at"
+    t.string "filename"
+    t.string "kind", null: false
+    t.integer "manager_id", null: false
+    t.json "parameters", default: {}, null: false
+    t.integer "progress", default: 0, null: false
+    t.string "status", default: "queued", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_report_exports_on_expires_at"
+    t.index ["manager_id"], name: "index_report_exports_on_manager_id"
+    t.index ["status"], name: "index_report_exports_on_status"
+  end
+
   create_table "swipe_corrections", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "day", null: false
@@ -108,7 +155,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_055935) do
     t.index "LOWER(name)", name: "index_tags_on_lower_name", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "managers", "employees"
+  add_foreign_key "report_exports", "managers"
   add_foreign_key "swipe_corrections", "employees"
   add_foreign_key "swipe_corrections", "managers", column: "validator_id"
   add_foreign_key "swipes", "employees"

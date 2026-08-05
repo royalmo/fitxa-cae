@@ -8,7 +8,10 @@
 <%= form_with url: admin_reports_path,
   method: :get,
   class: "admin-reports-form",
-  data: { controller: "reports" } do |form| %>
+  data: {
+    controller: "reports",
+    reports_export_url_value: admin_report_exports_path
+  } do |form| %>
   <section class="admin-reports-period-panel border rounded shadow-sm mb-3">
     <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
       <div class="admin-reports-period-title d-inline-flex align-items-center gap-2">
@@ -129,6 +132,7 @@
           type="button"
           class="btn btn-primary d-inline-flex align-items-center gap-2"
           data-reports-target="personButton"
+          data-action="reports#startPersonReport"
           data-reports-download-pdf-label="<%= t(".person.download_pdf") %>"
           data-reports-download-zip-label="<%= t(".person.download_zip") %>"
           <%= "disabled" unless @selected_period && (@selected_report_scope == "company" || (@selected_report_scope == "person" && @selected_employee) || (@selected_report_scope == "tag" && @selected_tag)) %>>
@@ -154,11 +158,14 @@
         <button
           type="button"
           class="btn btn-primary d-inline-flex align-items-center gap-2"
-          data-reports-target="summaryButton">
+          data-reports-target="summaryButton"
+          data-action="reports#startSummaryReport">
           <%= icon "download" %>
           <span><%= t(".summary.download") %></span>
         </button>
       </div>
     </section>
   </div>
+
+  <%= render "export_modal" %>
 <% end %>

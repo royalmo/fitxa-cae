@@ -17,6 +17,7 @@ class Manager < ApplicationRecord
   has_many :requested_swipe_corrections, as: :requester, class_name: "SwipeCorrection"
   has_many :authored_audit_actions, as: :author, class_name: "AuditAction"
   has_many :received_audit_actions, as: :recipient, class_name: "AuditAction"
+  has_many :report_exports, dependent: :destroy
 
   validates :active, inclusion: { in: [ true, false ] }
   validates :employee_id, uniqueness: { allow_nil: true }

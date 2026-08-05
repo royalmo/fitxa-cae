@@ -1,0 +1,108 @@
+<% employee = @report.fetch(:employee) %>
+<% totals = @report.fetch(:totals) %>
+
+<header class="report-header">
+  <div>
+    <div class="report-brand">FitxaCAE</div>
+    <h1><%= employee_display_name(employee) %></h1>
+    <p class="report-muted">
+      <em><%= employee.national_id %></em>
+      <% if employee.email.present? %> · <%= employee.email %><% end %>
+      <% if employee.phone.present? %> · <%= employee.phone %><% end %>
+    </p>
+  </div>
+  <div class="report-period">
+    <strong>Informe mensual</strong><br>
+    <%= l(@report.fetch(:period_start), format: :month_year) %>
+  </div>
+</header>
+
+<section class="report-section">
+  <div class="report-kpis">
+    <div class="report-kpi">
+      <div class="report-kpi-label">Hores treballades</div>
+      <div class="report-kpi-value"><%= duration_text(totals.fetch(:worked_seconds)) %></div>
+    </div>
+    <div class="report-kpi">
+      <div class="report-kpi-label">Dies amb fitxatges</div>
+      <div class="report-kpi-value"><%= totals.fetch(:worked_days) %></div>
+    </div>
+    <div class="report-kpi">
+      <div class="report-kpi-label">Fitxatges</div>
+      <div class="report-kpi-value"><%= totals.fetch(:swipes_count) %></div>
+    </div>
+    <div class="report-kpi">
+      <div class="report-kpi-label">Correccions</div>
+      <div class="report-kpi-value"><%= totals.fetch(:corrections_count) %></div>
+    </div>
+  </div>
+</section>
+
+<section class="report-section">
+  <h2>Etiquetes</h2>
+  <% if @report.fetch(:tags).any? %>
+    <div class="report-tags">
+      <% @report.fetch(:tags).each do |tag| %>
+        <span class="report-tag"><%= tag.name %></span>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="report-muted">---</p>
+  <% end %>
+</section>
+
+<section class="report-section">
+  <h2>Detall diari</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Dia</th>
+        <th>Fitxatges</th>
+        <th class="report-text-end">Hores</th>
+        <th class="report-text-end">Correccions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @report.fetch(:days).each do |day| %>
+        <tr>
+          <td class="report-nowrap"><%= l(day.fetch(:date), format: :weekday_day_month) %></td>
+          <td>
+            <% if day.fetch(:swipes).any? %>
+              <% day.fetch(:swipes).each do |swipe| %>
+                <span class="report-swipe report-swipe-<%= swipe.fetch(:kind) %>">
+                  <%= clocking_kind_text(swipe.fetch(:kind)) %>
+                  <%= l(swipe.fetch(:swipe_at), format: :hour_minute) %>
+                  <% if swipe.fetch(:forged) %><span class="report-forged">(corregit)</span><% end %>
+                </span>
+              <% end %>
+            <% else %>
+              <span class="report-muted">Sense fitxatges</span>
+            <% end %>
+          </td>
+          <td class="report-text-end report-nowrap"><%= duration_text(day.fetch(:worked_seconds)) %></td>
+          <td class="report-text-end"><%= day.fetch(:corrections).size %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
+
+<section class="report-section">
+  <h2>Correccions del mes</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Estat</th>
+        <th class="report-text-end">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @report.fetch(:correction_counts).each do |status, count| %>
+        <tr>
+          <td><%= status_text(status) %></td>
+          <td class="report-text-end"><%= count %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

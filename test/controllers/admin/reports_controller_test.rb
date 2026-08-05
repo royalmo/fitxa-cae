@@ -11,7 +11,7 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "Informes"
     assert_no_match "Pàgina pendent.", response.body
-    assert_select "form.admin-reports-form[action='#{admin_reports_path}'][method='get'][data-controller='reports']" do
+    assert_select "form.admin-reports-form[action='#{admin_reports_path}'][method='get'][data-controller='reports'][data-reports-export-url-value='#{admin_report_exports_path}']" do
       assert_select ".admin-reports-period-panel" do
         assert_select "select[name='month'][data-reports-target='month'] option[selected][value='#{Time.zone.today.month}']"
         assert_select "select[name='year'][data-reports-target='year'] option[selected][value='#{Time.zone.today.year}']"
@@ -30,7 +30,7 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
         end
         assert_select "[data-reports-target='tagField'][hidden]"
         assert_select "[data-controller='employee-search'][data-employee-search-auto-submit-value='false']"
-        assert_select "button[data-reports-target='personButton'][disabled]", text: "Descarregar PDF"
+        assert_select "button[data-reports-target='personButton'][data-action='reports#startPersonReport'][disabled]", text: "Descarregar PDF"
       end
       assert_select ".admin-report-card", text: /Resum mensual/ do
         assert_select "h2", text: "Resum mensual"
@@ -38,7 +38,13 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
         assert_match "persones actives", response.body
         assert_match "hores treballades", response.body
         assert_select "button[data-reports-target='summaryButton'][disabled]", count: 0
-        assert_select "button[data-reports-target='summaryButton']", text: "Descarregar PDF"
+        assert_select "button[data-reports-target='summaryButton'][data-action='reports#startSummaryReport']", text: "Descarregar PDF"
+      end
+      assert_select "#adminReportExportModal[data-reports-target='modal']" do
+        assert_select "[data-reports-target='progress']"
+        assert_select "[data-reports-target='progressBar']"
+        assert_select "[data-reports-target='statusMessage']"
+        assert_select "a[data-reports-target='downloadLink'][href]", 0
       end
     end
     assert_select "[data-controller='list-loading']", 0

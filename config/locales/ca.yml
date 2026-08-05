@@ -701,6 +701,25 @@ ca:
           title: "Resum mensual"
           download: "Descarregar PDF"
           description: "Informe mensual amb totes les persones actives i les persones que han fitxat durant el període, incloent etiquetes, nombre de fitxatges i hores treballades."
+    report_exports:
+      modal:
+        title: "Preparant l'informe"
+        description: "Estem generant el document. Pots mantenir aquesta finestra oberta fins que comenci la descàrrega."
+        close: "Tancar"
+        download: "Descarregar"
+      statuses:
+        queued: "Informe en cua..."
+        running: "Generant l'informe..."
+        completed: "Informe preparat."
+        failed: "No s'ha pogut generar l'informe."
+        expired: "Aquest informe ha caducat."
+      unavailable: "Aquest informe ja no està disponible."
+      errors:
+        generic: "No s'ha pogut generar l'informe."
+        invalid_kind: "Tipus d'informe no vàlid."
+        invalid_period: "Període no vàlid."
+        missing_employee: "Selecciona una persona."
+        missing_tag: "Selecciona una etiqueta."
     swipes:
       index:
         title: "Fitxatges"

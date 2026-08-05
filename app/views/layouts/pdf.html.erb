@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: #172033;
+        font-family: "Liberation Sans", Arial, sans-serif;
+        font-size: 10.5px;
+        line-height: 1.35;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 4px;
+        color: #111827;
+        font-size: 22px;
+      }
+
+      h2 {
+        margin-bottom: 8px;
+        color: #111827;
+        font-size: 14px;
+      }
+
+      h3 {
+        margin-bottom: 4px;
+        font-size: 11px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 5px 6px;
+        border-bottom: 1px solid #d8dee8;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: #4b5563;
+        background: #f3f5f8;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .report-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid #e30613;
+        margin-bottom: 16px;
+      }
+
+      .report-brand {
+        color: #e30613;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .report-period {
+        color: #4b5563;
+        font-size: 11px;
+      }
+
+      .report-muted {
+        color: #6b7280;
+      }
+
+      .report-kpis {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .report-kpi {
+        padding: 9px;
+        border: 1px solid #d8dee8;
+        border-radius: 6px;
+        background: #fafbfc;
+      }
+
+      .report-kpi-label {
+        margin-bottom: 3px;
+        color: #6b7280;
+        font-size: 8.5px;
+        text-transform: uppercase;
+      }
+
+      .report-kpi-value {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .report-section {
+        margin-bottom: 16px;
+      }
+
+      .report-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .report-tag {
+        display: inline-block;
+        padding: 2px 6px;
+        border: 1px solid #d8dee8;
+        border-radius: 999px;
+        color: #4b5563;
+        background: #f8fafc;
+        font-size: 9px;
+      }
+
+      .report-swipe {
+        display: inline-block;
+        margin-right: 6px;
+        white-space: nowrap;
+      }
+
+      .report-swipe-entry {
+        color: #166534;
+      }
+
+      .report-swipe-exit {
+        color: #9a3412;
+      }
+
+      .report-forged {
+        color: #6b7280;
+        font-style: italic;
+      }
+
+      .report-text-end {
+        text-align: right;
+      }
+
+      .report-nowrap {
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>

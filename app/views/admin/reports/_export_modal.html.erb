@@ -1,0 +1,49 @@
+<div
+  class="modal fade"
+  id="adminReportExportModal"
+  tabindex="-1"
+  aria-labelledby="adminReportExportModalLabel"
+  aria-hidden="true"
+  data-reports-target="modal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="adminReportExportModalLabel">
+          <%= t("admin.report_exports.modal.title") %>
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("admin.report_exports.modal.close") %>"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-body-secondary mb-3">
+          <%= t("admin.report_exports.modal.description") %>
+        </p>
+        <div
+          class="progress admin-report-export-progress mb-2"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          data-reports-target="progress">
+          <div
+            class="progress-bar progress-bar-striped progress-bar-animated"
+            style="width: 0%"
+            data-reports-target="progressBar">
+            0%
+          </div>
+        </div>
+        <p class="mb-0 small text-body-secondary" data-reports-target="statusMessage" aria-live="polite"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">
+          <%= t("admin.report_exports.modal.close") %>
+        </button>
+        <a
+          class="btn btn-primary d-inline-flex align-items-center gap-2 disabled"
+          data-reports-target="downloadLink"
+          aria-disabled="true">
+          <%= icon "download" %>
+          <span><%= t("admin.report_exports.modal.download") %></span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

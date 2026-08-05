@@ -1,0 +1,78 @@
+<% totals = @report.fetch(:totals) %>
+
+<header class="report-header">
+  <div>
+    <div class="report-brand">FitxaCAE</div>
+    <h1>Resum mensual</h1>
+    <p class="report-muted">
+      Persones actives i persones amb fitxatges durant el període.
+    </p>
+  </div>
+  <div class="report-period">
+    <strong>Informe mensual</strong><br>
+    <%= l(@report.fetch(:period_start), format: :month_year) %>
+  </div>
+</header>
+
+<section class="report-section">
+  <div class="report-kpis">
+    <div class="report-kpi">
+      <div class="report-kpi-label">Persones</div>
+      <div class="report-kpi-value"><%= totals.fetch(:people_count) %></div>
+    </div>
+    <div class="report-kpi">
+      <div class="report-kpi-label">Actives</div>
+      <div class="report-kpi-value"><%= totals.fetch(:active_people_count) %></div>
+    </div>
+    <div class="report-kpi">
+      <div class="report-kpi-label">Amb fitxatges</div>
+      <div class="report-kpi-value"><%= totals.fetch(:people_with_swipes_count) %></div>
+    </div>
+    <div class="report-kpi">
+      <div class="report-kpi-label">Hores totals</div>
+      <div class="report-kpi-value"><%= duration_text(totals.fetch(:worked_seconds)) %></div>
+    </div>
+  </div>
+</section>
+
+<section class="report-section">
+  <h2>Persones</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Persona</th>
+        <th>DNI/NIE</th>
+        <th>Etiquetes</th>
+        <th class="report-text-end">Fitxatges</th>
+        <th class="report-text-end">Hores</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @report.fetch(:rows).each do |row| %>
+        <% employee = row.fetch(:employee) %>
+        <tr>
+          <td>
+            <%= employee_display_name(employee) %>
+            <% unless row.fetch(:active) %>
+              <span class="report-muted">(inactiva)</span>
+            <% end %>
+          </td>
+          <td><em class="report-muted"><%= employee.national_id %></em></td>
+          <td>
+            <% if row.fetch(:tags).any? %>
+              <div class="report-tags">
+                <% row.fetch(:tags).each do |tag| %>
+                  <span class="report-tag"><%= tag.name %></span>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="report-muted">---</span>
+            <% end %>
+          </td>
+          <td class="report-text-end"><%= row.fetch(:swipes_count) %></td>
+          <td class="report-text-end report-nowrap"><%= duration_text(row.fetch(:worked_seconds)) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

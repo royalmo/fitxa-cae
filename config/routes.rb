@@ -92,6 +92,9 @@ Rails.application.routes.draw do
       patch :activation, on: :member
     end
     resources :reports, only: %i[index]
+    resources :report_exports, path: "reports/exports", only: %i[create show] do
+      get :download, on: :member
+    end
 
     resources :corrections, only: %i[index show new create edit update] do
       get :day, on: :collection
