@@ -1,42 +1,15 @@
-<% totals = @report.fetch(:totals) %>
-
-<header class="report-header">
-  <div>
-    <div class="report-brand">FitxaCAE</div>
-    <h1>Resum mensual</h1>
-    <p class="report-muted">
-      Persones actives i persones amb fitxatges durant el període.
-    </p>
-  </div>
-  <div class="report-period">
-    <strong>Informe mensual</strong><br>
-    <%= l(@report.fetch(:period_start), format: :month_year) %>
-  </div>
+<header class="report-header report-summary-header">
+  <%= pdf_brand_logo %>
+  <h1 class="report-summary-title">
+    Resum mensual - <%= pdf_month_year_title(@report.fetch(:period_start)) %>
+  </h1>
 </header>
 
 <section class="report-section">
-  <div class="report-kpis">
-    <div class="report-kpi">
-      <div class="report-kpi-label">Persones</div>
-      <div class="report-kpi-value"><%= totals.fetch(:people_count) %></div>
-    </div>
-    <div class="report-kpi">
-      <div class="report-kpi-label">Actives</div>
-      <div class="report-kpi-value"><%= totals.fetch(:active_people_count) %></div>
-    </div>
-    <div class="report-kpi">
-      <div class="report-kpi-label">Amb fitxatges</div>
-      <div class="report-kpi-value"><%= totals.fetch(:people_with_swipes_count) %></div>
-    </div>
-    <div class="report-kpi">
-      <div class="report-kpi-label">Hores totals</div>
-      <div class="report-kpi-value"><%= duration_text(totals.fetch(:worked_seconds)) %></div>
-    </div>
-  </div>
-</section>
-
-<section class="report-section">
-  <h2>Persones</h2>
+  <p class="report-muted">
+    Recompte d'hores per cada persona activa o amb fitxatges en aquest mes.
+    S'apliquen correccions aprovades, i s'ignoren fitxatges incorrectes o correccions pendents.
+  </p>
   <table>
     <thead>
       <tr>
@@ -70,7 +43,11 @@
             <% end %>
           </td>
           <td class="report-text-end"><%= row.fetch(:swipes_count) %></td>
-          <td class="report-text-end report-nowrap"><%= duration_text(row.fetch(:worked_seconds)) %></td>
+          <td class="report-text-end report-nowrap">
+            <span class="<%= "report-duration-zero" if row.fetch(:worked_seconds).zero? %>">
+              <%= duration_text(row.fetch(:worked_seconds)) %>
+            </span>
+          </td>
         </tr>
       <% end %>
     </tbody>

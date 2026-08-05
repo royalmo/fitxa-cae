@@ -42,6 +42,7 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
     employee = create_employee(first_name: "Clara", last_name: "Pons")
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 9, 0))
     employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 2, 17, 0))
+    create_employee(first_name: "Aina", last_name: "Sense hores", national_id: valid_dni(12_345_679))
     report = Reports::MonthlySummaryReport.new(month: 7, year: 2026).to_h
 
     html = ApplicationController.render(
@@ -50,9 +51,14 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
       assigns: { report: report }
     )
 
-    assert_includes html, "Resum mensual"
+    assert_includes html, "Resum mensual - Juliol de 2026"
+    assert_includes html, "Recompte d'hores per cada persona activa o amb fitxatges en aquest mes."
+    refute_includes html, "class=\"report-kpis\""
+    refute_includes html, "<h2>Persones</h2>"
     assert_includes html, "Clara Pons"
     assert_includes html, "8 h 00 min"
+    assert_includes html, "report-duration-zero"
+    assert_includes html, "0 h 00 min"
   end
 
   private
