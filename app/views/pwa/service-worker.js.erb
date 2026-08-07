@@ -1,10 +1,8 @@
 const VERSION = "fitxa-cae-v7"
 const SHELL_CACHE = `${VERSION}-shell`
-const PAGE_CACHE = `${VERSION}-pages`
 const ASSET_CACHE = `${VERSION}-assets`
 
 const APP_SHELL = [
-  "/",
   <%= raw unavailable_path.to_json %>,
   <%= raw asset_path("fonts.css").to_json %>,
   <%= raw asset_path("application.css").to_json %>,
@@ -39,7 +37,7 @@ self.addEventListener("activate", (event) => {
     caches.keys()
       .then((keys) => Promise.all(
         keys
-          .filter((key) => ![SHELL_CACHE, PAGE_CACHE, ASSET_CACHE].includes(key))
+          .filter((key) => ![SHELL_CACHE, ASSET_CACHE].includes(key))
           .map((key) => caches.delete(key))
       ))
       .then(() => self.clients.claim())
@@ -64,16 +62,10 @@ self.addEventListener("fetch", (event) => {
 })
 
 async function networkFirstPage(request) {
-  const cache = await caches.open(PAGE_CACHE)
-
   try {
-    const response = await fetch(request)
-    cache.put(request, response.clone())
-    return response
+    return await fetch(request)
   } catch (_error) {
-    return (await cache.match(request)) ||
-      (await cache.match("/")) ||
-      (await caches.match(<%= raw unavailable_path.to_json %>))
+    return await caches.match(<%= raw unavailable_path.to_json %>)
   }
 }
 

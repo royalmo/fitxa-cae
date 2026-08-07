@@ -22,7 +22,21 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
+    setup do
+      clear_test_rate_limit_stores
+    end
+
     # Add more helper methods to be used by all tests here...
+    def clear_test_rate_limit_stores
+      stores = [
+        Employee::SessionsController::CODE_REQUEST_RATE_LIMIT_STORE,
+        Admin::SessionsController::PASSWORD_LOGIN_RATE_LIMIT_STORE,
+        Admin::PasswordResetsController::PASSWORD_RESET_RATE_LIMIT_STORE
+      ]
+
+      stores.each { |store| store.clear if store.respond_to?(:clear) }
+    end
+
     def valid_dni(number = 12_345_678)
       digits = number % 100_000_000
       "#{digits.to_s.rjust(8, "0")}#{Employee::NATIONAL_ID_LETTERS[digits % Employee::NATIONAL_ID_LETTERS.length]}"

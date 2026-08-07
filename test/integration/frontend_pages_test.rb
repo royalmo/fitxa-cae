@@ -308,6 +308,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get pwa_service_worker_path(format: :js)
     assert_response :success
     assert_match "startsWith(\"/admin\")", response.body
+    assert_no_match "PAGE_CACHE", response.body
+    assert_no_match "cache.match(request)", response.body
     assert_no_match "<%=", response.body
     assert_no_match "&quot;", response.body
     assert_match "\"#{unavailable_path}\"", response.body

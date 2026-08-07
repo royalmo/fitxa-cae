@@ -79,6 +79,45 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_redirected_to clockings_path
   end
 
+  test "password login rate limits repeated attempts by ip" do
+    employee = create_employee(password: "1234")
+
+    10.times do
+      post login_path, params: {
+        national_id: employee.national_id,
+        password: "bad"
+      }
+      assert_response :unprocessable_entity
+    end
+
+    post login_path, params: {
+      national_id: employee.national_id,
+      password: "bad"
+    }
+
+    assert_redirected_to login_path
+    assert_equal I18n.t("employee.sessions.create.rate_limited"), flash[:alert]
+  end
+
+  test "password login limit does not consume code request limit" do
+    employee = create_employee(password: "1234")
+
+    10.times do
+      post login_path, params: {
+        national_id: employee.national_id,
+        password: "bad"
+      }
+      assert_response :unprocessable_entity
+    end
+
+    post request_login_code_path, params: {
+      national_id: "bad",
+      delivery_method: "email"
+    }
+
+    assert_response :unprocessable_entity
+  end
+
   test "password login rejects bad credentials and inactive employees" do
     employee = create_employee(password: "1234")
     inactive = create_employee(national_id: valid_dni(12_345_679), password: "1234", active: false)

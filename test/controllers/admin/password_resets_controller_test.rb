@@ -6,6 +6,7 @@ class Admin::PasswordResetsControllerTest < ActionDispatch::IntegrationTest
 
   setup do
     ActionMailer::Base.deliveries.clear
+    Admin::PasswordResetsController::PASSWORD_RESET_RATE_LIMIT_STORE.clear
     clear_enqueued_jobs
     clear_performed_jobs
   end
@@ -55,6 +56,20 @@ class Admin::PasswordResetsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to admin_login_path
     assert_equal I18n.t("admin.password_resets.create.sent"), flash[:notice]
+  end
+
+  test "rate limits repeated reset link requests by ip" do
+    10.times do
+      assert_no_enqueued_emails do
+        post admin_password_reset_path, params: { email: "missing@example.test" }
+      end
+      assert_redirected_to admin_login_path
+    end
+
+    post admin_password_reset_path, params: { email: "missing@example.test" }
+
+    assert_redirected_to new_admin_password_reset_path
+    assert_equal I18n.t("admin.password_resets.create.rate_limited"), flash[:alert]
   end
 
   test "reset link updates password and does not sign in the manager" do

@@ -1,5 +1,13 @@
 class Admin::PasswordResetsController < ApplicationController
+  PASSWORD_RESET_RATE_LIMIT_STORE = Rails.env.test? ? ActiveSupport::Cache::MemoryStore.new : Rails.cache
+
   layout "admin_auth"
+
+  rate_limit to: 10,
+    within: 5.minutes,
+    only: :create,
+    store: PASSWORD_RESET_RATE_LIMIT_STORE,
+    with: :redirect_to_password_reset_rate_limit
 
   before_action :redirect_signed_in_manager, only: %i[new create]
   before_action :load_manager_from_token, only: %i[edit update]
@@ -66,5 +74,9 @@ class Admin::PasswordResetsController < ApplicationController
 
   def redirect_signed_in_manager
     redirect_to admin_root_path if manager_signed_in?
+  end
+
+  def redirect_to_password_reset_rate_limit
+    redirect_to new_admin_password_reset_path, alert: t("admin.password_resets.create.rate_limited")
   end
 end

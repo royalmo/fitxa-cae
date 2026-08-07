@@ -1,10 +1,19 @@
 class Employee::SessionsController < ApplicationController
   CODE_REQUEST_RATE_LIMIT_STORE = Rails.env.test? ? ActiveSupport::Cache::MemoryStore.new : Rails.cache
+  PASSWORD_LOGIN_RATE_LIMIT_STORE = CODE_REQUEST_RATE_LIMIT_STORE
 
   layout "employee_auth"
 
   rate_limit to: 10,
     within: 5.minutes,
+    name: "password-login",
+    only: :create,
+    store: PASSWORD_LOGIN_RATE_LIMIT_STORE,
+    with: :redirect_to_password_login_rate_limit
+
+  rate_limit to: 10,
+    within: 5.minutes,
+    name: "code-request",
     only: :request_code,
     store: CODE_REQUEST_RATE_LIMIT_STORE,
     with: :redirect_to_code_request_rate_limit
@@ -146,6 +155,10 @@ class Employee::SessionsController < ApplicationController
   def redirect_to_code_request_rate_limit
     redirect_to login_path(delivery_method: params[:delivery_method].presence || "email"),
       alert: t("employee.sessions.request_code.rate_limited")
+  end
+
+  def redirect_to_password_login_rate_limit
+    redirect_to login_path, alert: t("employee.sessions.create.rate_limited")
   end
 
   def notify_login_code_delivery_error(error, delivery_method:, employee: nil)

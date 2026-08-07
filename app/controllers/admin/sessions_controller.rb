@@ -1,5 +1,13 @@
 class Admin::SessionsController < ApplicationController
+  PASSWORD_LOGIN_RATE_LIMIT_STORE = Rails.env.test? ? ActiveSupport::Cache::MemoryStore.new : Rails.cache
+
   layout "admin_auth"
+
+  rate_limit to: 10,
+    within: 5.minutes,
+    only: :create,
+    store: PASSWORD_LOGIN_RATE_LIMIT_STORE,
+    with: :redirect_to_password_login_rate_limit
 
   before_action :redirect_signed_in_manager, only: :new
 
@@ -34,5 +42,9 @@ class Admin::SessionsController < ApplicationController
 
   def redirect_signed_in_manager
     redirect_to admin_root_path if manager_signed_in?
+  end
+
+  def redirect_to_password_login_rate_limit
+    redirect_to admin_login_path, alert: t("admin.sessions.create.rate_limited")
   end
 end

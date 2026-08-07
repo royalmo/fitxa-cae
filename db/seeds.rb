@@ -1,3 +1,7 @@
+if Rails.env.production? && ENV["ALLOW_PRODUCTION_SEEDS"] != "1"
+  abort "Refusing to load destructive demo seeds in production. Set ALLOW_PRODUCTION_SEEDS=1 to override intentionally."
+end
+
 rng = Random.new(20_260_630)
 
 DNI_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"

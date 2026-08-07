@@ -31,6 +31,7 @@ ca:
         forgot_password: He oblidat la contrasenya
       create:
         invalid: DNI/NIE o contrasenya incorrectes.
+        rate_limited: Has fet massa intents d'inici de sessió. Espera un moment i torna-ho a provar.
       request_code:
         invalid_national_id: DNI/NIE invàlid.
         delivery_unavailable:

@@ -106,6 +106,7 @@ ca:
         forgot_password: He oblidat la contrasenya
       create:
         invalid: Correu o contrasenya incorrectes.
+        rate_limited: Has fet massa intents d'inici de sessió. Espera un moment i torna-ho a provar.
       destroy:
         signed_out: Sessió de gestió tancada.
     accounts:
@@ -798,6 +799,7 @@ ca:
       create:
         sent: Si el correu correspon a un responsable actiu, rebrà un enllaç per restablir
           la contrasenya.
+        rate_limited: Has demanat massa enllaços de restabliment. Espera un moment i torna-ho a provar.
       edit:
         title: Nova contrasenya
         heading: Defineix la contrasenya

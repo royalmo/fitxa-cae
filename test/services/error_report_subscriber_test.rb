@@ -34,12 +34,21 @@ class ErrorReportSubscriberTest < ActiveSupport::TestCase
       StandardError.new("Cannot send login code"),
       handled: true,
       severity: :error,
-      context: { password: "secret", delivery_method: "email" },
+      context: {
+        password: "secret",
+        national_id: "12345678Z",
+        phone: "+34 600 111 222",
+        code_digits: %w[1 2 3 4 5 6],
+        delivery_method: "sms"
+      },
       source: "fitxa_cae"
     )
 
-    assert_equal "\"email\"", payload[:context]["delivery_method"]
+    assert_equal "\"sms\"", payload[:context]["delivery_method"]
     assert_match "[FILTERED]", payload[:context]["password"]
+    assert_match "[FILTERED]", payload[:context]["national_id"]
+    assert_match "[FILTERED]", payload[:context]["phone"]
+    assert_match "[FILTERED]", payload[:context]["code_digits"]
   ensure
     singleton.define_method(:report, original_method) if original_method
   end

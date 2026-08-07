@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    Admin::SessionsController::PASSWORD_LOGIN_RATE_LIMIT_STORE.clear
+  end
+
   test "renders login page" do
     get admin_login_path
 
@@ -82,6 +86,20 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
 
     post admin_login_path, params: { email: inactive.email, password: "12345678" }
     assert_response :unprocessable_entity
+  end
+
+  test "rate limits repeated password login attempts by ip" do
+    manager = create_manager(email: "laia.riera@example.test")
+
+    10.times do
+      post admin_login_path, params: { email: manager.email, password: "bad" }
+      assert_response :unprocessable_entity
+    end
+
+    post admin_login_path, params: { email: manager.email, password: "bad" }
+
+    assert_redirected_to admin_login_path
+    assert_equal I18n.t("admin.sessions.create.rate_limited"), flash[:alert]
   end
 
   test "signs out manager" do

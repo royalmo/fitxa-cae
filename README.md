@@ -285,6 +285,12 @@ Before deploying:
    - `fitxa_xarranca_storage:/rails/storage`
 4. Keep the Dockerfile `RUBY_VERSION` build argument aligned with `.ruby-version`.
 
+Create the first production manager from the command line:
+
+```sh
+bin/kamal app exec -d fitxa-cae --reuse "bin/rails managers:create_first EMAIL=admin@example.com FIRST_NAME=Nom LAST_NAME=Cognoms"
+```
+
 Deploy:
 
 ```sh
