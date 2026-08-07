@@ -3,7 +3,13 @@ require "csv"
 require "tempfile"
 
 class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+  include ActionMailer::TestHelper
+
   setup do
+    ActionMailer::Base.deliveries.clear
+    clear_enqueued_jobs
+    clear_performed_jobs
     log_in_manager
   end
 
@@ -145,13 +151,15 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     ])
 
     assert_difference -> { Employee.count }, 2 do
-      post admin_import_path, params: {
-        import: {
-          source: "paste",
-          pasted_data: content,
-          tag_ids: [ tag.id ]
+      assert_enqueued_emails 2 do
+        post admin_import_path, params: {
+          import: {
+            source: "paste",
+            pasted_data: content,
+            tag_ids: [ tag.id ]
+          }
         }
-      }
+      end
     end
 
     assert_redirected_to admin_employees_path
@@ -168,6 +176,10 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ tag ], existing_employee.reload.tags.to_a
     assert_equal "Importació completada. Persones noves: 2. Persones existents amb etiquetes noves: 1.",
       flash[:notice]
+
+    deliver_enqueued_emails
+    assert_equal [ "ada@example.test", "laia@example.test" ], ActionMailer::Base.deliveries.map { |mail| mail.to.first }.sort
+    assert_equal [ I18n.t("employee_welcome_mailer.welcome.subject") ], ActionMailer::Base.deliveries.map(&:subject).uniq
   end
 
   test "creates employees from uploaded file" do

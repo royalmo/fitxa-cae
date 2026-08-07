@@ -1,7 +1,13 @@
 require "test_helper"
 
 class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+  include ActionMailer::TestHelper
+
   setup do
+    ActionMailer::Base.deliveries.clear
+    clear_enqueued_jobs
+    clear_performed_jobs
     log_in_manager
   end
 
@@ -268,17 +274,19 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     tag = Tag.create!(name: "office", active: true, color: "#2563eb")
 
     assert_difference "Employee.count", 1 do
-      post admin_employees_path, params: {
-        employee: {
-          first_name: "Pau",
-          last_name: "Costa",
-          national_id: valid_dni(41_000_003),
-          email: "pau@example.test",
-          phone: "+34 600 111 222",
-          active: "0",
-          tag_ids: [ tag.id ]
+      assert_enqueued_emails 1 do
+        post admin_employees_path, params: {
+          employee: {
+            first_name: "Pau",
+            last_name: "Costa",
+            national_id: valid_dni(41_000_003),
+            email: "pau@example.test",
+            phone: "+34 600 111 222",
+            active: "0",
+            tag_ids: [ tag.id ]
+          }
         }
-      }
+      end
     end
 
     assert_redirected_to admin_employees_path
@@ -286,6 +294,30 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_predicate employee, :active?
     assert_equal [ tag ], employee.tags.to_a
     assert_not employee.password_login_enabled?
+
+    deliver_enqueued_emails
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal [ "pau@example.test" ], mail.to
+    assert_equal I18n.t("employee_welcome_mailer.welcome.subject"), mail.subject
+    assert_match "Pau Costa", mail.text_part.body.decoded
+    assert_match "DNI/NIE", mail.text_part.body.decoded
+  end
+
+  test "does not send welcome email when created employee has no email" do
+    assert_difference "Employee.count", 1 do
+      assert_no_enqueued_emails do
+        post admin_employees_path, params: {
+          employee: {
+            first_name: "Pau",
+            last_name: "Costa",
+            national_id: valid_dni(41_000_013),
+            active: "0"
+          }
+        }
+      end
+    end
+
+    assert_redirected_to admin_employees_path
   end
 
   test "renders validation errors when employee data is invalid" do

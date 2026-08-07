@@ -35,9 +35,9 @@ class EmployeeLoginCodeDeliveryJobTest < ActiveJob::TestCase
     employee.generate_login_code!(delivery_method: "sms")
     response = Struct.new(:code).new(500)
 
-    with_sms_delivery(->(**_kwargs) { raise SmsArena::DeliveryError, response }) do
+    with_sms_delivery(->(**_kwargs) { raise SmsProvider::DeliveryError, response }) do
       with_error_notifications do |notifications|
-        assert_raises(SmsArena::DeliveryError) do
+        assert_raises(SmsProvider::DeliveryError) do
           EmployeeLoginCodeDeliveryJob.perform_now(employee, "123456", "sms")
         end
 
@@ -53,10 +53,10 @@ class EmployeeLoginCodeDeliveryJobTest < ActiveJob::TestCase
   private
 
   def with_sms_delivery(delivery)
-    singleton = class << SmsArena
+    singleton = class << SmsProvider
       self
     end
-    original_method = SmsArena.method(:deliver_login_code)
+    original_method = SmsProvider.method(:deliver_login_code)
 
     singleton.define_method(:deliver_login_code, &delivery)
     yield

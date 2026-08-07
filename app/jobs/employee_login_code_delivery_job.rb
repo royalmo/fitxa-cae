@@ -7,7 +7,7 @@ class EmployeeLoginCodeDeliveryJob < ApplicationJob
 
     case @delivery_method
     when "sms"
-      SmsArena.deliver_login_code(phone: @employee.phone, code: code)
+      SmsProvider.deliver_login_code(phone: @employee.phone, code: code)
     when "email"
       EmployeeLoginMailer.code(@employee, code).deliver_now
     else

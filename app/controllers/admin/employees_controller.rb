@@ -22,6 +22,7 @@ class Admin::EmployeesController < Admin::BaseController
     @employee.tag_ids = selected_tag_ids
 
     if @employee.save
+      deliver_employee_welcome(@employee)
       redirect_to admin_employees_path, notice: t("admin.flash.employee_created")
     else
       load_tags
@@ -98,6 +99,10 @@ class Admin::EmployeesController < Admin::BaseController
 
   def load_tags
     @tags = Tag.order(:name)
+  end
+
+  def deliver_employee_welcome(employee)
+    EmployeeWelcomeMailer.welcome(employee).deliver_later if employee.email.present?
   end
 
   def last_swipes_by_employee_id(employee_ids)

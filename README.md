@@ -143,7 +143,7 @@ Useful edge-case employees:
 | Sonia Costa Grau | `31475140P` | None | Inactive |
 | Tomas Puig Miro | `31483059S` | `1234` | Inactive, useful for rejected-login tests |
 
-SMS code login is mocked unless `SMSARENA_ENABLED=true`. In development, request an SMS code and read the generated code in the Rails log.
+SMS code login is mocked unless `LABSMOBILE_ENABLED=true`. In development, request an SMS code and read the generated code in the Rails log.
 
 ## Default Manager Records
 
@@ -168,15 +168,15 @@ Required production configuration:
 - SSL settings enabled in `config/environments/production.rb` when the app is served over HTTPS
 - Backups for the production SQLite files in `storage/`
 
-Optional SMSArena environment variables:
+Optional LabsMobile SMS environment variables:
 
-- `SMSARENA_ENABLED=true`
-- `SMSARENA_API_URL`
-- `SMSARENA_AUTH_MODE`, one of `params`, `basic`, or `bearer`
-- `SMSARENA_API_KEY`
-- `SMSARENA_USERNAME`
-- `SMSARENA_PASSWORD`
-- `SMSARENA_SENDER`
+- `LABSMOBILE_ENABLED=true`
+- `LABSMOBILE_USERNAME`
+- `LABSMOBILE_API_TOKEN`
+- `LABSMOBILE_SENDER`
+- `LABSMOBILE_API_URL`, defaults to `https://api.labsmobile.com/json/send`
+- `LABSMOBILE_TEST_MODE=true`, to use LabsMobile simulated delivery
+- `LABSMOBILE_TIMEOUT`, defaults to `10`
 
 Email login codes require production mailer delivery settings before they can be used reliably outside development/test.
 

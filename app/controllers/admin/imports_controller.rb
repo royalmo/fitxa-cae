@@ -42,7 +42,8 @@ class Admin::ImportsController < Admin::BaseController
     importable_records = simulation.fetch(:importable_records)
     raise InvalidImport.new(:no_importable_people) if simulation.fetch(:actionable_count).zero?
 
-    apply_import!(simulation)
+    created_employees = apply_import!(simulation)
+    deliver_employee_welcome_emails(created_employees)
 
     redirect_to admin_employees_path, notice: import_completed_message(importable_records, simulation.fetch(:existing_tag_update_count))
   rescue InvalidImport => error
@@ -223,13 +224,14 @@ class Admin::ImportsController < Admin::BaseController
 
   def apply_import!(simulation)
     Employee.transaction do
-      import_records!(simulation.fetch(:importable_records), simulation.fetch(:tags))
+      created_employees = import_records!(simulation.fetch(:importable_records), simulation.fetch(:tags))
       apply_existing_import_tags!(simulation.fetch(:existing_national_ids), simulation.fetch(:tags))
+      created_employees
     end
   end
 
   def import_records!(records, tags)
-    records.each do |record|
+    records.map do |record|
       employee = Employee.create!(
         first_name: record.first_name,
         last_name: record.last_name,
@@ -239,6 +241,13 @@ class Admin::ImportsController < Admin::BaseController
         active: true
       )
       employee.tags = tags
+      employee
+    end
+  end
+
+  def deliver_employee_welcome_emails(employees)
+    employees.each do |employee|
+      EmployeeWelcomeMailer.welcome(employee).deliver_later if employee.email.present?
     end
   end
 

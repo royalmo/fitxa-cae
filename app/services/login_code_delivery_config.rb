@@ -10,7 +10,7 @@ module LoginCodeDeliveryConfig
     when "email"
       email_configured?(allow_test_delivery: allow_test_delivery)
     when "sms"
-      SmsArena.configured?(allow_mock_delivery: allow_test_delivery)
+      SmsProvider.configured?(allow_mock_delivery: allow_test_delivery)
     else
       false
     end

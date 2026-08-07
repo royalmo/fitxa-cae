@@ -242,15 +242,15 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_select ".employee-page-flash.flash-notice > span", text: I18n.t("employee.password_resets.update.success")
   end
 
-  test "sms code login handles smsarena delivery errors" do
+  test "sms code login handles sms provider delivery errors" do
     employee = create_employee(phone: "+34 600 111 222")
-    singleton = class << SmsArena
+    singleton = class << SmsProvider
       self
     end
-    original_method = SmsArena.method(:deliver_login_code)
+    original_method = SmsProvider.method(:deliver_login_code)
 
     singleton.define_method(:deliver_login_code) do |**_kwargs|
-      raise SmsArena::DeliveryError, Struct.new(:code).new(500)
+      raise SmsProvider::DeliveryError, Struct.new(:code).new(500)
     end
 
     with_error_notifications do |notifications|
@@ -263,7 +263,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
 
       assert_redirected_to login_code_path
       assert employee.reload.settings["login_code"]
-      assert_raises(SmsArena::DeliveryError) do
+      assert_raises(SmsProvider::DeliveryError) do
         perform_enqueued_jobs(only: EmployeeLoginCodeDeliveryJob)
       end
       assert_nil employee.reload.settings["login_code"]
