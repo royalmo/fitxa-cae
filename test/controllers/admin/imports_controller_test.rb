@@ -151,7 +151,7 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     ])
 
     assert_difference -> { Employee.count }, 2 do
-      assert_enqueued_emails 2 do
+      assert_enqueued_jobs 1 do
         post admin_import_path, params: {
           import: {
             source: "paste",
@@ -163,6 +163,7 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to admin_employees_path
+    assert_equal EmployeeWelcomeDeliveryJob, enqueued_jobs.last.fetch(:job)
 
     first_employee = Employee.find_by!(national_id: first_national_id)
     second_employee = Employee.find_by!(national_id: second_national_id)
@@ -177,7 +178,7 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Importació completada. Persones noves: 2. Persones existents amb etiquetes noves: 1.",
       flash[:notice]
 
-    deliver_enqueued_emails
+    perform_enqueued_jobs(only: EmployeeWelcomeDeliveryJob)
     assert_equal [ "ada@example.test", "laia@example.test" ], ActionMailer::Base.deliveries.map { |mail| mail.to.first }.sort
     assert_equal [ I18n.t("employee_welcome_mailer.welcome.subject") ], ActionMailer::Base.deliveries.map(&:subject).uniq
   end

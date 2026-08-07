@@ -246,9 +246,8 @@ class Admin::ImportsController < Admin::BaseController
   end
 
   def deliver_employee_welcome_emails(employees)
-    employees.each do |employee|
-      EmployeeWelcomeMailer.welcome(employee).deliver_later if employee.email.present?
-    end
+    employee_ids = employees.filter_map { |employee| employee.id if employee.email.present? }
+    EmployeeWelcomeDeliveryJob.perform_later(employee_ids) if employee_ids.any?
   end
 
   def apply_existing_import_tags!(national_ids, tags)
