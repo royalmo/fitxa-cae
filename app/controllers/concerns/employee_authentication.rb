@@ -2,6 +2,7 @@ module EmployeeAuthentication
   extend ActiveSupport::Concern
 
   EMPLOYEE_AUTH_COOKIE = :fitxa_cae_employee_id
+  PASSWORD_SETUP_TTL = 30.minutes
 
   included do
     helper_method :current_employee, :employee_signed_in?
@@ -34,14 +35,15 @@ module EmployeeAuthentication
     current_employee.present?
   end
 
-  def sign_in_employee(employee, remember:, installed_pwa:)
+  def sign_in_employee(employee, remember:, installed_pwa:, redirect_path: nil, notice: nil)
     return_to = session.delete(:employee_return_to)
+    target_path = redirect_path.presence || return_to.presence || root_path
 
     reset_session
     write_employee_auth_cookie(employee, remember: remember, installed_pwa: installed_pwa)
     @current_employee = employee
 
-    redirect_to(return_to.presence || root_path)
+    redirect_to target_path, notice: notice
   end
 
   def sign_out_employee
@@ -65,6 +67,34 @@ module EmployeeAuthentication
 
   def clear_pending_employee_login
     session.delete(:pending_employee_login)
+  end
+
+  def store_pending_employee_password_setup(employee, reason:, remember:, installed_pwa:)
+    session[:pending_employee_password_setup] = {
+      "employee_id" => employee.id,
+      "reason" => reason.to_s,
+      "remember" => remember,
+      "installed_pwa" => installed_pwa,
+      "expires_at" => PASSWORD_SETUP_TTL.from_now.iso8601
+    }
+  end
+
+  def pending_employee_password_setup
+    clear_pending_employee_password_setup if pending_employee_password_setup_expired?
+
+    Employee.find_by(id: pending_employee_password_setup_state["employee_id"], active: true) if pending_employee_password_setup_state["employee_id"]
+  end
+
+  def clear_pending_employee_password_setup
+    session.delete(:pending_employee_password_setup)
+  end
+
+  def pending_employee_password_setup_remember?
+    ActiveModel::Type::Boolean.new.cast(pending_employee_password_setup_state["remember"])
+  end
+
+  def pending_employee_password_setup_installed_pwa?
+    ActiveModel::Type::Boolean.new.cast(pending_employee_password_setup_state["installed_pwa"])
   end
 
   def pending_employee_login_delivery_method
@@ -107,5 +137,21 @@ module EmployeeAuthentication
 
   def pending_employee_login_requested?
     pending_employee_login_state.present?
+  end
+
+  def pending_employee_password_setup_state
+    session[:pending_employee_password_setup] || {}
+  end
+
+  def pending_employee_password_setup_requested?
+    pending_employee_password_setup_state.present?
+  end
+
+  def pending_employee_password_setup_expired?
+    expires_at = Time.zone.parse(pending_employee_password_setup_state["expires_at"].to_s)
+
+    expires_at.blank? || expires_at.past?
+  rescue ArgumentError
+    true
   end
 end

@@ -75,7 +75,13 @@ class Employee::SessionsController < ApplicationController
       remember = pending_employee_login_remember?
       installed_pwa = pending_employee_login_installed_pwa?
       clear_pending_employee_login
-      sign_in_employee(@pending_employee, remember: remember, installed_pwa: installed_pwa)
+
+      if @pending_employee.password_setup_required?
+        store_pending_employee_password_setup(@pending_employee, reason: "first_login", remember: remember, installed_pwa: installed_pwa)
+        redirect_to edit_employee_password_reset_path
+      else
+        sign_in_employee(@pending_employee, remember: remember, installed_pwa: installed_pwa)
+      end
     else
       @delivery_method = pending_employee_login_delivery_method
       flash.now[:alert] = t(".invalid")

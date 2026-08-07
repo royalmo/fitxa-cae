@@ -13,20 +13,20 @@
 
   <section class="auth-panel">
     <div class="auth-panel-actions">
-      <%= link_to login_path, class: "auth-back-link" do %>
+      <%= link_to new_employee_password_reset_path(delivery_method: @delivery_method), class: "auth-back-link" do %>
         <%= icon "arrow-left", class: "icon" %>
         <span><%= t(".back") %></span>
       <% end %>
     </div>
 
-    <%= render "flash_messages" %>
+    <%= render "employee/sessions/flash_messages" %>
 
-    <%= render "code_form",
-      form_url: verify_login_code_path,
+    <%= render "employee/sessions/code_form",
+      form_url: verify_employee_password_reset_code_path,
       submitted_code: submitted_code,
       code_label: t(".code"),
-      digit_label_key: "employee.sessions.code.digit",
-      field_id_prefix: "login_code",
+      digit_label_key: "employee.password_resets.code.digit",
+      field_id_prefix: "password_reset_code",
       submit_label: t(".submit"),
       submitting_label: t(".submitting") %>
   </section>

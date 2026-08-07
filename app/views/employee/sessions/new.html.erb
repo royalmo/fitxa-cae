@@ -43,6 +43,8 @@
         </label>
 
         <%= form.submit t(".password_submit"), data: { submitting_label: t("shared.submitting.entering") } %>
+
+        <%= link_to t(".forgot_password"), new_employee_password_reset_path, class: "text-button auth-forgot-link" %>
       <% end %>
     </div>
 

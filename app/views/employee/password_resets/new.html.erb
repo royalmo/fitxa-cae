@@ -1,0 +1,53 @@
+<% content_for :title, t(".title") %>
+<% selected_delivery_method = params[:delivery_method].presence_in(LoginCodeDeliveryConfig::DELIVERY_METHODS) || "email" %>
+
+<section class="auth-card auth-card-narrow employee-auth-card">
+  <header class="auth-header">
+    <%= render "layouts/brand_mark", path: login_path %>
+    <h1><%= t(".heading") %></h1>
+  </header>
+
+  <section class="auth-panel">
+    <div class="auth-panel-actions">
+      <%= link_to login_path, class: "auth-back-link" do %>
+        <%= icon "arrow-left", class: "icon" %>
+        <span><%= t(".back") %></span>
+      <% end %>
+    </div>
+
+    <%= render "employee/sessions/flash_messages" %>
+
+    <%= form_with url: employee_password_reset_path, method: :post, class: "auth-form" do |form| %>
+      <div class="field">
+        <%= form.label :national_id, t(".national_id"), for: "employee_password_reset_national_id" %>
+        <%= form.text_field :national_id,
+          id: "employee_password_reset_national_id",
+          value: params[:national_id],
+          autocomplete: "username",
+          required: true %>
+      </div>
+
+      <fieldset class="choice-list delivery-method-list">
+        <legend><%= t(".delivery_method") %></legend>
+        <div class="delivery-method-options">
+          <label>
+            <%= radio_button_tag :delivery_method,
+              "email",
+              selected_delivery_method == "email",
+              id: "employee_password_reset_delivery_method_email" %>
+            <span><%= t(".email") %></span>
+          </label>
+          <label>
+            <%= radio_button_tag :delivery_method,
+              "sms",
+              selected_delivery_method == "sms",
+              id: "employee_password_reset_delivery_method_sms" %>
+            <span><%= t(".sms") %></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <%= form.submit t(".submit"), data: { submitting_label: t("shared.submitting.sending") } %>
+    <% end %>
+  </section>
+</section>

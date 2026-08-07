@@ -25,6 +25,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_select ".auth-tab-list", text: /Contrasenya/
     assert_select ".auth-tab-list", text: /Rebre codi/
     assert_select "#employee_login_password_tab[checked]"
+    assert_select ".auth-tab-panel-password a.auth-forgot-link[href='#{new_employee_password_reset_path}']", text: "He oblidat la contrasenya"
     assert_select "#employee_delivery_method_email[checked]"
     assert_select "#employee_delivery_method_sms[checked]", 0
     assert_equal [ "Correu", "SMS" ], css_select(".delivery-method-options label").map { |label| label.text.squish }
@@ -125,7 +126,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
   end
 
   test "email code login sends and verifies a code" do
-    employee = create_employee(email: "ada@example.test")
+    employee = create_employee(email: "ada@example.test", password: "1234")
 
     assert_enqueued_jobs 1, only: EmployeeLoginCodeDeliveryJob do
       with_secure_random_number(42) do
@@ -170,7 +171,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
   end
 
   test "sms code login stores hashed code and verifies it" do
-    employee = create_employee(phone: "+34 600 111 222")
+    employee = create_employee(phone: "+34 600 111 222", password: "1234")
 
     assert_enqueued_jobs 1, only: EmployeeLoginCodeDeliveryJob do
       with_secure_random_number(12_345) do
@@ -191,7 +192,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
   end
 
   test "code login accepts six individual digit inputs" do
-    employee = create_employee(email: "ada@example.test")
+    employee = create_employee(email: "ada@example.test", password: "1234")
 
     with_secure_random_number(65_432) do
       post request_login_code_path, params: {
@@ -203,6 +204,42 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     post verify_login_code_path, params: { code_digits: %w[6 5 4 3 2 8] }
 
     assert_redirected_to root_path
+  end
+
+  test "code login for an employee without a password requires password setup" do
+    employee = create_employee(email: "ada@example.test")
+
+    with_secure_random_number(42) do
+      post request_login_code_path, params: {
+        national_id: employee.national_id,
+        delivery_method: "email"
+      }
+    end
+
+    post verify_login_code_path, params: { code: "000422" }
+
+    assert_redirected_to edit_employee_password_reset_path
+    assert_nil employee.reload.settings["login_code"]
+
+    follow_redirect!
+    assert_response :success
+    assert_select "title", text: "Nova contrasenya | FitxaCAE"
+    assert_select "form.auth-form[action='#{employee_password_reset_path}']"
+    assert_select "input[name='password'][autocomplete='new-password'][required]"
+    assert_select "input[name='password_confirmation'][autocomplete='new-password'][required]"
+
+    patch employee_password_reset_path, params: {
+      password: "5678",
+      password_confirmation: "5678"
+    }
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("employee.password_resets.update.success"), flash[:notice]
+    assert employee.reload.authenticate("5678")
+
+    follow_redirect!
+    assert_response :success
+    assert_select ".employee-page-flash.flash-notice > span", text: I18n.t("employee.password_resets.update.success")
   end
 
   test "sms code login handles smsarena delivery errors" do

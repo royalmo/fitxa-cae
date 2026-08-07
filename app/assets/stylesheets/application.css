@@ -588,6 +588,11 @@ html[data-standalone-pwa="true"] .employee-install-prompt {
   gap: 0.9rem;
 }
 
+.auth-forgot-link {
+  justify-self: center;
+  text-align: center;
+}
+
 .field {
   display: grid;
   gap: 0.4rem;

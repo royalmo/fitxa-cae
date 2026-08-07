@@ -74,6 +74,10 @@ class Employee < ApplicationRecord
     password_digest.present?
   end
 
+  def password_setup_required?
+    !password_login_enabled?
+  end
+
   def theme_preference
     settings["theme"].presence_in(THEME_PREFERENCES) || DEFAULT_THEME_PREFERENCE
   end

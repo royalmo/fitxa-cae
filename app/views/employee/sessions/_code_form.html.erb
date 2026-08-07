@@ -1,0 +1,34 @@
+<%= form_with url: form_url,
+  method: :post,
+  class: "auth-form",
+  html: { autocomplete: "off" },
+  data: {
+    controller: "code-input",
+    code_input_submitting_label_value: submitting_label
+  } do |form| %>
+  <fieldset class="code-input-group">
+    <legend class="sr-only"><%= code_label %></legend>
+    <%= hidden_field_tag :code, submitted_code, data: { code_input_target: "hidden" } %>
+
+    <div class="code-inputs">
+      <% Employee::LOGIN_CODE_LENGTH.times do |index| %>
+        <%= text_field_tag "code_digits[]",
+          submitted_code[index],
+          id: "#{field_id_prefix}_digit_#{index + 1}",
+          class: "code-digit-input",
+          inputmode: "numeric",
+          pattern: "[0-9]*",
+          maxlength: 1,
+          required: true,
+          autocomplete: "off",
+          aria: { label: t(digit_label_key, number: index + 1) },
+          data: {
+            code_input_target: "digit",
+            action: "input->code-input#input keydown->code-input#keydown paste->code-input#paste"
+          } %>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <%= form.submit submit_label, data: { code_input_target: "submit", submitting_label: submitting_label } %>
+<% end %>

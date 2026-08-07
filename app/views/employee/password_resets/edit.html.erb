@@ -1,0 +1,26 @@
+<% content_for :title, t(".title") %>
+
+<section class="auth-card auth-card-narrow employee-auth-card">
+  <header class="auth-header">
+    <%= render "layouts/brand_mark", path: login_path %>
+    <h1><%= t(".heading") %></h1>
+  </header>
+
+  <section class="auth-panel">
+    <%= render "layouts/error_summary", messages: @employee.errors.full_messages, title: t(".error_title") %>
+
+    <%= form_with url: employee_password_reset_path, method: :patch, class: "auth-form" do |form| %>
+      <div class="field">
+        <%= form.label :password, t(".password") %>
+        <%= form.password_field :password, autocomplete: "new-password", required: true %>
+      </div>
+
+      <div class="field">
+        <%= form.label :password_confirmation, t(".password_confirmation") %>
+        <%= form.password_field :password_confirmation, autocomplete: "new-password", required: true %>
+      </div>
+
+      <%= form.submit t(".submit"), data: { submitting_label: t(".submitting") } %>
+    <% end %>
+  </section>
+</section>

@@ -32,6 +32,12 @@ Rails.application.routes.draw do
   post "login/code" => "employee/sessions#request_code", as: :request_login_code
   get "login/code" => "employee/sessions#code", as: :login_code
   post "login/code/verify" => "employee/sessions#verify_code", as: :verify_login_code
+  get "password-reset" => "employee/password_resets#new", as: :new_employee_password_reset
+  post "password-reset" => "employee/password_resets#create", as: :employee_password_reset
+  get "password-reset/code" => "employee/password_resets#code", as: :employee_password_reset_code
+  post "password-reset/code/verify" => "employee/password_resets#verify_code", as: :verify_employee_password_reset_code
+  get "password-reset/edit" => "employee/password_resets#edit", as: :edit_employee_password_reset
+  patch "password-reset" => "employee/password_resets#update", as: nil
   delete "logout" => "employee/sessions#destroy", as: :logout
 
   root "employee/dashboard#show"
