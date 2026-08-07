@@ -1,0 +1,36 @@
+ca:
+  activerecord:
+    models:
+      employee: Persona
+      manager: Responsable
+      tag: Etiqueta
+    attributes:
+      employee:
+        active: Estat
+        email: Correu
+        first_name: Nom
+        last_name: Cognoms
+        national_id: DNI
+        password: Contrasenya
+        phone: Telèfon
+      manager:
+        active: Estat
+        email: Correu
+        employee_id: Persona vinculada
+        first_name: Nom
+        last_name: Cognoms
+        password: Contrasenya
+      tag:
+        active: Estat
+        color: Color
+        name: Nom
+    errors:
+      models:
+        manager:
+          attributes:
+            employee_id:
+              taken: ja està assignada a un altre responsable
+        tag:
+          attributes:
+            name:
+              taken: ja està assignat a una altra etiqueta

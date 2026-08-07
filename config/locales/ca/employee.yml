@@ -1,0 +1,263 @@
+ca:
+  employee:
+    guest: Treballador
+    themes:
+      light: Clar
+      dark: Fosc
+      system: Predeterminat
+    sessions:
+      install_prompt: Instal·la FitxaCAE
+      flash:
+        require_login: Inicia sessió per continuar.
+        code_required: Demana un codi nou per continuar.
+      sms:
+        body: El teu codi de Fitxa CAE és %{code}. Caduca en %{minutes} minuts.
+      new:
+        title: Iniciar sessió
+        heading: Inicia sessió
+        password_heading: Amb contrasenya
+        code_heading: Amb codi
+        tabs_label: Mètode d'accés
+        password_tab: Contrasenya
+        code_tab: Rebre codi
+        national_id: DNI o NIE
+        password: Contrasenya
+        remember_me: Mantenir la sessió iniciada
+        password_submit: Entrar
+        delivery_method: Rebre codi per
+        sms: SMS
+        email: Correu
+        code_submit: Enviar codi
+        forgot_password: He oblidat la contrasenya
+      create:
+        invalid: DNI/NIE o contrasenya incorrectes.
+      request_code:
+        invalid_national_id: DNI/NIE invàlid.
+        delivery_unavailable:
+          email: No s'ha pogut enviar el correu.
+          sms: No s'ha pogut enviar l'SMS.
+        rate_limited: Has demanat massa codis. Espera un moment i torna-ho a provar.
+      code:
+        title: Codi d'accés
+        heading: Introdueix el codi
+        sent_if_found_intro: Si el DNI/NIE es troba a la base de dades,
+        sent_if_found:
+          email: rebràs un codi al teu correu.
+          sms: rebràs un codi al teu telèfon.
+        code: Codi
+        digit: Dígit %{number}
+        submit: Entrar
+        submitting: Entrant...
+        back: Enrere
+      verify_code:
+        invalid: El codi no és correcte o ha caducat.
+      destroy:
+        signed_out: Sessió tancada.
+    nav:
+      label: Navegació de personal
+      account: Compte
+      admin: Accés admin
+      clockings: Fitxatges
+      corrections: Correccions
+      logout: Tancar sessió
+      today: Avui
+    flash:
+      account_updated: Canvis del compte desats.
+      already_clocked_in: Ja tens una entrada oberta.
+      already_clocked_out: No tens cap entrada oberta.
+      clocked_in: Entrada registrada.
+      clocked_out: Sortida registrada.
+      clocking_undone: Fitxatge desfet.
+      correction_deleted: Sol·licitud eliminada.
+      correction_requested: Sol·licitud enviada a RRHH.
+      correction_restored: Sol·licitud recuperada.
+      correction_restore_failed: No s'ha pogut recuperar la sol·licitud.
+      undo: Desfer
+    correction_kinds:
+      generic: Correcció de fitxatge
+    dashboard:
+      show:
+        title: Avui
+        hello: Hola, %{name}
+        clock_in: Entrar
+        clock_out: Sortir
+        correct_today: Corregir
+        week_title: Resum setmanal
+        week_activity_label: Activitat
+        week_corrections_label: Correccions
+        week_days:
+          one: 1 dia
+          other: "%{count} dies"
+        week_activity: "%{duration} en %{days}"
+        week_corrections_empty: Cap correcció.
+        today_clockings: Fitxatges d'avui
+        today_clockings_empty: Encara no hi ha fitxatges per avui.
+    clockings:
+      index:
+        title: Fitxatges
+        heading: Historial
+        period: Període
+        month: Mes
+        year: Any
+        previous_month: Mes anterior
+        next_month: Mes següent
+        request_correction_for_day: Demanar correcció per %{date}
+        date: Data
+        hours: Hores
+        swipes: Fitxatges
+        empty: No hi ha registres per aquest mes
+        current_month_empty: Apareixeran aquí els fitxatges d'aquest mes
+        current_month: Anar al mes actual
+        loading: Carregant...
+    corrections:
+      statuses:
+        pending: Pendent
+        approved: Aprovada
+        rejected: Rebutjada
+        created_by_human_resources: Creada per RRHH
+        created_and_rejected_by_human_resources: Creada i rebutjada per RRHH
+      summary:
+        requested_swipes: 'Hora sol·licitada: %{swipes}'
+        invalidated_swipes:
+          one: 1 fitxatge a invalidar
+          other: "%{count} fitxatges a invalidar"
+        no_details: Sense detall addicional.
+      human_resources_created_tooltip: Correcció realitzada per RRHH
+      index:
+        title: Correccions
+        heading: Correccions
+        new_request: Nova correcció
+        status: Estat
+        filters: Filtrar per
+        month: Mes
+        year: Any
+        month_year_join: de
+        all_statuses: Totes
+        empty: Encara no has enviat cap correcció.
+        empty_month: No hi ha correccions en aquest mes.
+        empty_month_with_status: No hi ha correccions %{status} en aquest mes.
+        showing_count: Mostrant %{from}-%{to} de %{count}
+        pagination: Paginació de correccions
+        previous_page: Anterior
+        next_page: Següent
+        page_status: Pàgina %{page} de %{total_pages}
+        loading: Carregant...
+        open_correction: Obrir correcció del %{date}
+        status_options:
+          pending: Pendents
+          approved: Aprovades
+          rejected: Rebutjades
+        empty_statuses:
+          pending: pendents
+          approved: aprovades
+          rejected: rebutjades
+      show:
+        heading: Detall de la correcció
+        back_to_list: Tornar a correccions
+        invalidated_swipes: Fitxatges a invalidar
+        requested_swipes: Fitxatges sol·licitats
+        comment: Comentari
+        human_resources_comment: Comentari de Recursos Humans
+        response: Resposta de Recursos Humans
+        answered_at: 'Resposta: %{date}'
+        sent_at: 'Enviada: %{date}'
+      new:
+        title: Nova correcció
+        heading: Nova correcció
+        back_to_list: Tornar a correccions
+        error_title: Revisa la sol·licitud
+        date: Dia
+        select_day_empty: Selecciona un dia per sol·licitar una correcció.
+        loading_day: Carregant...
+        pending_loaded: Ja hi ha una sol·licitud pendent per aquest dia. Pots modificar-la
+          abans d'enviar-la.
+        existing_swipes: Fitxatges registrats
+        entries: Entrades
+        exits: Sortides
+        request_entry: Afegir entrada
+        request_exit: Afegir sortida
+        keep_swipe: Restaurar
+        remove_swipe: Invalidar
+        remove_requested_swipe: Eliminar fitxatge sol·licitat
+        note: Comentari (opcional)
+        note_placeholder: Afegeix el context que necessiti RRHH per revisar la correcció.
+        delete: Eliminar sol·licitud
+        submit: Enviar a RRHH
+      create:
+        missing_date: Indica un dia vàlid.
+        date_out_of_range: Només pots demanar correccions del mes actual o del mes
+          anterior.
+        invalid_requested_swipe: 'Revisa els fitxatges a crear: cal indicar entrada
+          o sortida i una hora vàlida.'
+        missing_changes: Indica almenys un fitxatge a invalidar o a crear.
+    accounts:
+      show:
+        title: Compte
+        heading: Compte
+        error_title: Revisa els canvis
+        name: Nom
+        national_id: DNI/NIE
+        email: Correu
+        phone: Telèfon
+        theme: Tema
+        new_password: Nova contrasenya
+        password_confirmation: Repeteix la contrasenya
+        save: Desar canvis
+        change_password: Canviar contrasenya
+        change_password_submit: Canviar contrasenya
+        human_resources_contact: Contactar amb Recursos Humans
+        human_resources_subject: Assumpte
+        human_resources_message: Missatge
+        human_resources_submit: Envia
+      update_password:
+        password_confirmation_invalid: La confirmació de la contrasenya no coincideix.
+        password_blank: Indica la nova contrasenya.
+      contact_human_resources:
+        blank: Indica l'assumpte i el missatge.
+        failed: No s'ha pogut enviar el missatge.
+        sent: Missatge enviat a Recursos Humans.
+    password_resets:
+      flash:
+        code_required: Demana un codi nou per continuar.
+        password_setup_required: Verifica el codi per definir la contrasenya.
+      new:
+        title: Restablir contrasenya
+        heading: Restableix la contrasenya
+        national_id: DNI o NIE
+        delivery_method: Rebre codi per
+        email: Correu
+        sms: SMS
+        submit: Enviar codi
+        back: Tornar
+      create:
+        invalid_national_id: DNI/NIE invàlid.
+        delivery_unavailable:
+          email: No s'ha pogut enviar el correu.
+          sms: No s'ha pogut enviar l'SMS.
+        rate_limited: Has demanat massa codis. Espera un moment i torna-ho a provar.
+      code:
+        title: Codi de restabliment
+        heading: Introdueix el codi
+        sent_if_found_intro: Si el DNI/NIE es troba a la base de dades,
+        sent_if_found:
+          email: rebràs un codi al teu correu.
+          sms: rebràs un codi al teu telèfon.
+        code: Codi
+        digit: Dígit %{number}
+        submit: Continuar
+        submitting: Continuant...
+        back: Tornar
+      verify_code:
+        invalid: El codi no és correcte o ha caducat.
+      edit:
+        title: Nova contrasenya
+        heading: Crea una contrasenya
+        error_title: Revisa la contrasenya
+        password: Nova contrasenya
+        password_confirmation: Repeteix la contrasenya
+        submit: Desar contrasenya
+        submitting: Desant...
+      update:
+        password_confirmation_invalid: La confirmació de la contrasenya no coincideix.
+        password_blank: Indica la nova contrasenya.
+        success: Contrasenya desada.

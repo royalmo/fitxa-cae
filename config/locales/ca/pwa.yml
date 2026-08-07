@@ -1,0 +1,7 @@
+ca:
+  pwa:
+    unavailable:
+      title: No s'ha pogut carregar
+      heading: No s'ha pogut carregar
+      body: Torna-ho a provar d'aquí uns instants.
+      retry: Tornar a provar

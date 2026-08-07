@@ -1,0 +1,35 @@
+ca:
+  employee_login_mailer:
+    code:
+      subject: Codi d'accés a Fitxa CAE
+      body: Hola %{name}, el teu codi d'accés és %{code}. Caduca en %{minutes} minuts.
+  employee_welcome_mailer:
+    welcome:
+      subject: Benvingut/da a FitxaCAE
+      greeting: Hola %{name},
+      body: S'ha creat el teu compte de FitxaCAE per consultar i registrar els teus
+        fitxatges.
+      first_login: La primera vegada que hi accedeixis, tria l'opció de rebre un codi,
+        introdueix el teu DNI/NIE i segueix els passos per definir la contrasenya.
+  human_resources_contact_mailer:
+    contact_request:
+      subject: 'FitxaCAE RRHH: %{subject}'
+      heading: Nou missatge des de FitxaCAE
+      employee: Treballador
+      national_id: DNI/NIE
+      email: Correu
+      phone: Telèfon
+      subject_label: Assumpte
+      blank: No informat
+  manager_password_mailer:
+    password_setup:
+      subject: Defineix la contrasenya de FitxaCAE Admin
+      body: Hola %{name}, s'ha creat el teu compte de responsable a FitxaCAE.
+      link: Defineix la contrasenya
+      expires: Aquest enllaç caduca d'aquí a 1 mes.
+    password_reset:
+      subject: Restableix la contrasenya de FitxaCAE Admin
+      body: Hola %{name}, hem rebut una sol·licitud per restablir la contrasenya del
+        teu compte de responsable.
+      link: Restableix la contrasenya
+      expires: Aquest enllaç caduca d'aquí a 1 hora.

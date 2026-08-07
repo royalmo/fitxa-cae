@@ -1,0 +1,31 @@
+ca:
+  errors:
+    messages:
+      pending_taken: ja té una sol·licitud pendent per aquest dia
+      taken: ja està assignat a un altre registre
+    pages:
+      show:
+        actions:
+          home: Torna a l'inici
+          human_resources: Contacta amb RRHH
+        mail_subject: Incidència FitxaCAE - Error %{code}
+        bad_request:
+          title: Sol·licitud incorrecta
+          heading: No podem obrir aquesta sol·licitud.
+          body: La sol·licitud no és vàlida o ha caducat.
+        not_found:
+          title: Pàgina no trobada
+          heading: No hem trobat aquesta pantalla.
+          body: L'enllaç pot haver canviat o la pàgina ja no existeix.
+        not_acceptable:
+          title: Navegador no compatible
+          heading: Aquest navegador no és compatible.
+          body: Obre FitxaCAE amb un navegador actual per continuar.
+        unprocessable_entity:
+          title: Canvi rebutjat
+          heading: No s'ha pogut aplicar aquest canvi.
+          body: El formulari pot haver caducat o l'acció no és permesa.
+        internal_server_error:
+          title: Error intern
+          heading: Vaja! Alguna cosa no ha anat bé.
+          body: Hem tingut una incidència interna. Prova-ho de nou d'aquí a uns minuts.

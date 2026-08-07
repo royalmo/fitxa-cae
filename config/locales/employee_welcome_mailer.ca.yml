@@ -1,7 +1,0 @@
-ca:
-  employee_welcome_mailer:
-    welcome:
-      subject: "Benvingut/da a FitxaCAE"
-      greeting: "Hola %{name},"
-      body: "S'ha creat el teu compte de FitxaCAE per consultar i registrar els teus fitxatges."
-      first_login: "La primera vegada que hi accedeixis, tria l'opció de rebre un codi, introdueix el teu DNI/NIE i segueix els passos per definir la contrasenya."

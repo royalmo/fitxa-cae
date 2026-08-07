@@ -1,0 +1,59 @@
+ca:
+  app:
+    name: Fitxa CAE
+    short_name: Fitxa
+    description: Registre de temps simple per a equips operatius.
+  date:
+    formats:
+      short: "%-d/%-m/%Y"
+      numeric: "%d/%m/%Y"
+      long: "%-d %B %Y"
+      month_year: "%B %Y"
+      weekday_day_month: "%A, %-d de %B"
+      weekday_day_month_year: "%A, %-d de %B de %Y"
+  time:
+    formats:
+      hour_minute: "%H:%M"
+      short: "%-d/%-m/%Y %H:%M"
+  shared:
+    actions: Accions
+    dismiss_flash: Tancar avís
+    auth_footer:
+      project: FitxaCAE
+      version: v%{version}
+      developed_by: Desenvolupat per
+      developer: Eric Roy
+      legal_notice: Avís legal
+      admin_access: Accés admin
+      employee_access: Accés empleat
+    approve: Aprovar
+    cancel: Cancel·lar
+    edit: Editar
+    filter: Filtrar
+    reject: Rebutjar
+    save: Desar
+    search: Cercar
+    submitting:
+      approving: Aprovant...
+      changing: Canviant...
+      entering: Entrant...
+      filtering: Filtrant...
+      importing: Important...
+      rejecting: Rebutjant...
+      saving: Desant...
+      sending: Enviant...
+    view: Veure
+  statuses:
+    active: Actiu
+    approved: Aprovat
+    complete: Complet
+    corrected: Corregit
+    disabled: Inactiu
+    empty: Buit
+    odd: Senar
+    open: Obert
+    pending: Pendent
+    rejected: Rebutjat
+  clocking_kinds:
+    entry: Entrada
+    exit: Sortida
