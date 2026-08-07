@@ -80,10 +80,11 @@ module SmsProvider
   private_class_method :configured_api_url?
 
   class Client
-    def initialize(logger: Rails.logger, http_client: HttpClient.new, env: ENV)
+    def initialize(logger: Rails.logger, http_client: HttpClient.new, env: ENV, output: Rails.env.development? ? $stdout : nil)
       @logger = logger
       @http_client = http_client
       @env = env
+      @output = output
     end
 
     def deliver_login_code(phone:, code:)
@@ -112,10 +113,19 @@ module SmsProvider
 
     private
 
-    attr_reader :logger, :http_client, :env
+    attr_reader :logger, :http_client, :env, :output
 
     def mock_delivery(phone:, message:)
-      logger.info("[LabsMobile mock] to=#{phone} body=#{message}")
+      console_message = <<~MESSAGE
+
+        === Development SMS delivery ===
+        To: #{phone}
+
+        #{message}
+        === End development SMS delivery ===
+      MESSAGE
+      logger.info(console_message)
+      write_to_console(console_message)
 
       Delivery.new(
         provider: "labsmobile",
@@ -124,6 +134,13 @@ module SmsProvider
         response_code: nil,
         response_body: nil
       )
+    end
+
+    def write_to_console(message)
+      return unless output
+
+      output.write(message)
+      output.flush if output.respond_to?(:flush)
     end
 
     def enabled?

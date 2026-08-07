@@ -10,8 +10,28 @@ class LoginCodeDeliveryConfigTest < ActiveSupport::TestCase
     assert_not LoginCodeDeliveryConfig.email_configured?(allow_test_delivery: false)
   end
 
+  test "allows development console delivery explicitly" do
+    with_action_mailer_delivery_config(
+      delivery_method: :console,
+      smtp_settings: {}
+    ) do
+      assert LoginCodeDeliveryConfig.email_configured?(
+        allow_test_delivery: false,
+        allow_development_delivery: true
+      )
+    end
+  end
+
   test "rejects disabled sms when mock delivery is not allowed" do
     assert_not LoginCodeDeliveryConfig.configured?("sms", allow_test_delivery: false)
+  end
+
+  test "allows disabled sms as development mock delivery" do
+    assert LoginCodeDeliveryConfig.configured?(
+      "sms",
+      allow_test_delivery: false,
+      allow_development_delivery: true
+    )
   end
 
   test "accepts configured non local smtp" do

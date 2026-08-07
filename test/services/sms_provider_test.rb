@@ -1,4 +1,5 @@
 require "test_helper"
+require "stringio"
 
 class SmsProviderTest < ActiveSupport::TestCase
   FakeResponse = Data.define(:code, :body)
@@ -30,6 +31,20 @@ class SmsProviderTest < ActiveSupport::TestCase
     assert_equal "labsmobile", delivery.provider
     assert delivery.message_id.present?
     assert SmsProvider.configured?(env: {})
+  end
+
+  test "writes mock delivery details to console output" do
+    output = StringIO.new
+    logger = ActiveSupport::Logger.new(StringIO.new)
+
+    SmsProvider::Client.new(env: {}, logger: logger, output: output).deliver_login_code(
+      phone: "+34 600 111 222",
+      code: "654321"
+    )
+
+    assert_includes output.string, "Development SMS delivery"
+    assert_includes output.string, "To: +34 600 111 222"
+    assert_includes output.string, "654321"
   end
 
   test "reports production sms configuration readiness" do
