@@ -20,7 +20,7 @@ class ErrorsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :internal_server_error
     assert_select ".error-page-code", false
-    assert_select "a[href^='mailto:rrhh@cae.cat']", "Contacta amb RRHH"
+    assert_select "a[href^='mailto:#{Rails.configuration.x.human_resources_email}']", "Contacta amb RRHH"
   end
 
   test "renders signed in employee topbar controls when available" do
@@ -47,7 +47,7 @@ class ErrorsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-topbar-actions", text: /Laia Riera/
     assert_select "h1", "No hem trobat aquesta pantalla."
     assert_select "a.btn.btn-primary[href='#{admin_root_path}']", "Torna a l'inici"
-    assert_select "a.btn.btn-outline-secondary[href^='mailto:rrhh@cae.cat']", "Contacta amb RRHH"
+    assert_select "a.btn.btn-outline-secondary[href^='mailto:#{Rails.configuration.x.human_resources_email}']", "Contacta amb RRHH"
   end
 
   test "exceptions app renders dynamic employee page" do

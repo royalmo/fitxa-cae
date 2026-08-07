@@ -1,0 +1,18 @@
+servers:
+  web:
+    hosts:
+    - fitxa-cae.compila.cat
+proxy:
+  host: fitxa.cae.cat
+env:
+  clear:
+    APP_HOST: fitxa.cae.cat
+    HUMAN_RESOURCES_EMAIL: rrhh@cae.cat
+    MAILER_FROM_EMAIL: fitxa@cae.cat
+    ERROR_NOTIFICATION_RECIPIENTS: eric@ericroy.net
+    ERROR_NOTIFICATION_SENDER: FitxaCAE <fitxa@cae.cat>
+    SMTP_ADDRESS: mail.cae.cat
+    LABSMOBILE_SENDER: FitxaCAE
+    SMTP_DOMAIN: cae.cat
+volumes:
+- fitxa_cae_storage:/rails/storage

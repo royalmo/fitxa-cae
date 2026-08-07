@@ -162,23 +162,43 @@ Managers sign in at `/admin/login` with email and password. Admin pages under `/
 
 Required production configuration:
 
-- `RAILS_MASTER_KEY`, or a readable `config/master.key`
+- `SECRET_KEY_BASE`, stored as a stable per-destination secret
 - Persistent storage for `storage/`, because production SQLite databases and local uploads live there
-- A real host configured in `config/environments/production.rb` when deploying behind a domain
-- SSL settings enabled in `config/environments/production.rb` when the app is served over HTTPS
+- `APP_HOST`, used for generated email links and allowed hosts
+- SMTP delivery settings
 - Backups for the production SQLite files in `storage/`
 
-Optional LabsMobile SMS environment variables:
+This project does not use Rails encrypted credentials for production. Keep production secrets in
+`.kamal/secrets.<destination>` instead. If Rails credentials are introduced later, commit only the
+encrypted credentials file and never commit `config/master.key`.
 
-- `LABSMOBILE_ENABLED=true`
+Production email settings:
+
+- Public values such as `MAILER_FROM_EMAIL`, `SMTP_ADDRESS`, and per-domain email recipients live in the destination deploy YAML.
+- Secret values such as `SMTP_USERNAME` and `SMTP_PASSWORD` live in `.kamal/secrets.<destination>`.
+- Standard SMTP defaults are left unset unless a provider needs an override.
+
+LabsMobile SMS settings:
+
+- `LABSMOBILE_ENABLED=true` is set in the shared Kamal deploy config.
+- `LABSMOBILE_SENDER` lives in the destination deploy YAML.
+- `LABSMOBILE_USERNAME` and `LABSMOBILE_API_TOKEN` live in `.kamal/secrets.<destination>`.
+- LabsMobile API URL, timeout, and test mode use app defaults unless explicitly needed.
+
+Per-client Kamal env files are scaffolded with placeholders:
+
+- `.kamal/secrets.fitxa-cae`
+- `.kamal/secrets.fitxa-xarranca`
+
+Those real secret files are ignored by git. The committed templates are `.kamal/secrets.fitxa-cae.example` and `.kamal/secrets.fitxa-xarranca.example`.
+
+Each destination secrets file should only contain:
+
+- `SECRET_KEY_BASE`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
 - `LABSMOBILE_USERNAME`
 - `LABSMOBILE_API_TOKEN`
-- `LABSMOBILE_SENDER`
-- `LABSMOBILE_API_URL`, defaults to `https://api.labsmobile.com/json/send`
-- `LABSMOBILE_TEST_MODE=true`, to use LabsMobile simulated delivery
-- `LABSMOBILE_TIMEOUT`, defaults to `10`
-
-Email login codes require production mailer delivery settings before they can be used reliably outside development/test.
 
 ## Run In Production With Docker
 
@@ -200,7 +220,10 @@ Run the container:
 docker run -d \
   --name fitxa_cae \
   -p 3000:80 \
-  -e RAILS_MASTER_KEY="$(cat config/master.key)" \
+  -e SECRET_KEY_BASE="$(bin/rails secret)" \
+  -e APP_HOST="fitxa.cae.cat" \
+  -e FORCE_SSL=false \
+  -e ASSUME_SSL=false \
   -v fitxa_cae_storage:/rails/storage \
   fitxa_cae
 ```
@@ -225,15 +248,18 @@ bundle install
 Prepare the database and assets:
 
 ```sh
-RAILS_ENV=production RAILS_MASTER_KEY="$(cat config/master.key)" bin/rails db:prepare
-RAILS_ENV=production RAILS_MASTER_KEY="$(cat config/master.key)" bin/rails assets:precompile
+export SECRET_KEY_BASE="$(bin/rails secret)"
+RAILS_ENV=production bin/rails db:prepare
+RAILS_ENV=production bin/rails assets:precompile
 ```
 
 Start the production server:
 
 ```sh
 RAILS_ENV=production \
-RAILS_MASTER_KEY="$(cat config/master.key)" \
+APP_HOST="fitxa.cae.cat" \
+FORCE_SSL=false \
+ASSUME_SSL=false \
 bin/thrust bin/rails server -b 0.0.0.0 -p 3000
 ```
 
@@ -241,34 +267,37 @@ Use a process manager and a reverse proxy for a real server deployment.
 
 ## Deploy With Kamal
 
-`config/deploy.yml` is present but still contains placeholder values such as `192.168.0.1` and `localhost:5555`.
+Two Kamal destinations are configured:
+
+- `fitxa-cae`, serving `fitxa.cae.cat`
+- `fitxa-xarranca`, serving `fitxa-xarranca.cae.cat`
+
+Both destinations deploy to the OVH VPS at `fitxa-cae.compila.cat`. Kamal is configured to SSH as the `deploy` user, not `eric`. Kamal proxy owns public ports `80` and `443` and handles HTTPS certificates for both domains.
 
 Before deploying:
 
-1. Set the real server host under `servers.web`.
-2. Set the image name and registry.
-3. Put `RAILS_MASTER_KEY` in `.kamal/secrets`.
-4. Confirm the persistent `fitxa_cae_storage:/rails/storage` volume is appropriate for the target server.
-5. Keep the Dockerfile `RUBY_VERSION` build argument aligned with `.ruby-version`.
+1. Confirm DNS for both public domains points to `fitxa-cae.compila.cat`.
+2. Fill `.kamal/secrets.fitxa-cae` and `.kamal/secrets.fitxa-xarranca`.
+   - If `.kamal/` is your deployment-secret backup, store the literal `SECRET_KEY_BASE` value in each destination secrets file.
+   - Keep non-secret per-client values in `config/deploy.fitxa-cae.yml` and `config/deploy.fitxa-xarranca.yml`.
+3. Confirm each destination volume is backed up:
+   - `fitxa_cae_storage:/rails/storage`
+   - `fitxa_xarranca_storage:/rails/storage`
+4. Keep the Dockerfile `RUBY_VERSION` build argument aligned with `.ruby-version`.
 
-First deploy:
-
-```sh
-bin/kamal setup
-```
-
-Later deploys:
+Deploy:
 
 ```sh
-bin/kamal deploy
+bin/kamal deploy -d fitxa-cae
+bin/kamal deploy -d fitxa-xarranca
 ```
 
 Useful Kamal commands:
 
 ```sh
-bin/kamal logs
-bin/kamal console
-bin/kamal shell
+bin/kamal logs -d fitxa-cae
+bin/kamal console -d fitxa-cae
+bin/kamal shell -d fitxa-cae
 ```
 
 ## Data And Backups

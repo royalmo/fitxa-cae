@@ -35,5 +35,8 @@
 
 # Ignore key files for decrypting credentials and more.
 /config/*.key
+/.kamal/secrets
+/.kamal/secrets.*
+!/.kamal/secrets.*.example
 
 future-prompts.txt
