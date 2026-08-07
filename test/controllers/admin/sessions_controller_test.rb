@@ -20,6 +20,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action='#{admin_login_path}']"
     assert_select "body[data-controller~='admin-theme'][data-controller~='submit-feedback']"
     assert_select "input[type='submit'][data-submitting-label='Entrant...']"
+    assert_select "a.auth-forgot-link[href='#{new_admin_password_reset_path}']", text: "He oblidat la contrasenya"
     assert_select ".admin-auth-card .auth-panel .flash", 0
     assert_select ".admin-auth-shell > .flash", 0
   end

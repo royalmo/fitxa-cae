@@ -1,7 +1,5 @@
 <% form_url = manager.persisted? ? admin_manager_path(manager) : admin_managers_path %>
 <% selected_employee = manager.employee %>
-<% password_label = t("admin.managers.form.password") %>
-<% password_label = "#{password_label} (#{t("admin.managers.form.password_keep_blank")})" if manager.persisted? %>
 <% status_id_suffix = manager.persisted? ? manager.id : "new" %>
 
 <% if manager.errors.any? %>
@@ -29,11 +27,7 @@
         </div>
         <div class="col-12 col-md-6">
           <%= form.label :email, t("admin.managers.form.email"), class: "form-label" %>
-          <%= form.email_field :email, autocomplete: "email", class: "form-control" %>
-        </div>
-        <div class="col-12 col-md-6">
-          <%= form.label :password, password_label, class: "form-label" %>
-          <%= form.password_field :password, autocomplete: "new-password", class: "form-control" %>
+          <%= form.email_field :email, autocomplete: "email", class: "form-control", required: true %>
         </div>
         <div class="col-12 col-md-6">
           <%= form.label :employee_id, t("admin.managers.form.employee"), class: "form-label" %>

@@ -56,6 +56,11 @@ Rails.application.routes.draw do
   post "account/human-resources-contact" => "employee/accounts#contact_human_resources",
     as: :account_human_resources_contact
 
+  get "admin/password-reset" => "admin/password_resets#new", as: :new_admin_password_reset
+  post "admin/password-reset" => "admin/password_resets#create", as: :admin_password_reset
+  get "admin/password-reset/:token" => "admin/password_resets#edit", as: :edit_admin_password_reset
+  patch "admin/password-reset/:token" => "admin/password_resets#update", as: nil
+
   namespace :admin do
     get "login" => "sessions#new", as: :login
     post "login" => "sessions#create"

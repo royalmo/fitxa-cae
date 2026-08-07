@@ -2,10 +2,22 @@ require "test_helper"
 
 class ManagerTest < ActiveSupport::TestCase
   test "is valid without an employee and defaults to active" do
-    manager = Manager.create!(first_name: "Laia", last_name: "Riera")
+    manager = Manager.create!(first_name: "Laia", last_name: "Riera", email: "laia.riera@example.test")
 
     assert_predicate manager, :active?
     assert_nil manager.employee
+  end
+
+  test "requires a unique email" do
+    create_manager(email: "laia.riera@example.test")
+
+    manager = Manager.new(first_name: "Laia", last_name: "Riera")
+    assert_not manager.valid?
+    assert_model_error manager, :email, :blank
+
+    manager.email = " LAIA.RIERA@EXAMPLE.TEST "
+    assert_not manager.valid?
+    assert_model_error manager, :email, :taken
   end
 
   test "can be linked to one employee" do
@@ -68,6 +80,23 @@ class ManagerTest < ActiveSupport::TestCase
     assert manager.authenticate_password("secret")
     assert_not manager.authenticate_password("bad")
     assert_equal manager, Manager.find_active_by_email(" laia.riera@example.test ")
+  end
+
+  test "generates setup and reset tokens with separate expirations" do
+    manager = create_manager(password: nil)
+    setup_token = manager.password_setup_token
+
+    travel Manager::PASSWORD_SETUP_TOKEN_TTL - 1.day
+    assert_equal manager, Manager.find_by_password_setup_token(setup_token)
+
+    manager.update!(password: "secret123")
+    assert_nil Manager.find_by_password_setup_token(setup_token)
+
+    reset_token = manager.password_reset_token
+    assert_equal 1.hour, manager.password_reset_token_expires_in
+
+    travel Manager::PASSWORD_RESET_TOKEN_TTL + 1.second
+    assert_nil Manager.find_by_password_reset_token(reset_token)
   end
 
   test "stores last request access in settings" do

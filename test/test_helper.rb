@@ -49,10 +49,12 @@ module ActiveSupport
     end
 
     def create_manager(**attributes)
+      @manager_email_sequence = @manager_email_sequence.to_i + 1
+
       Manager.create!({
         first_name: "Laia",
         last_name: "Riera",
-        email: "laia.riera@example.test",
+        email: "manager#{@manager_email_sequence}@example.test",
         password: "12345678"
       }.merge(attributes))
     end

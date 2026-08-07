@@ -18,6 +18,7 @@ class Admin::ManagersController < Admin::BaseController
     @manager = Manager.new(manager_params)
 
     if @manager.save
+      ManagerPasswordMailer.password_setup(@manager).deliver_later
       redirect_to admin_managers_path, notice: t("admin.flash.manager_created")
     else
       render_manager_form(:new)
@@ -56,11 +57,15 @@ class Admin::ManagersController < Admin::BaseController
     render template, status: :unprocessable_entity
   end
 
-  def handle_record_not_unique
+  def handle_record_not_unique(error)
     @manager ||= params[:id].present? ? Manager.find(params[:id]) : Manager.new
     @manager.assign_attributes(manager_params)
-    @manager.errors.add(:employee_id, :taken)
+    @manager.errors.add(record_not_unique_attribute(error), :taken)
     render_manager_form(@manager.persisted? ? :edit : :new)
+  end
+
+  def record_not_unique_attribute(error)
+    error.message.include?("index_managers_on_lower_email") ? :email : :employee_id
   end
 
   def filtered_managers
@@ -80,9 +85,8 @@ class Admin::ManagersController < Admin::BaseController
   end
 
   def manager_params
-    attributes = params.require(:manager).permit(:first_name, :last_name, :email, :employee_id, :active, :password)
+    attributes = params.require(:manager).permit(:first_name, :last_name, :email, :employee_id, :active)
     attributes[:employee_id] = nil if attributes[:employee_id].blank?
-    attributes.delete(:password) if attributes[:password].blank?
     attributes
   end
 

@@ -1,7 +1,13 @@
 require "test_helper"
 
 class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+  include ActionMailer::TestHelper
+
   setup do
+    ActionMailer::Base.deliveries.clear
+    clear_enqueued_jobs
+    clear_performed_jobs
     log_in_manager
   end
 
@@ -99,8 +105,9 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     get new_admin_manager_path
 
     assert_response :success
-    assert_select "label[for='manager_password']", text: "Contrasenya"
-    assert_select "label", text: /deixar en blanc per no modificar/, count: 0
+    assert_select "label[for='manager_password']", 0
+    assert_select "input[name='manager[password]']", 0
+    assert_select "input[name='manager[email]'][required]"
     assert_select ".col-12.col-md-6 .admin-employee-search[data-controller='employee-search']" do
       assert_select "input[type='hidden'][name='manager[employee_id]'][value='']"
     end
@@ -130,7 +137,8 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_manager_path(manager)
 
     assert_response :success
-    assert_select "label[for='manager_password']", text: "Contrasenya (deixar en blanc per no modificar)"
+    assert_select "label[for='manager_password']", 0
+    assert_select "input[name='manager[password]']", 0
     assert_select "input[type='hidden'][name='manager[employee_id]'][value='#{employee.id}']"
     assert_select "input[name='manager_employee_query'][value='Ona Prat']"
     assert_select "input[type='radio'][name='manager[active]'][value='false'][checked='checked']"
@@ -217,22 +225,30 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     employee = create_employee(first_name: "Ona", last_name: "Prat")
 
     assert_difference "Manager.count", 1 do
-      post admin_managers_path, params: {
-        manager: {
-          first_name: "Arnau",
-          last_name: "Mas",
-          email: "arnau.mas@example.test",
-          employee_id: employee.id,
-          active: "1",
-          password: "secret123"
+      assert_enqueued_emails 1 do
+        post admin_managers_path, params: {
+          manager: {
+            first_name: "Arnau",
+            last_name: "Mas",
+            email: "arnau.mas@example.test",
+            employee_id: employee.id,
+            active: "1",
+            password: "secret123"
+          }
         }
-      }
+      end
     end
 
     manager = Manager.order(:created_at).last
     assert_redirected_to admin_managers_path
     assert_equal employee, manager.employee
-    assert manager.authenticate_password("secret123")
+    assert_not_predicate manager.password_digest, :present?
+
+    deliver_enqueued_emails
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal [ "arnau.mas@example.test" ], mail.to
+    assert_equal I18n.t("manager_password_mailer.password_setup.subject"), mail.subject
+    assert_match "Defineix la contrasenya", mail.text_part.body.decoded
 
     patch admin_manager_path(manager), params: {
       manager: {
@@ -241,7 +257,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
         email: "arnau.mas@example.test",
         employee_id: "",
         active: "0",
-        password: ""
+        password: "ignored"
       }
     }
 
@@ -249,7 +265,83 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     manager.reload
     assert_nil manager.employee
     assert_not manager.active?
-    assert manager.authenticate_password("secret123")
+    assert_not_predicate manager.password_digest, :present?
+  end
+
+  test "does not create a manager without email" do
+    assert_no_difference "Manager.count" do
+      assert_no_enqueued_emails do
+        post admin_managers_path, params: {
+          manager: {
+            first_name: "Arnau",
+            last_name: "Mas",
+            email: "",
+            employee_id: "",
+            active: "1"
+          }
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".error-summary li", text: "Correu no pot estar en blanc"
+  end
+
+  test "does not allow duplicate manager email" do
+    create_manager(email: "arnau.mas@example.test")
+
+    assert_no_difference "Manager.count" do
+      assert_no_enqueued_emails do
+        post admin_managers_path, params: {
+          manager: {
+            first_name: "Arnau",
+            last_name: "Mas",
+            email: " ARNAU.MAS@EXAMPLE.TEST ",
+            employee_id: "",
+            active: "1"
+          }
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".error-summary li", text: "Correu ja està assignat a un altre registre"
+  end
+
+  test "setup email link lets a new manager define a password without signing in" do
+    employee = create_employee(first_name: "Ona", last_name: "Prat")
+
+    assert_enqueued_emails 1 do
+      post admin_managers_path, params: {
+        manager: {
+          first_name: "Arnau",
+          last_name: "Mas",
+          email: "arnau.mas@example.test",
+          employee_id: employee.id,
+          active: "1"
+        }
+      }
+    end
+
+    manager = Manager.order(:created_at).last
+    delete admin_logout_path
+
+    get edit_admin_password_reset_path(manager.password_setup_token)
+
+    assert_response :success
+    assert_select "title", text: "Nova contrasenya | FitxaCAE Admin"
+
+    patch edit_admin_password_reset_path(manager.password_setup_token), params: {
+      password: "secret123",
+      password_confirmation: "secret123"
+    }
+
+    assert_redirected_to admin_login_path
+    assert_equal I18n.t("admin.password_resets.update.success"), flash[:notice]
+    assert manager.reload.authenticate_password("secret123")
+
+    get admin_root_path
+    assert_redirected_to admin_login_path
   end
 
   test "activates and deactivates managers" do

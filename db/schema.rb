@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_220234) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_07_085920) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -85,13 +85,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_220234) do
   create_table "managers", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
-    t.string "email"
+    t.string "email", null: false
     t.integer "employee_id"
     t.string "first_name"
     t.string "last_name"
     t.string "password_digest"
     t.json "settings", default: {}, null: false
     t.datetime "updated_at", null: false
+    t.index "LOWER(email)", name: "index_managers_on_lower_email", unique: true
     t.index ["employee_id"], name: "index_managers_on_employee_id", unique: true
   end
 
