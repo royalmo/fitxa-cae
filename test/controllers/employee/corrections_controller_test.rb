@@ -42,6 +42,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a.page-title-close[href='#{corrections_path}'][title='#{I18n.t("employee.corrections.new.back_to_list")}'][aria-label='#{I18n.t("employee.corrections.new.back_to_list")}']"
     assert_select "input[type='date'][name='date'][value]", 0
+    assert_select "input[type='hidden'][name='server_updated_at'][value='0'][data-correction-form-target='serverUpdatedAt']"
     assert_select ".correction-select-day-state", text: "Selecciona un dia per sol·licitar una correcció."
     assert_select ".correction-select-day-state .empty-state-icon"
     assert_select ".correction-loading-state[hidden]", text: "Carregant..."
@@ -59,6 +60,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "input[type='date'][name='date'][value='2026-06-03'][min='2026-06-01'][max='2026-07-19']"
+    assert_select "input[type='hidden'][name='server_updated_at'][value='0'][data-correction-form-target='serverUpdatedAt']"
     assert_select ".correction-swipe-column", 2
     assert_select ".correction-swipe-column[data-kind='entry'] .correction-swipe-column-header", text: "Entrades"
     assert_select ".correction-swipe-column[data-kind='exit'] .correction-swipe-column-header", text: "Sortides"
@@ -99,6 +101,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
+    assert_select "input[type='hidden'][name='server_updated_at'][value='#{correction_server_updated_at(employee, pending_correction.day)}'][data-correction-form-target='serverUpdatedAt']"
     assert_select ".correction-pending-note", text: I18n.t("employee.corrections.new.pending_loaded")
     assert_select ".correction-delete-action[hidden]", 0
     assert_select "a.correction-delete-button[href='#{correction_path(pending_correction)}'][data-turbo-method='delete']", text: /Eliminar sol·licitud/
@@ -166,6 +169,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     payload = response.parsed_body
     assert_equal true, payload["day_allowed"]
+    assert_equal correction_server_updated_at(employee, pending_correction.day), payload["server_updated_at"]
     assert_equal pending_correction.id.to_s, payload["pending_correction"]["id"]
     assert_equal correction_path(pending_correction), payload["pending_correction"]["delete_url"]
     assert_equal [ swipe.id.to_s ], payload["pending_correction"]["invalidated_swipe_ids"]
@@ -196,6 +200,7 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference "SwipeCorrection.count" do
       post corrections_path, params: {
         date: "2026-07-02",
+        server_updated_at: correction_server_updated_at(employee, pending_correction.day),
         note: "Versió editada",
         invalidated_swipe_ids: [ old_swipe.id ],
         requested_swipes: [ { kind: "exit", time: "17:30" } ]
@@ -207,6 +212,37 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Versió editada", pending_correction.requester_comments
     assert_equal [ old_swipe.id ], pending_correction.details["invalidated_swipe_ids"]
     assert_equal [ { "kind" => "exit", "hour" => "17:30:00" } ], pending_correction.details["requested_swipes"]
+  end
+
+  test "rejects a stale pending correction edit" do
+    employee = create_employee(password: "1234")
+    pending_correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:10:00" } ]
+      },
+      requester_comments: "Primera versió"
+    )
+    opened_server_updated_at = correction_server_updated_at(employee, pending_correction.day)
+    pending_correction.update!(requester_comments: "Versió remota")
+    log_in_employee(employee)
+
+    assert_no_difference "SwipeCorrection.count" do
+      post corrections_path, params: {
+        date: "2026-07-02",
+        server_updated_at: opened_server_updated_at,
+        note: "Versió caducada",
+        requested_swipes: [ { kind: "exit", time: "17:30" } ]
+      }
+    end
+
+    assert_redirected_to new_correction_path(day: "2026-07-02")
+    assert_equal I18n.t("employee.flash.correction_stale"), flash[:alert]
+    assert_equal "Versió remota", pending_correction.reload.requester_comments
+    assert_equal [ { "kind" => "entry", "hour" => "08:10:00" } ], pending_correction.details["requested_swipes"]
   end
 
   test "deletes a pending correction for the signed in employee" do

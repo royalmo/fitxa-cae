@@ -73,6 +73,7 @@ ca:
       correction_requested: Sol·licitud enviada a RRHH.
       correction_restored: Sol·licitud recuperada.
       correction_restore_failed: No s'ha pogut recuperar la sol·licitud.
+      correction_stale: Aquesta sol·licitud ha canviat. Revisa-la abans de tornar-la a enviar.
       undo: Desfer
     correction_kinds:
       generic: Correcció de fitxatge

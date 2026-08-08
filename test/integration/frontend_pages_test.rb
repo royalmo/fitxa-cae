@@ -298,7 +298,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
       }
     )
 
-    post approve_admin_correction_path(correction)
+    post approve_admin_correction_path(correction),
+      params: { server_updated_at: correction_server_updated_at(employee, correction.day) }
     assert_redirected_to admin_corrections_path
   end
 

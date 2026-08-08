@@ -26,6 +26,20 @@ class SwipeCorrection < ApplicationRecord
     day.present? && employee_request_day_range(reference_date: reference_date).cover?(day)
   end
 
+  def self.day_server_updated_at(employee:, day:)
+    return 0 unless employee && day
+
+    timestamp = kept.where(employee_id: employee.id, day: day).maximum(:updated_at)
+    server_updated_at_value(timestamp)
+  end
+
+  def self.server_updated_at_value(timestamp)
+    return 0 unless timestamp
+
+    time = timestamp.to_time
+    (time.to_i * 1_000_000) + time.usec
+  end
+
   def soft_deleted?
     deleted_at.present?
   end

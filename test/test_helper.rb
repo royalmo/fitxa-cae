@@ -87,6 +87,10 @@ module ActiveSupport
       }
     end
 
+    def correction_server_updated_at(employee, day)
+      SwipeCorrection.day_server_updated_at(employee: employee, day: day)
+    end
+
     def assert_model_error(record, attribute, error)
       error_codes = record.errors.details.fetch(attribute).map { |detail| detail.fetch(:error) }
 

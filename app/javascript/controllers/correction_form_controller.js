@@ -14,7 +14,8 @@ export default class extends Controller {
     "submitActions",
     "reviewConfirmationBody",
     "deleteAction",
-    "deleteLink"
+    "deleteLink",
+    "serverUpdatedAt"
   ]
 
   static values = {
@@ -116,6 +117,8 @@ export default class extends Controller {
     const pendingCorrection = data.pending_correction
     const existingCorrectionHtml = data.existing_correction_html
 
+    this.renderServerUpdatedAt(data.server_updated_at)
+
     if (existingCorrectionHtml && data.existing_correction_blocks_form) {
       this.showBlockingExistingCorrection(existingCorrectionHtml)
       return
@@ -157,6 +160,13 @@ export default class extends Controller {
     this.renderDeleteAction(null)
     if (this.hasExistingSwipesTarget) this.existingSwipesTarget.replaceChildren()
     if (this.hasCommentTarget) this.commentTarget.value = ""
+    this.renderServerUpdatedAt(0)
+  }
+
+  renderServerUpdatedAt(value) {
+    if (this.hasServerUpdatedAtTarget) {
+      this.serverUpdatedAtTarget.value = String(value || 0)
+    }
   }
 
   renderDeleteAction(pendingCorrection) {

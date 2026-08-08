@@ -10,6 +10,7 @@ ca:
       correction_created_and_approved: Correcció creada i aprovada.
       correction_approved_with_modifications: Correcció aprovada amb modificacions.
       correction_rejected: Correcció rebutjada.
+      correction_stale: Aquesta correcció ha canviat. Revisa-la abans de tornar-la a desar.
       correction_updated: Correcció actualitzada.
       tag_activated: Etiqueta activada.
       tag_activation_failed: No s'ha pogut actualitzar l'estat de l'etiqueta.

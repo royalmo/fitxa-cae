@@ -65,6 +65,10 @@
 <% end %>
 
 <%= form_with model: correction, url: form_url, data: correction_form_data do |form| %>
+  <%= hidden_field_tag "swipe_correction[server_updated_at]",
+    @server_updated_at,
+    data: { correction_form_target: "serverUpdatedAt" } %>
+
   <section class="card shadow-sm">
     <div class="card-body">
       <div class="row g-3">

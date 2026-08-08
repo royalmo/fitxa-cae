@@ -35,6 +35,10 @@
       correction_form_add_icon_value: icon("plus", class: "correction-requested-swipe-add-icon"),
       action: "input->correction-form#dismissErrors change->correction-form#dismissErrors focusout->correction-form#sortRequestedSwipeColumn"
     } do |form| %>
+    <%= hidden_field_tag :server_updated_at,
+      @server_updated_at,
+      data: { correction_form_target: "serverUpdatedAt" } %>
+
     <div class="field">
       <%= form.label :date, t(".date") %>
       <%= form.date_field :date,

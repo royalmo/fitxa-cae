@@ -31,6 +31,7 @@ class Admin::CorrectionsController < Admin::BaseController
     unless employee && correction_day
       render json: {
         day_allowed: false,
+        server_updated_at: 0,
         swipes: [],
         pending_correction: nil
       }
@@ -41,6 +42,7 @@ class Admin::CorrectionsController < Admin::BaseController
 
     render json: {
       day_allowed: true,
+      server_updated_at: correction_day_server_updated_at(employee, correction_day),
       existing_correction_html: existing_correction_prompt_html(existing_correction),
       existing_correction_blocks_form: existing_correction&.pending? || false,
       swipes: employee.swipes.kept.for_day(correction_day).chronological.map { |swipe| swipe_payload(swipe) },
@@ -63,6 +65,11 @@ class Admin::CorrectionsController < Admin::BaseController
     @correction = SwipeCorrection.new(requester: current_manager, status: :pending)
     assignment_valid = assign_correction_attributes(@correction)
 
+    if assignment_valid && stale_correction_submission?(@correction.employee, @correction.day)
+      redirect_to new_admin_correction_path(employee_id: @correction.employee_id, day: @correction.day.iso8601), alert: t("admin.flash.correction_stale")
+      return
+    end
+
     if assignment_valid && create_and_approve_correction(@correction)
       redirect_to admin_correction_path(@correction), notice: t("admin.flash.correction_created_and_approved")
     else
@@ -83,6 +90,11 @@ class Admin::CorrectionsController < Admin::BaseController
     @correction = SwipeCorrection.find(params[:id])
     return redirect_reviewed_correction(@correction) unless @correction.pending?
 
+    if stale_correction_submission?(@correction.employee, @correction.day)
+      redirect_to edit_admin_correction_path(@correction), alert: t("admin.flash.correction_stale")
+      return
+    end
+
     if review_pending_correction_from_edit(@correction)
       redirect_to admin_correction_path(@reviewed_correction), notice: @review_notice
     else
@@ -95,6 +107,11 @@ class Admin::CorrectionsController < Admin::BaseController
     correction = SwipeCorrection.find(params[:id])
 
     if correction.pending?
+      if stale_correction_submission?(correction.employee, correction.day)
+        redirect_back fallback_location: admin_corrections_path, alert: t("admin.flash.correction_stale")
+        return
+      end
+
       approve_correction(correction, validator_comments: review_validator_comments(:approved))
       redirect_back fallback_location: admin_corrections_path, notice: t("admin.flash.correction_approved")
     else
@@ -106,6 +123,11 @@ class Admin::CorrectionsController < Admin::BaseController
     correction = SwipeCorrection.find(params[:id])
 
     if correction.pending?
+      if stale_correction_submission?(correction.employee, correction.day)
+        redirect_back fallback_location: admin_corrections_path, alert: t("admin.flash.correction_stale")
+        return
+      end
+
       correction.update!(
         status: :rejected,
         validator: current_manager,
@@ -143,6 +165,7 @@ class Admin::CorrectionsController < Admin::BaseController
     @form_ready = @identity_ready && !@existing_day_correction&.pending?
     @day_swipes = @correction.employee&.swipes&.kept&.for_day(@correction.day)&.chronological&.to_a || []
     @requested_swipe_rows = requested_swipe_form_rows(@correction)
+    @server_updated_at = correction_day_server_updated_at(@correction.employee, @correction.day)
   end
 
   def selected_employee_for_form
@@ -256,6 +279,7 @@ class Admin::CorrectionsController < Admin::BaseController
     params.require(:swipe_correction).permit(
       :employee_id,
       :day,
+      :server_updated_at,
       :requester_comments,
       :validator_comments,
       invalidated_swipe_ids: [],
@@ -322,6 +346,21 @@ class Admin::CorrectionsController < Admin::BaseController
     return unless employee && day
 
     employee.swipe_corrections.pending.where(day: day).order(created_at: :desc).first
+  end
+
+  def stale_correction_submission?(employee, day)
+    return false unless employee && day
+
+    submitted_server_updated_at != correction_day_server_updated_at(employee, day)
+  end
+
+  def submitted_server_updated_at
+    raw_value = params.dig(:swipe_correction, :server_updated_at) || params[:server_updated_at]
+    Integer(raw_value.presence || 0, exception: false) || 0
+  end
+
+  def correction_day_server_updated_at(employee, day)
+    SwipeCorrection.day_server_updated_at(employee: employee, day: day)
   end
 
   def existing_correction_prompt_html(correction)

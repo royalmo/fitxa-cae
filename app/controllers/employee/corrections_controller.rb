@@ -52,6 +52,7 @@ class Employee::CorrectionsController < ApplicationController
       render json: {
         day_allowed: false,
         error: t("employee.corrections.create.date_out_of_range"),
+        server_updated_at: 0,
         swipes: [],
         pending_correction: nil
       }
@@ -62,6 +63,7 @@ class Employee::CorrectionsController < ApplicationController
 
     render json: {
       day_allowed: true,
+      server_updated_at: correction_day_server_updated_at(correction_day),
       swipes: swipes_for_day(correction_day).map { |swipe| swipe_payload(swipe) },
       pending_correction: pending_correction_payload(pending_correction)
     }
@@ -70,6 +72,12 @@ class Employee::CorrectionsController < ApplicationController
   def create
     @employee = current_employee
     @correction_date_range = correction_date_range
+
+    if stale_correction_submission?
+      redirect_to new_correction_path(day: parsed_correction_day.iso8601), alert: t("employee.flash.correction_stale")
+      return
+    end
+
     @correction = correction_for_submission
 
     correction_request_errors.each do |message|
@@ -189,10 +197,11 @@ class Employee::CorrectionsController < ApplicationController
     @requested_swipes = form_requested_swipes(@correction)
     @requested_swipes_by_kind = @requested_swipes.group_by { |requested_swipe| requested_swipe["kind"] }
     @requester_comments = correction_params[:note].presence || @correction.requester_comments
+    @server_updated_at = correction_day_server_updated_at(@form_day)
   end
 
   def correction_params
-    params.permit(:date, :note, invalidated_swipe_ids: [], requested_swipes: [ :kind, :time ])
+    params.permit(:date, :note, :server_updated_at, invalidated_swipe_ids: [], requested_swipes: [ :kind, :time ])
   end
 
   def parsed_correction_day
@@ -284,6 +293,21 @@ class Employee::CorrectionsController < ApplicationController
 
   def pending_correction_for(day)
     @employee.swipe_corrections.pending.find_by(day: day) if day
+  end
+
+  def stale_correction_submission?
+    day = parsed_correction_day
+    return false unless correction_day_allowed?(day)
+
+    submitted_server_updated_at != correction_day_server_updated_at(day)
+  end
+
+  def submitted_server_updated_at
+    Integer(correction_params[:server_updated_at].presence || 0, exception: false) || 0
+  end
+
+  def correction_day_server_updated_at(day)
+    SwipeCorrection.day_server_updated_at(employee: @employee, day: day)
   end
 
   def correction_deleted_flash(correction)

@@ -91,6 +91,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       modal_text = css_select("##{approve_modal_id} .modal-body").first.text
       assert_operator modal_text.index("Comentaris"), :<, modal_text.index("Demanat")
       assert_select "form[action='#{approve_admin_correction_path(pending_correction)}'][method='post']" do
+        assert_select "input[type='hidden'][name='server_updated_at'][value='#{correction_server_updated_at(employee, pending_correction.day)}']"
         assert_select "label[for='#{approve_modal_id}_validator_comments']", text: "Comentaris de RRHH"
         assert_select "textarea##{approve_modal_id}_validator_comments[name='validator_comments']"
         assert_select "button[type='submit'][data-submitting-label='Aprovant...']", text: "Aprovar"
@@ -100,6 +101,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       assert_select "h2##{reject_modal_id}_label", text: "Rebutjar correcció"
       assert_select ".modal-body", text: /Vols rebutjar la següent correcció horària/
       assert_select "form[action='#{reject_admin_correction_path(pending_correction)}'][method='post']" do
+        assert_select "input[type='hidden'][name='server_updated_at'][value='#{correction_server_updated_at(employee, pending_correction.day)}']"
         assert_select "label[for='#{reject_modal_id}_validator_comments']", text: "Comentaris de RRHH"
         assert_select "textarea##{reject_modal_id}_validator_comments[name='validator_comments']"
         assert_select "button[type='submit'][data-submitting-label='Rebutjant...']", text: "Rebutjar"
@@ -270,6 +272,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "form[action='#{admin_corrections_path}'][data-controller='correction-form'][data-correction-form-update-url-value='true']" do
+      assert_select "input[type='hidden'][name='swipe_correction[server_updated_at]'][value='0'][data-correction-form-target='serverUpdatedAt']"
       assert_select ".admin-employee-search[data-controller='employee-search'][data-employee-search-auto-submit-value='false']"
       assert_select "select[name='swipe_correction[employee_id]']", 0
       assert_select "input[type='hidden'][name='swipe_correction[employee_id]'][value=''][data-correction-form-target='employeeId']"
@@ -292,6 +295,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_no_match "Ja hi ha una correcció pendent per aquest dia.", response.body
     assert_select "input[type='hidden'][name='swipe_correction[employee_id]'][value='#{employee.id}']"
+    assert_select "input[type='hidden'][name='swipe_correction[server_updated_at]'][value='0'][data-correction-form-target='serverUpdatedAt']"
     assert_select "input[name='employee_query'][value='Clara Pons']"
     assert_select "input[type='date'][name='swipe_correction[day]'][value='2026-07-04'][disabled]", 0
     assert_select "[data-correction-form-target='formContent'][hidden]", 0
@@ -459,6 +463,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       assert_select "button[type='submit'][data-correction-form-confirmed='true'][data-submitting-label='Aprovant amb modificacions...']", text: "Procedir"
     end
     assert_select "input[type='hidden'][name='swipe_correction[employee_id]'][value='#{employee.id}']"
+    assert_select "input[type='hidden'][name='swipe_correction[server_updated_at]'][value='#{correction_server_updated_at(employee, correction.day)}'][data-correction-form-target='serverUpdatedAt']"
     assert_select "input[name='employee_query'][value='Clara Pons'][disabled]"
     assert_select "button[data-action='employee-search#clear']", 0
     assert_select "input[type='date'][name='swipe_correction[day]'][value='2026-07-04'][disabled]"
@@ -645,6 +650,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     payload = JSON.parse(response.body)
     assert_equal true, payload["day_allowed"]
+    assert_equal 0, payload["server_updated_at"]
     assert_equal [ { "id" => employee.swipes.last.id.to_s, "kind" => "entry", "time" => "08:40" } ], payload["swipes"]
   end
 
@@ -772,6 +778,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
           swipe_correction: {
             employee_id: employee.id,
             day: "2026-07-04",
+            server_updated_at: correction_server_updated_at(employee, Date.new(2026, 7, 4)),
             requester_comments: "Nova sol·licitud",
             requested_swipes: [
               { kind: "entry", hour: "08:00" }
@@ -789,6 +796,38 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal employee, correction.employee
     assert_equal "Nova sol·licitud", correction.requester_comments
     assert employee.swipes.where(forged: true, metadata: "admin_correction:#{correction.id}", kind: "entry").exists?
+  end
+
+  test "rejects a stale manager correction create when the day changed after the form loaded" do
+    manager = create_manager
+    log_in_manager(manager)
+    employee = create_employee
+    day = Date.new(2026, 7, 4)
+    opened_server_updated_at = 0
+    employee.swipe_corrections.create!(
+      requester: manager,
+      validator: manager,
+      status: :approved,
+      day: day
+    )
+
+    assert_no_difference "SwipeCorrection.count" do
+      post admin_corrections_path, params: {
+        swipe_correction: {
+          employee_id: employee.id,
+          day: day.iso8601,
+          server_updated_at: opened_server_updated_at,
+          requester_comments: "Alta caducada",
+          requested_swipes: [
+            { kind: "entry", hour: "08:00" }
+          ]
+        }
+      }
+    end
+
+    assert_redirected_to new_admin_correction_path(employee_id: employee.id, day: day.iso8601)
+    assert_equal I18n.t("admin.flash.correction_stale"), flash[:alert]
+    assert_not employee.swipes.where(forged: true, kind: "entry", swipe_at: Time.zone.local(2026, 7, 4, 8, 0)).exists?
   end
 
   test "creates and approves a manager correction with requested swipes" do
@@ -849,6 +888,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
           swipe_correction: {
             employee_id: other_employee.id,
             day: "2026-07-05",
+            server_updated_at: correction_server_updated_at(employee, correction.day),
             validator_comments: "Hora ajustada per RRHH",
             invalidated_swipe_ids: [ swipe.id ],
             requested_swipes: {
@@ -895,6 +935,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       assert_difference -> { employee.swipes.count }, 1 do
         patch admin_correction_path(correction), params: {
           swipe_correction: {
+            server_updated_at: correction_server_updated_at(employee, correction.day),
             validator_comments: "Només comentari",
             requested_swipes: {
               "0" => { kind: "entry", hour: "08:10" }
@@ -915,6 +956,45 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert employee.swipes.where(forged: true, metadata: "admin_correction:#{correction.id}", kind: "entry", swipe_at: Time.zone.local(2026, 7, 4, 8, 10)).exists?
   end
 
+  test "rejects a stale pending correction edit" do
+    manager = create_manager
+    log_in_manager(manager)
+    employee = create_employee
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 4),
+      requester_comments: "Original employee note",
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:10:00" } ]
+      }
+    )
+    opened_server_updated_at = correction_server_updated_at(employee, correction.day)
+    correction.update!(requester_comments: "Employee edited note")
+
+    assert_no_difference "SwipeCorrection.count" do
+      patch admin_correction_path(correction), params: {
+        swipe_correction: {
+          server_updated_at: opened_server_updated_at,
+          validator_comments: "Hora caducada",
+          requested_swipes: {
+            "0" => { kind: "entry", hour: "08:00" }
+          }
+        }
+      }
+    end
+
+    assert_redirected_to edit_admin_correction_path(correction)
+    assert_equal I18n.t("admin.flash.correction_stale"), flash[:alert]
+    correction.reload
+    assert_predicate correction, :pending?
+    assert_nil correction.validator
+    assert_equal "Employee edited note", correction.requester_comments
+    assert_equal [ { "kind" => "entry", "hour" => "08:10:00" } ], correction.details.fetch("requested_swipes")
+    assert_not SwipeCorrection.where(requester: manager, requester_comments: "Hora caducada").exists?
+  end
+
   test "update keeps employee and day from the original pending correction" do
     manager = create_manager
     log_in_manager(manager)
@@ -932,6 +1012,7 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
       swipe_correction: {
         employee_id: other_employee.id,
         day: "2026-07-05",
+        server_updated_at: correction_server_updated_at(employee, correction.day),
         validator_comments: "Manté identitat",
         invalidated_swipe_ids: [ swipe.id ]
       }
@@ -965,7 +1046,10 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     )
 
     assert_difference "employee.swipes.count", 2 do
-      post approve_admin_correction_path(correction), params: { validator_comments: "Revisat i correcte." }
+      post approve_admin_correction_path(correction), params: {
+        server_updated_at: correction_server_updated_at(employee, correction.day),
+        validator_comments: "Revisat i correcte."
+      }
     end
 
     assert_redirected_to admin_corrections_path
@@ -976,6 +1060,42 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate old_swipe.reload, :removed?
     assert employee.swipes.where(forged: true, metadata: "admin_correction:#{correction.id}").exists?(kind: "exit")
     assert employee.swipes.where(swipe_at: Time.zone.local(2026, 7, 4, 17, 0)).exists?
+  end
+
+  test "rejects a stale pending correction approval" do
+    manager = create_manager
+    log_in_manager(manager)
+    employee = create_employee
+    correction = employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 4),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:05:00" } ]
+      }
+    )
+    opened_server_updated_at = correction_server_updated_at(employee, correction.day)
+    correction.update!(
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "entry", "hour" => "08:15:00" } ]
+      }
+    )
+
+    assert_no_difference "employee.swipes.count" do
+      post approve_admin_correction_path(correction), params: {
+        server_updated_at: opened_server_updated_at,
+        validator_comments: "Aprovar versió caducada"
+      }
+    end
+
+    assert_redirected_to admin_corrections_path
+    assert_equal I18n.t("admin.flash.correction_stale"), flash[:alert]
+    correction.reload
+    assert_predicate correction, :pending?
+    assert_nil correction.validator
+    assert_equal [ { "kind" => "entry", "hour" => "08:15:00" } ], correction.details.fetch("requested_swipes")
   end
 
   test "rejects a pending correction without changing swipes" do
@@ -990,7 +1110,10 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     )
 
     assert_no_difference "employee.swipes.count" do
-      post reject_admin_correction_path(correction), params: { validator_comments: "No s'accepta el canvi." }
+      post reject_admin_correction_path(correction), params: {
+        server_updated_at: correction_server_updated_at(employee, correction.day),
+        validator_comments: "No s'accepta el canvi."
+      }
     end
 
     assert_redirected_to admin_corrections_path
@@ -1012,7 +1135,9 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     )
     referrer = admin_swipes_path(employee_id: employee.id, month: 7, year: 2026)
 
-    post approve_admin_correction_path(correction), headers: { "HTTP_REFERER" => referrer }
+    post approve_admin_correction_path(correction),
+      params: { server_updated_at: correction_server_updated_at(employee, correction.day) },
+      headers: { "HTTP_REFERER" => referrer }
 
     assert_redirected_to referrer
     assert_predicate correction.reload, :approved?

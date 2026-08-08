@@ -7,6 +7,9 @@
 <div class="modal fade" id="<%= modal_id %>" tabindex="-1" aria-labelledby="<%= modal_label_id %>" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <%= form_with url: admin_correction_review_path(correction, action), method: :post, class: "modal-content" do %>
+      <%= hidden_field_tag :server_updated_at,
+        SwipeCorrection.day_server_updated_at(employee: correction.employee, day: correction.day) %>
+
       <div class="modal-header">
         <h2 class="modal-title fs-5" id="<%= modal_label_id %>">
           <%= t("admin.corrections.index.review.#{action}.title") %>
