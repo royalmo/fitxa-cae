@@ -1,6 +1,4 @@
 module Admin::AuditActionsHelper
-  AUDIT_ACTION_DETAIL_MESSAGE_KEYS = %w[message detail details_text].freeze
-
   def admin_audit_actions_month_options
     I18n.t("date.month_names").each_with_index.filter_map do |month_name, month_number|
       [ month_name, month_number ] if month_number.positive?
@@ -34,7 +32,7 @@ module Admin::AuditActionsHelper
   end
 
   def admin_audit_action_kind_text(kind)
-    t("admin.audit_actions.kinds.#{kind}", default: kind.to_s.tr("._", " ").humanize)
+    t("audit_actions_texts.#{kind}.name", default: kind.to_s.tr("._", " ").humanize)
   end
 
   def admin_audit_author_value(author)
@@ -59,20 +57,15 @@ module Admin::AuditActionsHelper
   end
 
   def admin_audit_action_detail_text(audit_action)
-    custom_detail = admin_audit_action_custom_detail(audit_action)
-    return custom_detail if custom_detail.present?
-
-    case audit_action.kind
-    when "employee.updated", "manager.updated"
-      admin_audit_update_detail_text(audit_action)
-    when "swipe_correction.created", "swipe_correction.updated",
-         "swipe_correction.approved", "swipe_correction.rejected"
-      admin_audit_correction_detail_text(audit_action)
-    else
-      t("admin.audit_actions.details.default",
+    t("audit_actions_texts.#{audit_action.kind}.description",
+      **admin_audit_action_interpolations(audit_action),
+      default: t("audit_actions_texts.default.description",
         kind: admin_audit_action_kind_text(audit_action.kind),
-        recipient_name: admin_audit_subject_text(audit_action.recipient))
-    end
+        recipient_name: admin_audit_subject_text(audit_action.recipient)))
+  rescue I18n::MissingInterpolationArgument
+    t("audit_actions_texts.default.description",
+      kind: admin_audit_action_kind_text(audit_action.kind),
+      recipient_name: admin_audit_subject_text(audit_action.recipient))
   end
 
   def admin_audit_action_raw_details(audit_action)
@@ -105,67 +98,29 @@ module Admin::AuditActionsHelper
     end
   end
 
-  def admin_audit_update_detail_text(audit_action)
-    field = admin_audit_extra_value(audit_action, "field").to_s
+  def admin_audit_action_interpolations(audit_action)
+    details = audit_action.extra_info || {}
+    changed_fields = Array(details["changed_fields"]).compact_blank
+    changed_fields = [ details["field"] ] if changed_fields.blank? && details["field"].present?
 
-    return admin_audit_password_detail_text(audit_action) if field.in?(%w[password password_digest])
-    return admin_audit_active_detail_text(audit_action) if field == "active"
-
-    if field.present?
-      t("admin.audit_actions.details.updated.field",
-        field: admin_audit_field_text(field),
-        recipient_name: admin_audit_subject_text(audit_action.recipient))
-    elsif audit_action.recipient.is_a?(Manager)
-      t("admin.audit_actions.details.updated.manager",
-        recipient_name: admin_audit_subject_text(audit_action.recipient))
-    else
-      t("admin.audit_actions.details.updated.employee",
-        recipient_name: admin_audit_subject_text(audit_action.recipient))
-    end
-  end
-
-  def admin_audit_password_detail_text(audit_action)
-    t("admin.audit_actions.details.updated.password",
-      recipient_name: admin_audit_subject_text(audit_action.recipient))
-  end
-
-  def admin_audit_active_detail_text(audit_action)
-    active = admin_audit_boolean_value(admin_audit_extra_value(audit_action, "active", "new_value", "value", "to"))
-    recipient = audit_action.recipient
-
-    if active == false
-      key = recipient.is_a?(Manager) ? "manager_disabled" : "employee_disabled"
-    elsif active == true
-      key = recipient.is_a?(Manager) ? "manager_enabled" : "employee_enabled"
-    else
-      key = "field"
-    end
-
-    t("admin.audit_actions.details.updated.#{key}",
-      field: admin_audit_field_text("active"),
-      recipient_name: admin_audit_subject_text(recipient))
-  end
-
-  def admin_audit_correction_detail_text(audit_action)
-    status_key = audit_action.kind.to_s.split(".").last
-    day = admin_audit_action_day_text(audit_action)
-    translation_key = day.present? ? "#{status_key}_with_day" : status_key
-
-    t("admin.audit_actions.details.swipe_correction.#{translation_key}",
+    {
+      author_name: admin_audit_subject_text(audit_action.author),
       recipient_name: admin_audit_subject_text(audit_action.recipient),
-      day: day,
-      default: t("admin.audit_actions.details.swipe_correction.default",
-        kind: admin_audit_action_kind_text(audit_action.kind),
-        recipient_name: admin_audit_subject_text(audit_action.recipient)))
-  end
-
-  def admin_audit_action_custom_detail(audit_action)
-    AUDIT_ACTION_DETAIL_MESSAGE_KEYS.each do |key|
-      value = admin_audit_extra_value(audit_action, key)
-      return value if value.is_a?(String) && value.present?
-    end
-
-    nil
+      fields: admin_audit_fields_text(changed_fields),
+      field: admin_audit_field_text(changed_fields.first),
+      day: admin_audit_action_day_text(audit_action),
+      origin: admin_audit_origin_text(details["origin"]),
+      tag_name: details["tag_name"].to_s,
+      report_kind: admin_audit_report_kind_text(details["report_kind"]),
+      report_format: details["format"].to_s.upcase,
+      period: details["period"].to_s,
+      subject: details["subject"].to_s,
+      bulk_action_kind: admin_audit_bulk_action_kind_text(details["bulk_action_kind"]),
+      bulk_action: admin_audit_bulk_action_text(details["action"]),
+      count: admin_audit_count_text(details),
+      exported_count: details["exported_count"].to_i,
+      filename: details["filename"].to_s
+    }
   end
 
   def admin_audit_action_day_text(audit_action)
@@ -187,16 +142,47 @@ module Admin::AuditActionsHelper
     nil
   end
 
-  def admin_audit_boolean_value(value)
-    return value if value == true || value == false
+  def admin_audit_field_text(field)
+    return "" if field.blank?
 
-    case value.to_s
-    when "true", "1" then true
-    when "false", "0" then false
-    end
+    t("audit_actions_texts.fields.#{field}", default: field.to_s.humanize.downcase)
   end
 
-  def admin_audit_field_text(field)
-    t("admin.audit_actions.fields.#{field}", default: field.to_s.humanize.downcase)
+  def admin_audit_fields_text(fields)
+    Array(fields).compact_blank.map { |field| admin_audit_field_text(field) }.join(", ")
+  end
+
+  def admin_audit_origin_text(origin)
+    return "" if origin.blank?
+
+    t("audit_actions_texts.origins.#{origin}", default: origin.to_s.tr("_", " ").humanize.downcase)
+  end
+
+  def admin_audit_report_kind_text(report_kind)
+    return "" if report_kind.blank?
+
+    t("audit_actions_texts.report_kinds.#{report_kind}", default: report_kind.to_s.tr("_", " ").humanize.downcase)
+  end
+
+  def admin_audit_bulk_action_kind_text(kind)
+    return "" if kind.blank?
+
+    t("audit_actions_texts.bulk_action_kinds.#{kind}", default: kind.to_s.tr("_", " ").humanize.downcase)
+  end
+
+  def admin_audit_bulk_action_text(action)
+    return "" if action.blank?
+
+    t("audit_actions_texts.bulk_actions.#{action}", default: action.to_s.tr("_", " ").humanize.downcase)
+  end
+
+  def admin_audit_count_text(details)
+    count = details["exported_count"] ||
+      details["affected_count"] ||
+      details["affected_national_id_count"] ||
+      details["requested_swipe_count"] ||
+      details["invalidated_swipe_count"]
+
+    count.to_i
   end
 end

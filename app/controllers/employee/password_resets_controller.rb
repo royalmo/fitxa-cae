@@ -86,8 +86,10 @@ class Employee::PasswordResetsController < ApplicationController
     assign_password_setup
 
     if @employee.errors.empty? && @employee.save
+      password_change_origin = pending_employee_password_setup_first_login? ? "first_time" : "password_reset"
       remember = pending_employee_password_setup_remember?
       installed_pwa = pending_employee_password_setup_installed_pwa?
+      record_employee_password_change_audit(@employee, origin: password_change_origin)
       clear_pending_employee_password_setup
       sign_in_employee(
         @employee,
@@ -147,6 +149,18 @@ class Employee::PasswordResetsController < ApplicationController
     end
 
     @employee.password = password_setup_params[:password]
+  end
+
+  def record_employee_password_change_audit(employee, origin:)
+    record_audit_action!(
+      author: employee,
+      recipient: employee,
+      kind: "employee.password_changed",
+      extra_info: {
+        changed_fields: [ "password" ],
+        origin: origin
+      }
+    )
   end
 
   def load_pending_employee_password_reset

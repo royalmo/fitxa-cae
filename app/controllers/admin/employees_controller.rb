@@ -22,7 +22,13 @@ class Admin::EmployeesController < Admin::BaseController
     @employee.tag_ids = selected_tag_ids
 
     if @employee.save
-      deliver_employee_welcome(@employee)
+      welcome_email_enqueued = deliver_employee_welcome(@employee)
+      record_audit_action!(
+        author: current_manager,
+        recipient: @employee,
+        kind: "employee.created",
+        extra_info: employee_created_audit_details(@employee, welcome_email_enqueued: welcome_email_enqueued)
+      )
       redirect_to admin_employees_path, notice: t("admin.flash.employee_created")
     else
       load_tags
@@ -37,10 +43,12 @@ class Admin::EmployeesController < Admin::BaseController
 
   def update
     @employee = Employee.find(params[:id])
+    previous_tag_ids = @employee.tag_ids
     @employee.assign_attributes(employee_params)
     @employee.tag_ids = selected_tag_ids
 
     if @employee.save
+      record_employee_update_audit(@employee, previous_tag_ids)
       redirect_to admin_employees_path, notice: t("admin.flash.employee_updated")
     else
       load_tags
@@ -53,6 +61,7 @@ class Admin::EmployeesController < Admin::BaseController
     target_active = ActiveModel::Type::Boolean.new.cast(employee_activation_params[:active])
 
     if @employee.update(active: target_active)
+      record_employee_activation_audit(@employee) if @employee.saved_change_to_active?
       redirect_back fallback_location: admin_employees_path,
         notice: t(target_active ? "admin.flash.employee_activated" : "admin.flash.employee_deactivated")
     else
@@ -100,7 +109,10 @@ class Admin::EmployeesController < Admin::BaseController
   end
 
   def deliver_employee_welcome(employee)
-    EmployeeWelcomeMailer.welcome(employee).deliver_later if employee.email.present?
+    return false if employee.email.blank?
+
+    EmployeeWelcomeMailer.welcome(employee).deliver_later
+    true
   end
 
   def last_swipes_by_employee_id(employee_ids)
@@ -109,5 +121,55 @@ class Admin::EmployeesController < Admin::BaseController
       .order(swipe_at: :desc, id: :desc)
       .group_by(&:employee_id)
       .transform_values(&:first)
+  end
+
+  def employee_created_audit_details(employee, welcome_email_enqueued:)
+    changes = audit_saved_changes(employee, fields: %w[first_name last_name national_id email phone active])
+    tag_ids = employee.tag_ids
+
+    {
+      changed_fields: audit_changed_fields(changes),
+      changes: changes,
+      tag_ids: tag_ids,
+      tags: audit_tag_names(tag_ids),
+      welcome_email_enqueued: welcome_email_enqueued
+    }
+  end
+
+  def record_employee_update_audit(employee, previous_tag_ids)
+    changes = audit_saved_changes(employee, fields: %w[first_name last_name national_id email phone active])
+    active_changed = changes.delete("active")
+    next_tag_ids = employee.tag_ids
+
+    record_employee_activation_audit(employee) if active_changed
+
+    if previous_tag_ids.sort != next_tag_ids.sort
+      changes["tags"] = {
+        "from" => audit_tag_names(previous_tag_ids),
+        "to" => audit_tag_names(next_tag_ids)
+      }
+    end
+
+    record_audit_update!(
+      author: current_manager,
+      recipient: employee,
+      kind: "employee.updated",
+      changes: changes,
+      extra_info: audit_tag_change_details(previous_tag_ids, next_tag_ids)
+    )
+  end
+
+  def record_employee_activation_audit(employee)
+    previous_active, active = employee.saved_change_to_active
+
+    record_audit_action!(
+      author: current_manager,
+      recipient: employee,
+      kind: active ? "employee.activated" : "employee.deactivated",
+      extra_info: {
+        changed_fields: [ "active" ],
+        changes: { active: { from: previous_active, to: active } }
+      }
+    )
   end
 end

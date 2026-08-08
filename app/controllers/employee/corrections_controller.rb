@@ -79,12 +79,14 @@ class Employee::CorrectionsController < ApplicationController
     end
 
     @correction = correction_for_submission
+    existing_correction = @correction.persisted?
 
     correction_request_errors.each do |message|
       @correction.errors.add(:base, message)
     end
 
     if @correction.errors.empty? && @correction.save
+      record_employee_correction_submit_audit(@correction, existing: existing_correction)
       redirect_to corrections_path, notice: t("employee.flash.correction_requested")
     else
       load_correction_form_context(parsed_correction_day, correction: @correction)
@@ -95,6 +97,7 @@ class Employee::CorrectionsController < ApplicationController
   def destroy
     correction = current_employee.swipe_corrections.pending.find(params[:id])
     correction.soft_delete!
+    record_employee_correction_audit(correction, "swipe_correction.deleted")
 
     redirect_to corrections_path, notice: correction_deleted_flash(correction)
   end
@@ -102,6 +105,7 @@ class Employee::CorrectionsController < ApplicationController
   def restore
     correction = current_employee.swipe_corrections.deleted.pending.find(params[:id])
     correction.restore!
+    record_employee_correction_audit(correction, "swipe_correction.restored")
 
     redirect_to new_correction_path(day: correction.day.iso8601), notice: t("employee.flash.correction_restored")
   rescue ActiveRecord::RecordInvalid
@@ -402,5 +406,23 @@ class Employee::CorrectionsController < ApplicationController
 
   def correction_date_range
     SwipeCorrection.employee_request_day_range
+  end
+
+  def record_employee_correction_submit_audit(correction, existing:)
+    return if existing && correction.saved_changes.except("updated_at").blank?
+
+    record_employee_correction_audit(
+      correction,
+      existing ? "swipe_correction.updated" : "swipe_correction.created"
+    )
+  end
+
+  def record_employee_correction_audit(correction, kind)
+    record_audit_action!(
+      author: @employee || current_employee,
+      recipient: correction.employee,
+      kind: kind,
+      extra_info: audit_correction_details(correction)
+    )
   end
 end

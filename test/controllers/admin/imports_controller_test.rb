@@ -175,6 +175,11 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "import", employee_bulk_action_run.kind
     assert_equal admin_employee_bulk_action_run_path(employee_bulk_action_run), payload.fetch("status_url")
     assert_nil Employee.find_by(national_id: first_national_id)
+    audit_action = AuditAction.find_by!(kind: "employee_bulk_action.enqueued")
+    assert_equal "import", audit_action.extra_info.fetch("bulk_action_kind")
+    assert_equal [ tag.id ], audit_action.extra_info.fetch("tag_ids")
+    assert_not_includes audit_action.extra_info.to_s, content
+    assert_not_includes audit_action.extra_info.to_s, first_national_id
 
     assert_difference -> { Employee.count }, 2 do
       perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)

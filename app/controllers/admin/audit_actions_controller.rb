@@ -21,8 +21,17 @@ class Admin::AuditActionsController < Admin::BaseController
       .order(created_at: :desc, id: :desc)
       .includes(:author, :recipient)
       .limit(selected_export_limit)
+      .to_a
+    csv = audit_actions_csv(audit_actions)
 
-    send_data audit_actions_csv(audit_actions),
+    record_audit_action!(
+      author: current_manager,
+      recipient: current_manager,
+      kind: "audit_actions.exported",
+      extra_info: audit_actions_export_audit_details(audit_actions)
+    )
+
+    send_data csv,
       filename: "fitxa-cae-activitat-#{Time.zone.today.strftime("%Y%m%d")}.csv",
       type: "text/csv; charset=utf-8"
   end
@@ -166,5 +175,20 @@ class Admin::AuditActionsController < Admin::BaseController
     JSON.generate(audit_action.extra_info.presence || {})
   rescue JSON::GeneratorError
     audit_action.extra_info.to_s
+  end
+
+  def audit_actions_export_audit_details(audit_actions)
+    {
+      exported_count: audit_actions.size,
+      limit: selected_export_limit,
+      filters: {
+        author_type: @selected_author_type,
+        author: audit_subject_identifier(@selected_author),
+        recipient: audit_subject_identifier(@selected_recipient),
+        kind: @selected_kind,
+        month: @selected_month,
+        year: @selected_year
+      }.compact_blank
+    }
   end
 end

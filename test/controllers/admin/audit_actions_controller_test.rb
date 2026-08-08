@@ -61,14 +61,14 @@ class Admin::AuditActionsControllerTest < ActionDispatch::IntegrationTest
       assert_select "svg.admin-audit-author-icon"
       assert_select ".admin-audit-subject-name", text: "Laia Riera"
     end
-    assert_select "td", text: "Actualitzat el camp estat de Iu Bosch."
+    assert_select "td", text: "Actualitzada la persona Iu Bosch: estat."
     assert_select "button[data-bs-toggle='modal'][data-bs-target^='#admin_audit_action_modal_'] svg.icon"
     assert_select ".modal[id^='admin_audit_action_modal_']" do
       assert_select "dt", text: "Data i hora"
       assert_select "dt", text: "Autor/a"
       assert_select "dt", text: "Receptor/a"
       assert_select "dd a.admin-audit-subject-link[href='#{edit_admin_employee_path(employee)}']", text: "Iu Bosch"
-      assert_select "dd", text: "Actualitzat el camp estat de Iu Bosch."
+      assert_select "dd", text: "Actualitzada la persona Iu Bosch: estat."
       assert_select "textarea.admin-audit-action-raw-details[disabled]", text: /"field": "active"/
     end
     assert_select "h2", text: "Filtres", count: 0
@@ -134,8 +134,8 @@ class Admin::AuditActionsControllerTest < ActionDispatch::IntegrationTest
     included = AuditAction.create!(
       author: @manager,
       recipient: employee,
-      kind: "employee.updated",
-      extra_info: { "field" => "password" },
+      kind: "employee.password_changed",
+      extra_info: { "changed_fields" => [ "password" ], "origin" => "profile_page" },
       created_at: Time.zone.local(2026, 7, 4, 10, 30)
     )
     AuditAction.create!(
@@ -155,9 +155,16 @@ class Admin::AuditActionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal included.created_at.iso8601, rows.first["datetime"]
     assert_equal "manager:#{@manager.id}", rows.first["author"]
     assert_equal "employee:#{employee.id}", rows.first["recipient"]
-    assert_equal "employee.updated", rows.first["kind"]
-    assert_equal "Canviada la contrasenya de Iu Bosch.", rows.first["pretty_activity"]
-    assert_equal "{\"field\":\"password\"}", rows.first["details"]
+    assert_equal "employee.password_changed", rows.first["kind"]
+    assert_equal "Canviada la contrasenya de Iu Bosch (pàgina de compte).", rows.first["pretty_activity"]
+    assert_equal "{\"changed_fields\":[\"password\"],\"origin\":\"profile_page\"}", rows.first["details"]
+
+    export_audit = AuditAction.find_by!(kind: "audit_actions.exported")
+    assert_equal @manager, export_audit.author
+    assert_equal @manager, export_audit.recipient
+    assert_equal 1, export_audit.extra_info.fetch("exported_count")
+    assert_equal 1, export_audit.extra_info.fetch("limit")
+    assert_equal "manager:#{@manager.id}", export_audit.extra_info.dig("filters", "author")
   end
 
   test "searches audit authors across employees and managers" do
@@ -184,10 +191,6 @@ class Admin::AuditActionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "searches audit kinds by label and internal key" do
-    employee = create_employee(first_name: "Iu", last_name: "Bosch", national_id: valid_dni(12_345_681))
-    AuditAction.create!(author: @manager, recipient: employee, kind: "employee.updated")
-    AuditAction.create!(author: @manager, recipient: employee, kind: "swipe_correction.approved")
-
     get admin_audit_kind_search_path, params: { q: "persona" }
 
     assert_response :success
@@ -206,16 +209,11 @@ class Admin::AuditActionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "preloads the first audit kinds for blank searches" do
-    employee = create_employee(first_name: "Iu", last_name: "Bosch", national_id: valid_dni(12_345_682))
-
-    10.times do |index|
-      AuditAction.create!(author: @manager, recipient: employee, kind: "demo.kind_#{index}")
-    end
-
     get admin_audit_kind_search_path, params: { q: "" }
 
     assert_response :success
     assert_select ".admin-audit-kind-search-result", count: 8
+    assert_select ".admin-audit-kind-search-result[data-audit-kind-search-id-param='audit_actions.exported']"
     assert_select ".admin-audit-kind-search-result code", count: 0
   end
 end

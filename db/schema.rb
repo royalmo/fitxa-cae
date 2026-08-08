@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_08_180725) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_08_205111) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -48,7 +48,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_180725) do
     t.integer "recipient_id", null: false
     t.string "recipient_type", null: false
     t.datetime "updated_at", null: false
+    t.index ["author_type", "author_id", "created_at", "id"], name: "index_audit_actions_on_author_created_at_id"
     t.index ["author_type", "author_id"], name: "index_audit_actions_on_author"
+    t.index ["created_at", "id"], name: "index_audit_actions_on_created_at_and_id"
+    t.index ["kind", "created_at", "id"], name: "index_audit_actions_on_kind_created_at_id"
+    t.index ["recipient_type", "recipient_id", "created_at", "id"], name: "index_audit_actions_on_recipient_created_at_id"
     t.index ["recipient_type", "recipient_id"], name: "index_audit_actions_on_recipient"
   end
 

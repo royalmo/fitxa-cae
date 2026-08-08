@@ -29,6 +29,7 @@ class Admin::PasswordResetsController < ApplicationController
     assign_password
 
     if @manager.errors.empty? && @manager.save
+      record_manager_password_change_audit(@manager, origin: @password_change_origin || "password_reset")
       sign_out_manager
       redirect_to admin_login_path, notice: t(".success")
     else
@@ -67,9 +68,14 @@ class Admin::PasswordResetsController < ApplicationController
 
   def manager_from_token
     reset_manager = Manager.find_by_password_reset_token(params[:token])
-    return reset_manager if reset_manager&.active?
+    if reset_manager&.active?
+      @password_change_origin = "password_reset"
+      return reset_manager
+    end
 
-    Manager.find_by_password_setup_token(params[:token])
+    setup_manager = Manager.find_by_password_setup_token(params[:token])
+    @password_change_origin = "first_time" if setup_manager
+    setup_manager
   end
 
   def redirect_signed_in_manager
@@ -78,5 +84,17 @@ class Admin::PasswordResetsController < ApplicationController
 
   def redirect_to_password_reset_rate_limit
     redirect_to new_admin_password_reset_path, alert: t("admin.password_resets.create.rate_limited")
+  end
+
+  def record_manager_password_change_audit(manager, origin:)
+    record_audit_action!(
+      author: manager,
+      recipient: manager,
+      kind: "manager.password_changed",
+      extra_info: {
+        changed_fields: [ "password" ],
+        origin: origin
+      }
+    )
   end
 end

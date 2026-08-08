@@ -109,6 +109,26 @@ def demo_multi_swipe_patterns
   ]
 end
 
+def seed_correction_audit_details(correction, extra_info = {})
+  details = correction.details || {}
+  requested_swipes = Array(details["requested_swipes"]).map do |requested_swipe|
+    {
+      "kind" => requested_swipe["kind"].to_s,
+      "hour" => requested_swipe["hour"].to_s
+    }
+  end
+
+  {
+    correction_id: correction.id,
+    day: correction.day&.iso8601,
+    status: correction.status,
+    invalidated_swipe_ids: Array(details["invalidated_swipe_ids"]).map(&:to_s),
+    requested_swipes: requested_swipes,
+    requested_swipe_count: requested_swipes.size,
+    invalidated_swipe_count: Array(details["invalidated_swipe_ids"]).compact_blank.size
+  }.merge(extra_info)
+end
+
 ActiveRecord::Base.transaction do
   ReportExport.find_each { |report_export| report_export.artifact.purge if report_export.artifact.attached? }
   connection = ActiveRecord::Base.connection
@@ -304,7 +324,241 @@ ActiveRecord::Base.transaction do
       )
     end
   end
+
+  audit_author = managers.first
+  secondary_manager = managers.second
+  employee = employees.first
+  inactive_employee = employees.find { |seed_employee| !seed_employee.active? } || employees.last
+  pending_correction = SwipeCorrection.pending.first
+  approved_correction = SwipeCorrection.approved.first
+  rejected_correction = SwipeCorrection.rejected.first
+  audit_started_at = Time.current - 14.days
+
+  audit_rows = [
+    {
+      author: audit_author,
+      recipient: employee,
+      kind: "employee.created",
+      extra_info: {
+        changed_fields: %w[first_name last_name national_id email phone active],
+        tag_ids: employee.tag_ids,
+        tags: employee.tags.order(:name).pluck(:name),
+        welcome_email_enqueued: employee.email.present?
+      }
+    },
+    {
+      author: audit_author,
+      recipient: employee,
+      kind: "employee.updated",
+      extra_info: {
+        changed_fields: %w[email phone tags],
+        added_tag_ids: [ tags[:office].id ],
+        added_tags: [ tags[:office].name ]
+      }
+    },
+    {
+      author: audit_author,
+      recipient: inactive_employee,
+      kind: "employee.deactivated",
+      extra_info: {
+        changed_fields: [ "active" ],
+        changes: { active: { from: true, to: false } }
+      }
+    },
+    {
+      author: audit_author,
+      recipient: inactive_employee,
+      kind: "employee.activated",
+      extra_info: {
+        changed_fields: [ "active" ],
+        changes: { active: { from: false, to: true } }
+      }
+    },
+    {
+      author: audit_author,
+      recipient: secondary_manager,
+      kind: "manager.created",
+      extra_info: {
+        changed_fields: %w[first_name last_name email employee_id active],
+        password_setup_email_enqueued: true
+      }
+    },
+    {
+      author: audit_author,
+      recipient: secondary_manager,
+      kind: "manager.updated",
+      extra_info: {
+        changed_fields: %w[email employee_id]
+      }
+    },
+    {
+      author: secondary_manager,
+      recipient: secondary_manager,
+      kind: "manager.self_email_changed",
+      extra_info: {
+        changed_fields: [ "email" ],
+        old_email: "marc.soler.old@fitxa-cae.test",
+        new_email: secondary_manager.email
+      }
+    },
+    {
+      author: secondary_manager,
+      recipient: secondary_manager,
+      kind: "manager.password_changed",
+      extra_info: {
+        changed_fields: [ "password" ],
+        origin: "profile_page"
+      }
+    },
+    {
+      author: audit_author,
+      recipient: audit_author,
+      kind: "tag.created",
+      extra_info: {
+        tag_id: tags[:office].id,
+        tag_name: tags[:office].name,
+        tag_color: tags[:office].color,
+        active: true
+      }
+    },
+    {
+      author: audit_author,
+      recipient: audit_author,
+      kind: "tag.updated",
+      extra_info: {
+        tag_id: tags[:wharehouse].id,
+        tag_name: tags[:wharehouse].name,
+        tag_color: tags[:wharehouse].color,
+        changed_fields: %w[name color]
+      }
+    },
+    {
+      author: audit_author,
+      recipient: audit_author,
+      kind: "tag.deactivated",
+      extra_info: {
+        tag_id: tags[:off_shore].id,
+        tag_name: tags[:off_shore].name,
+        active: false
+      }
+    },
+    {
+      author: audit_author,
+      recipient: audit_author,
+      kind: "employee_bulk_action.enqueued",
+      extra_info: {
+        employee_bulk_action_run_id: 1,
+        bulk_action_kind: "activation",
+        action: "deactivate",
+        affected_national_id_count: 8
+      }
+    },
+    {
+      author: audit_author,
+      recipient: audit_author,
+      kind: "report_export.downloaded",
+      extra_info: {
+        report_export_id: 1,
+        report_kind: "company_zip",
+        format: "zip",
+        month: today.month,
+        year: today.year,
+        period: I18n.l(today.beginning_of_month, format: :month_year),
+        filename: "fitxa-cae-empresa-demo.zip"
+      }
+    },
+    {
+      author: audit_author,
+      recipient: audit_author,
+      kind: "report.monthly_summary_csv_downloaded",
+      extra_info: {
+        report_kind: "monthly_summary",
+        format: "csv",
+        month: today.month,
+        year: today.year,
+        period: I18n.l(today.beginning_of_month, format: :month_year)
+      }
+    },
+    {
+      author: audit_author,
+      recipient: audit_author,
+      kind: "audit_actions.exported",
+      extra_info: {
+        exported_count: 100,
+        limit: 100,
+        filters: { author_type: "Manager" }
+      }
+    },
+    {
+      author: employee,
+      recipient: employee,
+      kind: "employee.profile_updated",
+      extra_info: {
+        changed_fields: %w[email phone]
+      }
+    },
+    {
+      author: employee,
+      recipient: employee,
+      kind: "employee.password_changed",
+      extra_info: {
+        changed_fields: [ "password" ],
+        origin: "first_time"
+      }
+    },
+    {
+      author: employee,
+      recipient: employee,
+      kind: "human_resources_contact.submitted",
+      extra_info: {
+        subject: "Canvi de torn",
+        delivery: "email",
+        enqueued: true
+      }
+    }
+  ]
+
+  audit_rows << {
+    author: pending_correction.requester,
+    recipient: pending_correction.employee,
+    kind: "swipe_correction.created",
+    extra_info: seed_correction_audit_details(pending_correction)
+  } if pending_correction
+
+  audit_rows << {
+    author: audit_author,
+    recipient: approved_correction.employee,
+    kind: "swipe_correction.approved",
+    extra_info: seed_correction_audit_details(approved_correction)
+  } if approved_correction
+
+  audit_rows << {
+    author: audit_author,
+    recipient: rejected_correction.employee,
+    kind: "swipe_correction.rejected",
+    extra_info: seed_correction_audit_details(rejected_correction)
+  } if rejected_correction
+
+  audit_rows << {
+    author: audit_author,
+    recipient: approved_correction.employee,
+    kind: "swipe_correction.approved_with_modifications",
+    extra_info: seed_correction_audit_details(approved_correction, {
+      origin: "admin_edit",
+      original_correction_id: approved_correction.id,
+      replacement_correction_id: approved_correction.id + 10_000
+    })
+  } if approved_correction
+
+  audit_rows.each_with_index do |attributes, index|
+    AuditAction.create!(
+      attributes.merge(
+        created_at: audit_started_at + (index * 4.hours),
+        updated_at: audit_started_at + (index * 4.hours)
+      )
+    )
+  end
 end
 
 puts "Seeded #{Employee.count} employees, #{Manager.count} managers, #{Tag.count} tags, " \
-  "#{Swipe.count} swipes and #{SwipeCorrection.count} swipe corrections."
+  "#{Swipe.count} swipes, #{SwipeCorrection.count} swipe corrections and #{AuditAction.count} audit actions."

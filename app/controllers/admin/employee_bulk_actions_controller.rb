@@ -50,6 +50,12 @@ class Admin::EmployeeBulkActionsController < Admin::BaseController
 
   def enqueue_employee_bulk_action_run(kind, parameters)
     current_manager.employee_bulk_action_runs.create!(kind: kind, parameters: parameters).tap do |employee_bulk_action_run|
+      record_audit_action!(
+        author: current_manager,
+        recipient: current_manager,
+        kind: "employee_bulk_action.enqueued",
+        extra_info: audit_bulk_action_details(employee_bulk_action_run)
+      )
       ProcessEmployeeBulkActionRunJob.perform_later(employee_bulk_action_run)
     end
   end

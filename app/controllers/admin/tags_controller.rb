@@ -11,6 +11,15 @@ class Admin::TagsController < Admin::BaseController
     @tag = Tag.new(tag_params.merge(active: true))
 
     if @tag.save
+      record_audit_action!(
+        author: current_manager,
+        recipient: current_manager,
+        kind: "tag.created",
+        extra_info: tag_audit_details(@tag).merge(
+          changed_fields: audit_changed_fields(audit_saved_changes(@tag, fields: %w[name color active])),
+          changes: audit_saved_changes(@tag, fields: %w[name color active])
+        )
+      )
       redirect_to admin_tags_path, notice: t("admin.flash.tag_created")
     else
       render_index_with_form_error(@tag)
@@ -21,6 +30,7 @@ class Admin::TagsController < Admin::BaseController
     @tag = Tag.find(params[:id])
 
     if @tag.update(tag_params)
+      record_tag_update_audit(@tag)
       redirect_to admin_tags_path, notice: t("admin.flash.tag_updated")
     else
       render_index_with_form_error(@tag)
@@ -32,6 +42,7 @@ class Admin::TagsController < Admin::BaseController
     target_active = ActiveModel::Type::Boolean.new.cast(tag_activation_params[:active])
 
     if @tag.update(active: target_active)
+      record_tag_activation_audit(@tag) if @tag.saved_change_to_active?
       redirect_back fallback_location: admin_tags_path,
         notice: t(target_active ? "admin.flash.tag_activated" : "admin.flash.tag_deactivated")
     else
@@ -84,5 +95,40 @@ class Admin::TagsController < Admin::BaseController
     @open_tag_form = tag
 
     render :index, status: :unprocessable_entity
+  end
+
+  def tag_audit_details(tag)
+    {
+      tag_id: tag.id,
+      tag_name: tag.name,
+      tag_color: tag.color,
+      active: tag.active?
+    }
+  end
+
+  def record_tag_update_audit(tag)
+    changes = audit_saved_changes(tag, fields: %w[name color])
+
+    record_audit_update!(
+      author: current_manager,
+      recipient: current_manager,
+      kind: "tag.updated",
+      changes: changes,
+      extra_info: tag_audit_details(tag)
+    )
+  end
+
+  def record_tag_activation_audit(tag)
+    previous_active, active = tag.saved_change_to_active
+
+    record_audit_action!(
+      author: current_manager,
+      recipient: current_manager,
+      kind: active ? "tag.activated" : "tag.deactivated",
+      extra_info: tag_audit_details(tag).merge(
+        changed_fields: [ "active" ],
+        changes: { active: { from: previous_active, to: active } }
+      )
+    )
   end
 end

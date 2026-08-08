@@ -1,0 +1,131 @@
+ca:
+  audit_actions_texts:
+    default:
+      description: "%{kind}: %{recipient_name}."
+    fields:
+      active: estat
+      color: color
+      email: correu
+      employee_id: persona vinculada
+      first_name: nom
+      last_name: cognoms
+      name: nom
+      national_id: DNI/NIE
+      password: contrasenya
+      phone: telèfon
+      tags: etiquetes
+    origins:
+      first_time: primer accés
+      password_reset: restabliment
+      profile_page: pàgina de compte
+      admin_create: creació des de gestió
+      admin_edit: revisió des de gestió
+    report_kinds:
+      company_zip: empresa
+      monthly_summary: resum mensual
+      monthly_summary_pdf: resum mensual
+      person_pdf: persona
+      tag_zip: etiqueta
+    bulk_action_kinds:
+      activation: activació
+      import: importació
+      tags: etiquetes
+    bulk_actions:
+      activate: activar
+      deactivate: desactivar
+    audit_actions:
+      exported:
+        name: Activitat exportada
+        description: "Exportació d'activitat: %{exported_count} registres."
+    employee_bulk_action:
+      enqueued:
+        name: Acció massiva iniciada
+        description: Iniciada una acció massiva de %{bulk_action_kind}.
+    employee:
+      created:
+        name: Persona creada
+        description: Creada la persona %{recipient_name}.
+      updated:
+        name: Persona actualitzada
+        description: "Actualitzada la persona %{recipient_name}: %{fields}."
+      activated:
+        name: Persona activada
+        description: Activada la persona %{recipient_name}.
+      deactivated:
+        name: Persona desactivada
+        description: Desactivada la persona %{recipient_name}.
+      profile_updated:
+        name: Perfil de persona actualitzat
+        description: "Actualitzat el perfil de %{recipient_name}: %{fields}."
+      password_changed:
+        name: Contrasenya de persona canviada
+        description: Canviada la contrasenya de %{recipient_name} (%{origin}).
+    human_resources_contact:
+      submitted:
+        name: Contacte a RRHH enviat
+        description: "Enviat un missatge a RRHH: %{subject}."
+    manager:
+      created:
+        name: Responsable creat
+        description: Creat el responsable %{recipient_name}.
+      updated:
+        name: Responsable actualitzat
+        description: "Actualitzat el responsable %{recipient_name}: %{fields}."
+      activated:
+        name: Responsable activat
+        description: Activat el responsable %{recipient_name}.
+      deactivated:
+        name: Responsable desactivat
+        description: Desactivat el responsable %{recipient_name}.
+      self_email_changed:
+        name: Correu propi canviat
+        description: Canviat el correu de %{recipient_name}.
+      password_changed:
+        name: Contrasenya de responsable canviada
+        description: Canviada la contrasenya de %{recipient_name} (%{origin}).
+    report:
+      monthly_summary_csv_downloaded:
+        name: Resum mensual CSV descarregat
+        description: Descarregat el CSV de resum mensual de %{period}.
+    report_export:
+      downloaded:
+        name: Informe descarregat
+        description: Descarregat l'informe %{report_kind} de %{period}.
+    swipe_correction:
+      created:
+        name: Correcció creada
+        description: Creada una correcció de fitxatge per a %{recipient_name} del dia %{day}.
+      updated:
+        name: Correcció actualitzada
+        description: Actualitzada una correcció de fitxatge de %{recipient_name} del dia %{day}.
+      deleted:
+        name: Correcció eliminada
+        description: Eliminada una correcció pendent de %{recipient_name} del dia %{day}.
+      restored:
+        name: Correcció recuperada
+        description: Recuperada una correcció pendent de %{recipient_name} del dia %{day}.
+      approved:
+        name: Correcció aprovada
+        description: Aprovada una correcció de fitxatge de %{recipient_name} del dia %{day}.
+      rejected:
+        name: Correcció rebutjada
+        description: Rebutjada una correcció de fitxatge de %{recipient_name} del dia %{day}.
+      created_and_approved:
+        name: Correcció creada i aprovada
+        description: Creada i aprovada una correcció de fitxatge per a %{recipient_name} del dia %{day}.
+      approved_with_modifications:
+        name: Correcció aprovada amb modificacions
+        description: Aprovada amb modificacions una correcció de fitxatge de %{recipient_name} del dia %{day}.
+    tag:
+      created:
+        name: Etiqueta creada
+        description: Creada l'etiqueta %{tag_name}.
+      updated:
+        name: Etiqueta actualitzada
+        description: "Actualitzada l'etiqueta %{tag_name}: %{fields}."
+      activated:
+        name: Etiqueta activada
+        description: Activada l'etiqueta %{tag_name}.
+      deactivated:
+        name: Etiqueta desactivada
+        description: Desactivada l'etiqueta %{tag_name}.

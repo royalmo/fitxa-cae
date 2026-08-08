@@ -17,6 +17,16 @@ class Admin::ReportsController < Admin::BaseController
     report = Reports::MonthlySummaryReport.new(month: period_start.month, year: period_start.year).to_h
     csv = Reports::MonthlySummaryCsv.new(report: report).to_csv
 
+    record_audit_action!(
+      author: current_manager,
+      recipient: current_manager,
+      kind: "report.monthly_summary_csv_downloaded",
+      extra_info: audit_period_details(month: period_start.month, year: period_start.year).merge(
+        report_kind: "monthly_summary",
+        format: "csv"
+      )
+    )
+
     send_data csv,
       filename: Reports::Filenames.monthly_summary_csv(period_start),
       type: "text/csv; charset=utf-8",

@@ -19,6 +19,12 @@ class Admin::ManagersController < Admin::BaseController
 
     if @manager.save
       ManagerPasswordMailer.password_setup(@manager).deliver_later
+      record_audit_action!(
+        author: current_manager,
+        recipient: @manager,
+        kind: "manager.created",
+        extra_info: manager_created_audit_details(@manager, password_setup_email_enqueued: true)
+      )
       redirect_to admin_managers_path, notice: t("admin.flash.manager_created")
     else
       render_manager_form(:new)
@@ -39,6 +45,7 @@ class Admin::ManagersController < Admin::BaseController
       @manager.errors.add(:active, :self_deactivation)
       render_manager_form(:edit)
     elsif @manager.update(attributes)
+      record_manager_update_audit(@manager)
       redirect_to admin_managers_path, notice: t("admin.flash.manager_updated")
     else
       render_manager_form(:edit)
@@ -52,6 +59,7 @@ class Admin::ManagersController < Admin::BaseController
     if self_deactivation_attempt?(@manager, active: target_active)
       redirect_back fallback_location: admin_managers_path, alert: t("admin.flash.manager_self_deactivation_blocked")
     elsif @manager.update(active: target_active)
+      record_manager_activation_audit(@manager) if @manager.saved_change_to_active?
       redirect_back fallback_location: admin_managers_path,
         notice: t(target_active ? "admin.flash.manager_activated" : "admin.flash.manager_deactivated")
     else
@@ -107,5 +115,43 @@ class Admin::ManagersController < Admin::BaseController
 
   def manager_activation_params
     params.require(:manager).permit(:active)
+  end
+
+  def manager_created_audit_details(manager, password_setup_email_enqueued:)
+    changes = audit_saved_changes(manager, fields: %w[first_name last_name email employee_id active])
+
+    {
+      changed_fields: audit_changed_fields(changes),
+      changes: changes,
+      password_setup_email_enqueued: password_setup_email_enqueued
+    }
+  end
+
+  def record_manager_update_audit(manager)
+    changes = audit_saved_changes(manager, fields: %w[first_name last_name email employee_id active])
+    active_changed = changes.delete("active")
+
+    record_manager_activation_audit(manager) if active_changed
+
+    record_audit_update!(
+      author: current_manager,
+      recipient: manager,
+      kind: "manager.updated",
+      changes: changes
+    )
+  end
+
+  def record_manager_activation_audit(manager)
+    previous_active, active = manager.saved_change_to_active
+
+    record_audit_action!(
+      author: current_manager,
+      recipient: manager,
+      kind: active ? "manager.activated" : "manager.deactivated",
+      extra_info: {
+        changed_fields: [ "active" ],
+        changes: { active: { from: previous_active, to: active } }
+      }
+    )
   end
 end

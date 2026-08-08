@@ -71,6 +71,11 @@ class Admin::CorrectionsController < Admin::BaseController
     end
 
     if assignment_valid && create_and_approve_correction(@correction)
+      record_admin_correction_audit(
+        @correction,
+        "swipe_correction.created_and_approved",
+        extra_info: { origin: "admin_create" }
+      )
       redirect_to admin_correction_path(@correction), notice: t("admin.flash.correction_created_and_approved")
     else
       @correction.errors.add(:base, t("admin.corrections.form.invalid")) if !assignment_valid && @correction.errors.empty?
@@ -96,6 +101,11 @@ class Admin::CorrectionsController < Admin::BaseController
     end
 
     if review_pending_correction_from_edit(@correction)
+      record_admin_correction_audit(
+        @reviewed_correction,
+        @review_audit_kind,
+        extra_info: @review_audit_extra_info
+      )
       redirect_to admin_correction_path(@reviewed_correction), notice: @review_notice
     else
       load_correction_form_context
@@ -113,6 +123,7 @@ class Admin::CorrectionsController < Admin::BaseController
       end
 
       approve_correction(correction, validator_comments: review_validator_comments(:approved))
+      record_admin_correction_audit(correction, "swipe_correction.approved")
       redirect_back fallback_location: admin_corrections_path, notice: t("admin.flash.correction_approved")
     else
       redirect_back fallback_location: admin_corrections_path, alert: t("admin.flash.correction_already_reviewed")
@@ -133,6 +144,7 @@ class Admin::CorrectionsController < Admin::BaseController
         validator: current_manager,
         validator_comments: review_validator_comments(:rejected)
       )
+      record_admin_correction_audit(correction, "swipe_correction.rejected")
       redirect_back fallback_location: admin_corrections_path, notice: t("admin.flash.correction_rejected")
     else
       redirect_back fallback_location: admin_corrections_path, alert: t("admin.flash.correction_already_reviewed")
@@ -402,6 +414,8 @@ class Admin::CorrectionsController < Admin::BaseController
       )
       @reviewed_correction = correction
       @review_notice = t("admin.flash.correction_approved")
+      @review_audit_kind = "swipe_correction.approved"
+      @review_audit_extra_info = { origin: "admin_edit" }
     end
 
     true
@@ -432,6 +446,12 @@ class Admin::CorrectionsController < Admin::BaseController
 
     @reviewed_correction = @approved_correction
     @review_notice = t("admin.flash.correction_approved_with_modifications")
+    @review_audit_kind = "swipe_correction.approved_with_modifications"
+    @review_audit_extra_info = {
+      origin: "admin_edit",
+      original_correction_id: correction.id,
+      replacement_correction_id: @approved_correction.id
+    }
   end
 
   def correction_details_changed?(previous_details, next_details)
@@ -505,5 +525,14 @@ class Admin::CorrectionsController < Admin::BaseController
     return if requested_swipe["hour"].blank?
 
     Time.zone.parse("#{correction.day.iso8601} #{requested_swipe["hour"]}")
+  end
+
+  def record_admin_correction_audit(correction, kind, extra_info: {})
+    record_audit_action!(
+      author: current_manager,
+      recipient: correction.employee,
+      kind: kind,
+      extra_info: audit_correction_details(correction, extra_info: extra_info)
+    )
   end
 end

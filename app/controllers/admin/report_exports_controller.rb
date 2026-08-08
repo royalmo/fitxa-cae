@@ -27,6 +27,13 @@ class Admin::ReportExportsController < Admin::BaseController
       return
     end
 
+    record_audit_action!(
+      author: current_manager,
+      recipient: current_manager,
+      kind: "report_export.downloaded",
+      extra_info: audit_report_export_details(report_export)
+    )
+
     send_data artifact_data(report_export),
       filename: report_export.filename,
       type: report_export.content_type,

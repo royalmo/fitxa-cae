@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
 
   include EmployeeAuthentication
   include ManagerAuthentication
+  include AuditRecording
 
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern, unless: :browser_check_skipped?

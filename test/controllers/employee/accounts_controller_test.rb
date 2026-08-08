@@ -194,6 +194,12 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".account-hr-flash .flash-close[aria-label='Tancar avís'][data-action='dismissible#dismiss']", text: "×"
     assert_no_match "Vacances pendents", response.body
     assert_no_match "Necessito revisar els dies disponibles.", response.body
+
+    audit_action = AuditAction.find_by!(kind: "human_resources_contact.submitted")
+    assert_equal employee, audit_action.author
+    assert_equal employee, audit_action.recipient
+    assert_equal "Vacances pendents", audit_action.extra_info.fetch("subject")
+    assert_not_includes audit_action.extra_info.to_s, "Necessito revisar els dies disponibles."
   end
 
   test "keeps human resources contact form values when message is blank" do

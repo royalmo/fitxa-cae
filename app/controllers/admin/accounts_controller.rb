@@ -7,6 +7,7 @@ class Admin::AccountsController < Admin::BaseController
     @manager = current_manager
 
     if @manager.update(manager_profile_params)
+      record_manager_self_email_change_audit(@manager) if @manager.saved_change_to_email?
       redirect_to admin_account_path, notice: t("admin.flash.account_updated")
     else
       @account_error_context = :profile
@@ -19,6 +20,7 @@ class Admin::AccountsController < Admin::BaseController
     assign_password_change
 
     if @manager.errors.empty? && @manager.save
+      record_manager_password_change_audit(@manager, origin: "profile_page")
       redirect_to admin_account_path, notice: t("admin.flash.account_updated")
     else
       @account_error_context = :password
@@ -49,5 +51,33 @@ class Admin::AccountsController < Admin::BaseController
     end
 
     @manager.password = account_password_params[:password]
+  end
+
+  def record_manager_self_email_change_audit(manager)
+    previous_email, email = manager.saved_change_to_email
+
+    record_audit_action!(
+      author: manager,
+      recipient: manager,
+      kind: "manager.self_email_changed",
+      extra_info: {
+        changed_fields: [ "email" ],
+        changes: { email: { from: previous_email, to: email } },
+        old_email: previous_email,
+        new_email: email
+      }
+    )
+  end
+
+  def record_manager_password_change_audit(manager, origin:)
+    record_audit_action!(
+      author: manager,
+      recipient: manager,
+      kind: "manager.password_changed",
+      extra_info: {
+        changed_fields: [ "password" ],
+        origin: origin
+      }
+    )
   end
 end

@@ -616,51 +616,6 @@ ca:
         format: 'Format: data, autora, receptora, tipus, descripció, detalls.'
         limit: Registres a descarregar
         confirm: Exportar CSV
-      fields:
-        active: estat
-        email: correu
-        employee_id: persona vinculada
-        first_name: nom
-        last_name: cognoms
-        password: contrasenya
-        password_digest: contrasenya
-        phone: telèfon
-        tags: etiquetes
-      details:
-        default: "%{kind}: %{recipient_name}."
-        updated:
-          employee: Actualitzada la persona %{recipient_name}.
-          manager: Actualitzat el responsable %{recipient_name}.
-          employee_enabled: Activada la persona %{recipient_name}.
-          employee_disabled: Desactivada la persona %{recipient_name}.
-          manager_enabled: Activat el responsable %{recipient_name}.
-          manager_disabled: Desactivat el responsable %{recipient_name}.
-          password: Canviada la contrasenya de %{recipient_name}.
-          field: Actualitzat el camp %{field} de %{recipient_name}.
-        swipe_correction:
-          created: Creada una correcció de fitxatge per a %{recipient_name}.
-          created_with_day: Creada una correcció de fitxatge per a %{recipient_name}
-            del dia %{day}.
-          updated: Actualitzada una correcció de fitxatge de %{recipient_name}.
-          updated_with_day: Actualitzada una correcció de fitxatge de %{recipient_name}
-            del dia %{day}.
-          approved: Aprovada una correcció de fitxatge de %{recipient_name}.
-          approved_with_day: Aprovada una correcció de fitxatge de %{recipient_name}
-            del dia %{day}.
-          rejected: Rebutjada una correcció de fitxatge de %{recipient_name}.
-          rejected_with_day: Rebutjada una correcció de fitxatge de %{recipient_name}
-            del dia %{day}.
-          default: "%{kind} de %{recipient_name}."
-      kinds:
-        employee:
-          updated: Persona actualitzada
-        manager:
-          updated: Responsable actualitzat
-        swipe_correction:
-          approved: Correcció aprovada
-          rejected: Correcció rebutjada
-          created: Correcció creada
-          updated: Correcció actualitzada
     managers:
       index:
         title: Responsables

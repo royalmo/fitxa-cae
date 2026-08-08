@@ -9,6 +9,7 @@ class Employee::AccountsController < ApplicationController
     @employee = current_employee
 
     if @employee.update(account_contact_params)
+      record_employee_profile_update_audit(@employee)
       redirect_to account_path, notice: t("employee.flash.account_updated")
     else
       @account_error_context = :contact
@@ -21,6 +22,7 @@ class Employee::AccountsController < ApplicationController
     assign_password_change
 
     if @employee.errors.empty? && @employee.save
+      record_employee_password_change_audit(@employee, origin: "profile_page")
       redirect_to account_path, notice: t("employee.flash.account_updated")
     else
       @account_error_context = :password
@@ -42,6 +44,16 @@ class Employee::AccountsController < ApplicationController
     HumanResourcesContactMailer
       .contact_request(@employee, subject: @hr_contact_form[:subject], body: @hr_contact_form[:message])
       .deliver_later
+    record_audit_action!(
+      author: @employee,
+      recipient: @employee,
+      kind: "human_resources_contact.submitted",
+      extra_info: {
+        subject: @hr_contact_form[:subject].to_s,
+        delivery: "email",
+        enqueued: true
+      }
+    )
 
     redirect_to account_path(anchor: "human_resources_contact"), flash: {
       hr_contact_notice: t(".sent")
@@ -88,5 +100,28 @@ class Employee::AccountsController < ApplicationController
     end
 
     @employee.password = account_password_params[:password]
+  end
+
+  def record_employee_profile_update_audit(employee)
+    changes = audit_saved_changes(employee, fields: %w[email phone])
+
+    record_audit_update!(
+      author: employee,
+      recipient: employee,
+      kind: "employee.profile_updated",
+      changes: changes
+    )
+  end
+
+  def record_employee_password_change_audit(employee, origin:)
+    record_audit_action!(
+      author: employee,
+      recipient: employee,
+      kind: "employee.password_changed",
+      extra_info: {
+        changed_fields: [ "password" ],
+        origin: origin
+      }
+    )
   end
 end

@@ -12,12 +12,30 @@ class Admin::AuditKindSearchController < Admin::BaseController
 
   def audit_kind_search_results
     query = params[:q].to_s.strip.downcase
-    kinds = AuditAction.distinct.order(:kind).pluck(:kind)
+    kinds = translated_audit_action_kinds
     return kinds.first(KIND_SEARCH_LIMIT) if query.blank?
 
     kinds.select do |kind|
       kind.downcase.include?(query) || audit_kind_label(kind).downcase.include?(query)
     end.first(KIND_SEARCH_LIMIT)
+  end
+
+  def translated_audit_action_kinds
+    translated_audit_action_kind_tree.flat_map do |namespace, entries|
+      audit_kind_keys(namespace, entries)
+    end.compact.sort
+  end
+
+  def translated_audit_action_kind_tree
+    I18n.t("audit_actions_texts", default: {}).with_indifferent_access
+  end
+
+  def audit_kind_keys(namespace, entries)
+    return [] unless entries.is_a?(Hash)
+
+    entries.filter_map do |key, value|
+      "#{namespace}.#{key}" if value.is_a?(Hash) && value.key?(:name)
+    end
   end
 
   def audit_kind_label(kind)
