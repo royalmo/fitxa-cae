@@ -14,7 +14,10 @@
 
 <% punch_duration = dashboard_duration_parts(@today_worked_seconds) %>
 
-<div class="today-layout">
+<div class="today-layout"
+  data-controller="dashboard-refresh"
+  data-dashboard-refresh-url-value="<%= dashboard_state_path %>"
+  data-dashboard-refresh-signature-value="<%= @dashboard_refresh_signature %>">
   <section class="today-punch-section" aria-label="<%= t(".title") %>">
     <% if @clock_state[:clocked_in] %>
       <%= button_to clock_out_path,

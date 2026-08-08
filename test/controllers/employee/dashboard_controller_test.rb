@@ -41,6 +41,7 @@ class Employee::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_select ".today-intro-meta", 0
     assert_select ".today-total", 0
     assert_select ".clock-time", 0
+    assert_select ".today-layout[data-controller='dashboard-refresh'][data-dashboard-refresh-url-value='#{dashboard_state_path}'][data-dashboard-refresh-signature-value]"
     assert_select ".today-punch-button.is-active[data-controller='punch-timer'][data-punch-timer-base-seconds-value='0'][data-punch-timer-started-at-value]"
     assert_select ".today-punch-button.is-active .icon[aria-hidden='true']"
     assert_select ".today-punch-button.is-active .today-punch-action-row .today-punch-label", text: "Sortir"
@@ -154,5 +155,38 @@ class Employee::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_select ".today-punch-duration-number.is-hours", text: "1"
     assert_select ".today-punch-duration-number[data-punch-timer-target='minutes']", text: "00"
     assert_select ".today-swipe-list .clocking-swipe.is-exit.is-pending-requested", text: "09:00"
+  end
+
+  test "state endpoint returns a stable signature until clock state changes" do
+    employee = create_employee(password: "1234")
+    employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 0), metadata: "employee_portal")
+
+    log_in_employee(employee)
+
+    first_signature = nil
+
+    travel_to Time.zone.local(2026, 7, 2, 10, 0) do
+      get dashboard_state_path
+
+      assert_response :success
+      assert_equal "application/json", response.media_type
+      assert_includes response.headers.fetch("Cache-Control"), "no-cache"
+
+      first_signature = JSON.parse(response.body).fetch("signature")
+    end
+
+    travel_to Time.zone.local(2026, 7, 2, 10, 0, 30) do
+      get dashboard_state_path
+
+      assert_response :success
+      assert_equal first_signature, JSON.parse(response.body).fetch("signature")
+
+      employee.swipes.create!(kind: :exit, swipe_at: Time.current, metadata: "employee_portal")
+
+      get dashboard_state_path
+
+      assert_response :success
+      assert_not_equal first_signature, JSON.parse(response.body).fetch("signature")
+    end
   end
 end

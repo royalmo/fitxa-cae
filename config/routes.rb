@@ -42,6 +42,7 @@ Rails.application.routes.draw do
   delete "logout" => "employee/sessions#destroy", as: :logout
 
   root "employee/dashboard#show"
+  get "dashboard/state" => "employee/dashboard#state", as: :dashboard_state
 
   get "clockings" => "employee/clockings#index", as: :clockings
   post "clock-in" => "employee/clockings#clock_in", as: :clock_in

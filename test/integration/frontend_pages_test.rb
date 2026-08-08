@@ -17,6 +17,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".today-punch-button .today-punch-duration-number.is-hours[data-punch-timer-target='hours']", text: "0"
     assert_select ".today-punch-button .today-punch-duration-number[data-punch-timer-target='minutes']", text: "00"
     assert_select ".today-punch-button .today-punch-duration-number[data-punch-timer-target='seconds']", text: "00"
+    assert_select ".today-layout[data-controller='dashboard-refresh'][data-dashboard-refresh-url-value='#{dashboard_state_path}'][data-dashboard-refresh-signature-value]"
     assert_select "html[data-pwa='employee'][data-employee-signed-in='true'][data-employee-theme-preference='system'][data-theme-preference='system']"
     assert_select "body[data-controller~='employee-theme'][data-controller~='submit-feedback'][data-employee-theme-preference-value='system'][data-employee-theme-signed-in-value='true']"
     assert_select "meta[name='color-scheme'][content='light dark']"
@@ -52,6 +53,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Fitxatges | FitxaCAE"
     assert_select "h1", text: "Historial"
+    assert_select "[data-controller~='dashboard-refresh']", 0
 
     get corrections_path
     assert_response :success
