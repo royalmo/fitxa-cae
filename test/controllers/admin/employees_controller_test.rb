@@ -200,6 +200,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "button[type='submit']", text: "Crear"
     assert_select "button[type='submit']", text: "Desar", count: 0
     assert_select "input[type='password'][name='employee[password]']", count: 0
+    assert_select "input[type='text'][name='employee[national_id]']:not([disabled])"
     assert_select "select[name='employee[active]']", count: 0
     assert_select "fieldset.admin-status-radio-fieldset" do
       assert_select "legend.form-label", text: "Estat"
@@ -238,6 +239,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "button[type='submit']", text: "Desar"
     assert_select "button[type='submit']", text: "Crear", count: 0
     assert_select "input[type='password'][name='employee[password]']", count: 0
+    assert_select "input[type='text'][name='employee[national_id]'][value='#{employee.national_id}']:not([disabled])"
     assert_select "select[name='employee[active]']", count: 0
     assert_select "fieldset.admin-status-radio-fieldset" do
       assert_select "legend.form-label", text: "Estat"
@@ -261,6 +263,19 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-tag-multi-search-selection[style*='#16a34a']" do
       assert_select "input[type='hidden'][name='employee[tag_ids][]'][value='#{inactive_tag.id}']"
       assert_select "button.admin-tag-multi-search-remove[aria-label='Eliminar etiqueta archived'] svg.icon"
+    end
+  end
+
+  test "renders old employee national id field disabled with tooltip" do
+    employee = create_employee(first_name: "Iria", last_name: "Mas", national_id: valid_dni(41_000_010))
+    employee.update_columns(created_at: 25.hours.ago)
+    tooltip = "Crea una nova persona si vols canvia el DNI/NIE."
+
+    get edit_admin_employee_path(employee)
+
+    assert_response :success
+    assert_select "span[data-controller='bootstrap-tooltip'][data-bs-toggle='tooltip'][data-bs-placement='top'][title='#{tooltip}'][tabindex='0']" do
+      assert_select "input[type='text'][name='employee[national_id]'][value='#{employee.national_id}'][disabled='disabled'][title='#{tooltip}']"
     end
   end
 
@@ -369,6 +384,46 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "irene@example.test", employee.email
     assert_not employee.active?
     assert_empty employee.tags
+  end
+
+  test "updates an old employee while keeping national id omitted by disabled field" do
+    employee = create_employee(first_name: "Iria", last_name: "Mas", national_id: valid_dni(41_000_011))
+    employee.update_columns(created_at: 25.hours.ago)
+
+    patch admin_employee_path(employee), params: {
+      employee: {
+        first_name: "Irene",
+        last_name: "Mas",
+        active: "0",
+        email: "irene@example.test"
+      }
+    }
+
+    assert_redirected_to admin_employees_path
+    employee.reload
+    assert_equal "Irene", employee.first_name
+    assert_equal valid_dni(41_000_011), employee.national_id
+    assert_equal "irene@example.test", employee.email
+  end
+
+  test "rejects national id changes for old employees" do
+    employee = create_employee(first_name: "Iria", last_name: "Mas", national_id: valid_dni(41_000_012))
+    employee.update_columns(created_at: 25.hours.ago)
+
+    patch admin_employee_path(employee), params: {
+      employee: {
+        first_name: "Irene",
+        last_name: "Mas",
+        national_id: valid_dni(41_000_013),
+        active: "1"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select ".error-summary li", text: "DNI no es pot canviar passades 24 hores de la creació"
+    employee.reload
+    assert_equal "Iria", employee.first_name
+    assert_equal valid_dni(41_000_012), employee.national_id
   end
 
   test "activates and deactivates employees" do

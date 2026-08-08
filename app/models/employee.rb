@@ -10,6 +10,7 @@ class Employee < ApplicationRecord
   LOGIN_CODE_LENGTH = LOGIN_CODE_RANDOM_DIGITS + 1
   LOGIN_CODE_CHECKSUM = "weighted_mod10_sum"
   LOGIN_CODE_CHECKSUM_WEIGHTS = [ 2, 1, 2, 1, 2, 1 ].freeze
+  NATIONAL_ID_EDIT_WINDOW = 24.hours
   THEME_PREFERENCES = %w[light dark system].freeze
   DEFAULT_THEME_PREFERENCE = "system"
 
@@ -30,6 +31,7 @@ class Employee < ApplicationRecord
 
   validates :first_name, :national_id, presence: true
   validate :national_id_has_valid_spanish_check_letter
+  validate :national_id_change_allowed, if: :will_save_change_to_national_id?
   validates :active, inclusion: { in: [ true, false ] }
 
   def self.normalize_national_id(national_id)
@@ -86,6 +88,10 @@ class Employee < ApplicationRecord
     normalized_theme_preference = theme_preference.to_s.presence_in(THEME_PREFERENCES) || DEFAULT_THEME_PREFERENCE
 
     self.settings = settings.merge("theme" => normalized_theme_preference)
+  end
+
+  def national_id_locked?(at: Time.current)
+    persisted? && created_at.present? && created_at <= at - NATIONAL_ID_EDIT_WINDOW
   end
 
   def latest_swipe(at: Time.current, on: nil)
@@ -176,6 +182,10 @@ class Employee < ApplicationRecord
     return if self.class.valid_national_id?(national_id)
 
     errors.add(:national_id, :invalid)
+  end
+
+  def national_id_change_allowed
+    errors.add(:national_id, :locked_after_creation) if national_id_locked?
   end
 
   def self.expected_national_id_letter(national_id)

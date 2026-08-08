@@ -32,6 +32,10 @@ ca:
               self_deactivation: no es pot desactivar per al teu propi compte
             employee_id:
               taken: ja està assignada a un altre responsable
+        employee:
+          attributes:
+            national_id:
+              locked_after_creation: no es pot canviar passades 24 hores de la creació
         tag:
           attributes:
             name:

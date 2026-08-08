@@ -61,6 +61,28 @@ class EmployeeTest < ActiveSupport::TestCase
     assert_model_error employee, :national_id, :invalid
   end
 
+  test "locks national id changes 24 hours after creation" do
+    created_at = Time.zone.local(2026, 7, 1, 8, 0, 0)
+    employee = nil
+
+    travel_to created_at do
+      employee = create_employee(national_id: valid_dni(12_345_678))
+    end
+
+    travel_to employee.created_at + 23.hours + 59.minutes do
+      assert_not_predicate employee, :national_id_locked?
+      assert employee.update(national_id: valid_dni(12_345_679))
+    end
+
+    travel_to employee.created_at + 24.hours do
+      assert_predicate employee, :national_id_locked?
+      employee.national_id = valid_dni(12_345_680)
+
+      assert_not employee.valid?
+      assert_model_error employee, :national_id, :locked_after_creation
+    end
+  end
+
   test "connects to manager, swipes, corrections, tags and audit actions" do
     employee = create_employee
     manager = create_manager(employee: employee)

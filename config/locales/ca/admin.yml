@@ -200,6 +200,7 @@ ca:
         first_name: Nom
         last_name: Cognoms
         national_id: DNI/NIE
+        national_id_locked_tooltip: Crea una nova persona si vols canvia el DNI/NIE.
         password: Contrasenya
         phone: Telèfon
         status: Estat
