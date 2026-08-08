@@ -1,8 +1,13 @@
 require "test_helper"
 
 class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
-    log_in_manager
+    clear_enqueued_jobs
+    clear_performed_jobs
+    @manager = create_manager
+    log_in_manager(@manager)
   end
 
   test "renders activation bulk action page" do
@@ -12,7 +17,7 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Activar i desactivar massivament | FitxaCAE Admin"
     assert_select "h1", text: "Activar i desactivar massivament"
     assert_select "a.btn.border-0[href='#{admin_employees_path}']", text: "Tornar"
-    assert_select ".admin-bulk-action[data-controller='bulk-national-ids'][data-bulk-national-ids-simulate-url-value='#{simulate_bulk_activation_admin_employees_path}'][data-bulk-national-ids-run-no-affected-label-value='Aquesta acció no afectarà cap persona.']" do
+    assert_select ".admin-bulk-action[data-controller='bulk-national-ids'][data-bulk-national-ids-simulate-url-value='#{simulate_bulk_activation_admin_employees_path}'][data-bulk-national-ids-run-url-value='#{run_bulk_activation_admin_employees_path}'][data-bulk-national-ids-run-no-affected-label-value='Aquesta acció no afectarà cap persona.']" do
       assert_select "form[action='#{run_bulk_activation_admin_employees_path}'][method='post']" do
         assert_select ".admin-bulk-action-layout" do
           assert_select ".admin-bulk-action-form-card.card.shadow-sm > .card-body.admin-bulk-action-form" do
@@ -53,7 +58,14 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
         assert_select "[data-bulk-national-ids-target='results'][hidden]", count: 0
         assert_select "#adminEmployeeBulkActivationConfirmModal.modal.fade" do
           assert_select ".modal-title", text: "Executar acció massiva"
-          assert_select "button[type='submit']", text: "Sí, executar"
+          assert_select "button[type='button'][data-bulk-national-ids-target='confirmRunButton'][data-action='bulk-national-ids#startRun']",
+            text: "Sí, executar"
+        end
+        assert_select "#adminEmployeeBulkActivationConfirmModalProgress.modal.fade" do
+          assert_select ".modal-title", text: "Executant l'acció massiva"
+          assert_select ".progress[data-bulk-national-ids-target='runProgress']"
+          assert_select ".progress-bar[data-bulk-national-ids-target='runProgressBar']", text: "0%"
+          assert_select "[data-bulk-national-ids-target='runStatusMessage']"
         end
       end
     end
@@ -67,7 +79,7 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Afegir etiquetes | FitxaCAE Admin"
     assert_select "h1", text: "Afegir etiquetes"
     assert_select "a.btn.border-0[href='#{admin_employees_path}']", text: "Tornar"
-    assert_select ".admin-bulk-action[data-controller='bulk-tags'][data-bulk-tags-simulate-url-value='#{simulate_bulk_tags_admin_employees_path}']" do
+    assert_select ".admin-bulk-action[data-controller='bulk-tags'][data-bulk-tags-simulate-url-value='#{simulate_bulk_tags_admin_employees_path}'][data-bulk-tags-run-url-value='#{run_bulk_tags_admin_employees_path}']" do
       assert_select "form[action='#{run_bulk_tags_admin_employees_path}'][method='post']" do
         assert_select ".admin-bulk-action-form-card" do
           assert_select "legend.form-label", text: "Etiquetes a afegir"
@@ -89,7 +101,14 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
         end
         assert_select "#adminEmployeeBulkTagsConfirmModal.modal.fade" do
           assert_select ".modal-title", text: "Executar acció massiva"
-          assert_select "button[type='submit']", text: "Sí, executar"
+          assert_select "button[type='button'][data-bulk-tags-target='confirmRunButton'][data-action='bulk-tags#startRun']",
+            text: "Sí, executar"
+        end
+        assert_select "#adminEmployeeBulkTagsConfirmModalProgress.modal.fade" do
+          assert_select ".modal-title", text: "Executant l'acció massiva"
+          assert_select ".progress[data-bulk-tags-target='runProgress']"
+          assert_select ".progress-bar[data-bulk-tags-target='runProgressBar']", text: "0%"
+          assert_select "[data-bulk-tags-target='runStatusMessage']"
         end
       end
     end
@@ -201,7 +220,7 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "No pots afegir i treure la mateixa etiqueta.", JSON.parse(response.body).fetch("error")
   end
 
-  test "runs bulk tag changes for active employees by default" do
+  test "enqueues bulk tag changes for active employees by default" do
     add_tag = Tag.create!(name: "Office", color: "#2563eb", active: true)
     remove_tag = Tag.create!(name: "Warehouse", color: "#16a34a", active: true)
     active_employee = create_employee(national_id: valid_dni(44_100_007), active: true)
@@ -209,113 +228,165 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     active_employee.tags << remove_tag
     inactive_employee.tags << remove_tag
 
-    post run_bulk_tags_admin_employees_path, params: {
-      national_ids: [ active_employee.national_id, inactive_employee.national_id ],
-      bulk_tags: { add_tag_ids: [ add_tag.id ], remove_tag_ids: [ remove_tag.id ], include_inactive: "0" }
-    }
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
+      post run_bulk_tags_admin_employees_path,
+        params: {
+          national_ids: [ active_employee.national_id, inactive_employee.national_id ],
+          bulk_tags: { add_tag_ids: [ add_tag.id ], remove_tag_ids: [ remove_tag.id ], include_inactive: "0" }
+        },
+        as: :json
+    end
 
-    assert_redirected_to admin_employees_path
+    assert_response :accepted
+    payload = JSON.parse(response.body)
+    employee_bulk_action_run = EmployeeBulkActionRun.find(payload.fetch("id"))
+    assert_equal @manager, employee_bulk_action_run.manager
+    assert_equal "tags", employee_bulk_action_run.kind
+    assert_equal "queued", payload.fetch("status")
+    assert_equal admin_employee_bulk_action_run_path(employee_bulk_action_run), payload.fetch("status_url")
+    assert_not_includes active_employee.reload.tags, add_tag
+    assert_includes active_employee.tags, remove_tag
+
+    perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+
     assert_includes active_employee.reload.tags, add_tag
     assert_not_includes active_employee.tags, remove_tag
     assert_not_includes inactive_employee.reload.tags, add_tag
     assert_includes inactive_employee.tags, remove_tag
-    assert_equal "S'han actualitzat les etiquetes d'1 persona.", flash[:notice]
+    assert_equal "S'han actualitzat les etiquetes d'1 persona.", employee_bulk_action_run.reload.result_message
   end
 
-  test "redirects bulk tag changes with no affected employees" do
+  test "rejects bulk tag changes with no affected employees" do
     tag = Tag.create!(name: "Office", color: "#2563eb", active: true)
     employee = create_employee(national_id: valid_dni(44_100_009), active: true)
     employee.tags << tag
 
-    post run_bulk_tags_admin_employees_path, params: {
-      national_ids: [ employee.national_id ],
-      bulk_tags: { add_tag_ids: [ tag.id ] }
-    }
+    assert_no_enqueued_jobs only: ProcessEmployeeBulkActionRunJob do
+      post run_bulk_tags_admin_employees_path,
+        params: {
+          national_ids: [ employee.national_id ],
+          bulk_tags: { add_tag_ids: [ tag.id ] }
+        },
+        as: :json
+    end
 
-    assert_redirected_to bulk_tags_admin_employees_path
-    assert_equal "Aquesta acció no afectarà cap persona.", flash[:alert]
+    assert_response :unprocessable_entity
+    assert_equal "Aquesta acció no afectarà cap persona.", JSON.parse(response.body).fetch("error")
   end
 
-  test "runs activation bulk action" do
+  test "enqueues activation bulk action" do
     active_employee = create_employee(national_id: valid_dni(44_000_004), active: true)
     inactive_employee = create_employee(national_id: valid_dni(44_000_005), active: false)
 
-    post run_bulk_activation_admin_employees_path, params: {
-      national_ids: [ active_employee.national_id, inactive_employee.national_id, valid_dni(44_000_006) ],
-      bulk_action: { action: "activate" }
-    }
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
+      post run_bulk_activation_admin_employees_path,
+        params: {
+          national_ids: [ active_employee.national_id, inactive_employee.national_id, valid_dni(44_000_006) ],
+          bulk_action: { action: "activate" }
+        },
+        as: :json
+    end
 
-    assert_redirected_to admin_employees_path
+    assert_response :accepted
+    payload = JSON.parse(response.body)
+    employee_bulk_action_run = EmployeeBulkActionRun.find(payload.fetch("id"))
+    assert_equal @manager, employee_bulk_action_run.manager
+    assert_equal "activation", employee_bulk_action_run.kind
+    assert_equal "queued", payload.fetch("status")
+    assert_equal admin_employee_bulk_action_run_path(employee_bulk_action_run), payload.fetch("status_url")
+    assert_not inactive_employee.reload.active?
+
+    perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+
     assert_predicate active_employee.reload, :active?
     assert_predicate inactive_employee.reload, :active?
     assert_predicate inactive_employee.current_employment_period, :open?
-    assert_equal "S'ha activat 1 persona.", flash[:notice]
+    assert_equal "S'ha activat 1 persona.", employee_bulk_action_run.reload.result_message
   end
 
-  test "runs deactivation bulk action" do
+  test "enqueues deactivation bulk action" do
     active_employee = create_employee(national_id: valid_dni(44_000_007), active: true)
     inactive_employee = create_employee(national_id: valid_dni(44_000_008), active: false)
     active_employee.current_employment_period.update!(started_at: 2.days.ago)
 
-    post run_bulk_activation_admin_employees_path, params: {
-      national_ids: [ active_employee.national_id, inactive_employee.national_id ],
-      bulk_action: { action: "deactivate" }
-    }
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
+      post run_bulk_activation_admin_employees_path,
+        params: {
+          national_ids: [ active_employee.national_id, inactive_employee.national_id ],
+          bulk_action: { action: "deactivate" }
+        },
+        as: :json
+    end
 
-    assert_redirected_to admin_employees_path
+    assert_response :accepted
+
+    perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+
+    employee_bulk_action_run = EmployeeBulkActionRun.order(:created_at).last
     assert_not active_employee.reload.active?
     assert_not inactive_employee.reload.active?
     assert_nil active_employee.current_employment_period
     assert_not_nil active_employee.employment_periods.sole.ended_at
-    assert_equal "S'ha desactivat 1 persona.", flash[:notice]
+    assert_equal "S'ha desactivat 1 persona.", employee_bulk_action_run.result_message
   end
 
-  test "redirects activation bulk actions with no affected employees" do
+  test "rejects activation bulk actions with no affected employees" do
     employee = create_employee(national_id: valid_dni(44_000_016), active: true)
 
-    post run_bulk_activation_admin_employees_path, params: {
-      national_ids: [ employee.national_id ],
-      bulk_action: { action: "activate" }
-    }
+    assert_no_enqueued_jobs only: ProcessEmployeeBulkActionRunJob do
+      post run_bulk_activation_admin_employees_path,
+        params: {
+          national_ids: [ employee.national_id ],
+          bulk_action: { action: "activate" }
+        },
+        as: :json
+    end
 
-    assert_redirected_to bulk_activation_admin_employees_path
+    assert_response :unprocessable_entity
     assert_predicate employee.reload, :active?
-    assert_equal "Aquesta acció no afectarà cap persona.", flash[:alert]
+    assert_equal "Aquesta acció no afectarà cap persona.", JSON.parse(response.body).fetch("error")
   end
 
-  test "redirects invalid activation bulk action requests" do
+  test "rejects invalid activation bulk action requests" do
     employee = create_employee(national_id: valid_dni(44_000_009), active: true)
 
-    post run_bulk_activation_admin_employees_path, params: {
-      national_ids: [ employee.national_id ],
-      bulk_action: { action: "" }
-    }
+    post run_bulk_activation_admin_employees_path,
+      params: {
+        national_ids: [ employee.national_id ],
+        bulk_action: { action: "" }
+      },
+      as: :json
 
-    assert_redirected_to bulk_activation_admin_employees_path
+    assert_response :unprocessable_entity
     assert_predicate employee.reload, :active?
-    assert_equal "Revisa la llista de DNI/NIE i l'acció seleccionada.", flash[:alert]
+    assert_equal "Revisa la llista de DNI/NIE i l'acció seleccionada.", JSON.parse(response.body).fetch("error")
   end
 
-  test "redirects activation bulk actions with the first invalid national id" do
-    post run_bulk_activation_admin_employees_path, params: {
-      national_ids: [ valid_dni(44_000_011), "bad" ],
-      bulk_action: { action: "activate" }
-    }
+  test "rejects activation bulk actions with the first invalid national id" do
+    post run_bulk_activation_admin_employees_path,
+      params: {
+        national_ids: [ valid_dni(44_000_011), "bad" ],
+        bulk_action: { action: "activate" }
+      },
+      as: :json
 
-    assert_redirected_to bulk_activation_admin_employees_path
-    assert_equal "No s'ha pogut simular la llista. Primer DNI/NIE no vàlid: BAD.", flash[:alert]
+    assert_response :unprocessable_entity
+    assert_equal "No s'ha pogut simular la llista. Primer DNI/NIE no vàlid: BAD.",
+      JSON.parse(response.body).fetch("error")
   end
 
-  test "redirects activation bulk actions with the first duplicated national id" do
+  test "rejects activation bulk actions with the first duplicated national id" do
     duplicated_national_id = valid_dni(44_000_014)
 
-    post run_bulk_activation_admin_employees_path, params: {
-      national_ids: [ duplicated_national_id, valid_dni(44_000_015), duplicated_national_id ],
-      bulk_action: { action: "activate" }
-    }
+    post run_bulk_activation_admin_employees_path,
+      params: {
+        national_ids: [ duplicated_national_id, valid_dni(44_000_015), duplicated_national_id ],
+        bulk_action: { action: "activate" }
+      },
+      as: :json
 
-    assert_redirected_to bulk_activation_admin_employees_path
+    assert_response :unprocessable_entity
     assert_equal "No s'ha pogut simular la llista. El DNI/NIE #{duplicated_national_id} està duplicat 2 vegades.",
-      flash[:alert]
+      JSON.parse(response.body).fetch("error")
   end
 end

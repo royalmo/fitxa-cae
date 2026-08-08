@@ -20,7 +20,7 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Importació | FitxaCAE Admin"
     assert_select "h1", text: "Importació massiva"
     assert_select "a.btn.border-0[href='#{admin_employees_path}']", text: "Tornar"
-    assert_select ".admin-bulk-action[data-controller='bulk-import'][data-bulk-import-simulate-url-value='#{simulate_admin_import_path}']" do
+    assert_select ".admin-bulk-action[data-controller='bulk-import'][data-bulk-import-simulate-url-value='#{simulate_admin_import_path}'][data-bulk-import-run-url-value='#{admin_import_path}']" do
       assert_select "form[action='#{admin_import_path}'][method='post']" do
         assert_select "input[type='hidden'][name='import[source]'][value='paste'][data-bulk-import-target='source']"
         assert_select "legend.form-label.small.text-body-secondary", text: "Etiquetes per a les noves persones (opcional)"
@@ -54,7 +54,14 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
         end
         assert_select "#adminImportConfirmModal.modal.fade" do
           assert_select ".modal-title", text: "Importar persones"
-          assert_select "button[type='submit']", text: "Sí, importar"
+          assert_select "button[type='button'][data-bulk-import-target='confirmRunButton'][data-action='bulk-import#startRun']",
+            text: "Sí, importar"
+        end
+        assert_select "#adminImportProgressModal.modal.fade" do
+          assert_select ".modal-title", text: "Executant l'acció massiva"
+          assert_select ".progress[data-bulk-import-target='runProgress']"
+          assert_select ".progress-bar[data-bulk-import-target='runProgressBar']", text: "0%"
+          assert_select "[data-bulk-import-target='runStatusMessage']"
         end
       end
     end
@@ -139,7 +146,7 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "La fila 1 té un DNI/NIE no vàlid: bad.", JSON.parse(response.body).fetch("error")
   end
 
-  test "creates importable employees from pasted data and attaches tags" do
+  test "enqueues pasted import and job creates employees and attaches tags" do
     tag = Tag.create!(name: "Formacio", color: "#16a34a", active: true)
     existing_employee = create_employee(national_id: valid_dni(45_000_005))
     first_national_id = valid_dni(45_000_006)
@@ -150,19 +157,30 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
       [ "Laia", "Riera", second_national_id, "laia@example.test", "600 555 666" ]
     ])
 
-    assert_difference -> { Employee.count }, 2 do
-      assert_enqueued_jobs 1 do
-        post admin_import_path, params: {
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
+      post admin_import_path,
+        params: {
           import: {
             source: "paste",
             pasted_data: content,
             tag_ids: [ tag.id ]
           }
-        }
-      end
+        },
+        as: :json
     end
 
-    assert_redirected_to admin_employees_path
+    assert_response :accepted
+    payload = JSON.parse(response.body)
+    employee_bulk_action_run = EmployeeBulkActionRun.find(payload.fetch("id"))
+    assert_equal "import", employee_bulk_action_run.kind
+    assert_equal admin_employee_bulk_action_run_path(employee_bulk_action_run), payload.fetch("status_url")
+    assert_nil Employee.find_by(national_id: first_national_id)
+
+    assert_difference -> { Employee.count }, 2 do
+      perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+    end
+
+    assert_enqueued_jobs 1, only: EmployeeWelcomeDeliveryJob
     assert_equal EmployeeWelcomeDeliveryJob, enqueued_jobs.last.fetch(:job)
 
     first_employee = Employee.find_by!(national_id: first_national_id)
@@ -176,20 +194,20 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ tag ], second_employee.tags.to_a
     assert_equal [ tag ], existing_employee.reload.tags.to_a
     assert_equal "Importació completada. Persones noves: 2. Persones existents amb etiquetes noves: 1.",
-      flash[:notice]
+      employee_bulk_action_run.reload.result_message
 
     perform_enqueued_jobs(only: EmployeeWelcomeDeliveryJob)
     assert_equal [ "ada@example.test", "laia@example.test" ], ActionMailer::Base.deliveries.map { |mail| mail.to.first }.sort
     assert_equal [ I18n.t("employee_welcome_mailer.welcome.subject") ], ActionMailer::Base.deliveries.map(&:subject).uniq
   end
 
-  test "creates employees from uploaded file" do
+  test "enqueues import from uploaded file" do
     national_id = valid_dni(45_000_008)
     uploaded_file = import_uploaded_file(import_csv([
       [ "Nora", "Vidal", national_id, "nora@example.test", "600 777 888" ]
     ]))
 
-    assert_difference -> { Employee.count }, 1 do
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
       post admin_import_path, params: {
         import: {
           source: "file",
@@ -198,72 +216,98 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to admin_employees_path
-    assert_equal "S'ha importat 1 persona.", flash[:notice]
+    assert_response :accepted
+    employee_bulk_action_run = EmployeeBulkActionRun.find(JSON.parse(response.body).fetch("id"))
+
+    assert_difference -> { Employee.count }, 1 do
+      perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+    end
+
+    assert_equal "S'ha importat 1 persona.", employee_bulk_action_run.reload.result_message
     assert_equal "Nora", Employee.find_by!(national_id: national_id).first_name
   ensure
     uploaded_file&.tempfile&.close!
   end
 
-  test "creates employees joining two surname columns" do
+  test "enqueues import joining two surname columns" do
     national_id = valid_dni(45_000_011)
     content = second_surname_import_csv([
       [ "Nora", "Vidal", "Puig", national_id, "nora@example.test", "600 777 888" ]
     ])
 
-    assert_difference -> { Employee.count }, 1 do
-      post admin_import_path, params: {
-        import: {
-          source: "paste",
-          allow_second_surname: "1",
-          pasted_data: content
-        }
-      }
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
+      post admin_import_path,
+        params: {
+          import: {
+            source: "paste",
+            allow_second_surname: "1",
+            pasted_data: content
+          }
+        },
+        as: :json
     end
 
-    assert_redirected_to admin_employees_path
+    assert_response :accepted
+
+    assert_difference -> { Employee.count }, 1 do
+      perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+    end
+
     assert_equal "Vidal Puig", Employee.find_by!(national_id: national_id).last_name
   end
 
-  test "adds selected tags to existing employees when no new employees are created" do
+  test "enqueues existing employee tag import when no new employees are created" do
     tag = Tag.create!(name: "Acollida existent", color: "#2563eb", active: true)
     existing_employee = create_employee(national_id: valid_dni(45_000_012))
     content = import_csv([
       [ "Aina", "Martinez", existing_employee.national_id, "aina@example.test", "600 333 444" ]
     ])
 
-    assert_no_difference -> { Employee.count } do
-      post admin_import_path, params: {
-        import: {
-          source: "paste",
-          pasted_data: content,
-          tag_ids: [ tag.id ]
-        }
-      }
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
+      post admin_import_path,
+        params: {
+          import: {
+            source: "paste",
+            pasted_data: content,
+            tag_ids: [ tag.id ]
+          }
+        },
+        as: :json
     end
 
-    assert_redirected_to admin_employees_path
+    assert_response :accepted
+    employee_bulk_action_run = EmployeeBulkActionRun.find(JSON.parse(response.body).fetch("id"))
+
+    assert_no_difference -> { Employee.count } do
+      perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+    end
+
     assert_equal [ tag ], existing_employee.reload.tags.to_a
-    assert_equal "S'han actualitzat les etiquetes d'1 persona existent.", flash[:notice]
+    assert_equal "S'han actualitzat les etiquetes d'1 persona existent.", employee_bulk_action_run.reload.result_message
   end
 
-  test "redirects import when no people can be created" do
+  test "rejects import when no people can be created" do
     existing_employee = create_employee(national_id: valid_dni(45_000_009))
     content = import_csv([
       [ "Aina", "Martinez", existing_employee.national_id, "aina@example.test", "600 333 444" ]
     ])
 
-    assert_no_difference -> { Employee.count } do
-      post admin_import_path, params: {
-        import: {
-          source: "paste",
-          pasted_data: content
-        }
-      }
+    assert_no_enqueued_jobs only: ProcessEmployeeBulkActionRunJob do
+      assert_no_difference -> { Employee.count } do
+        post admin_import_path,
+          params: {
+            import: {
+              source: "paste",
+              pasted_data: content
+            }
+          },
+          as: :json
+      end
     end
 
-    assert_redirected_to new_admin_import_path
-    assert_equal "Aquesta importació no crearà cap persona ni afegirà cap etiqueta.", flash[:alert]
+    assert_response :unprocessable_entity
+    assert_equal "Aquesta importació no crearà cap persona ni afegirà cap etiqueta.",
+      JSON.parse(response.body).fetch("error")
   end
 
   private

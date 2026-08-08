@@ -16,8 +16,11 @@
   class="admin-bulk-action"
   data-controller="bulk-import"
   data-bulk-import-simulate-url-value="<%= simulate_admin_import_path %>"
+  data-bulk-import-run-url-value="<%= admin_import_path %>"
   data-bulk-import-confirm-modal-id-value="adminImportConfirmModal"
   data-bulk-import-request-error-label-value="<%= t("admin.imports.errors.request_error") %>"
+  data-bulk-import-run-request-error-label-value="<%= t("admin.employee_bulk_action_runs.errors.start") %>"
+  data-bulk-import-run-poll-error-label-value="<%= t("admin.employee_bulk_action_runs.errors.poll") %>"
   data-bulk-import-missing-data-label-value="<%= t("admin.imports.new.missing_data") %>"
   data-bulk-import-run-requires-simulation-label-value="<%= t("admin.imports.new.run_requires_simulation") %>"
   data-bulk-import-run-no-affected-label-value="<%= t("admin.imports.errors.no_importable_people") %>"
@@ -213,12 +216,26 @@
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
               <%= t("shared.cancel") %>
             </button>
-            <%= button_tag type: :submit, class: "btn btn-danger", data: { submitting_label: t("shared.submitting.importing") } do %>
+            <%= button_tag type: :button,
+              class: "btn btn-danger",
+              data: {
+                bulk_import_target: "confirmRunButton",
+                action: "bulk-import#startRun"
+              } do %>
               <%= t(".confirm_run") %>
             <% end %>
           </div>
         </div>
       </div>
     </div>
+
+    <%= render "admin/shared/async_progress_modal",
+      modal_id: "adminImportProgressModal",
+      controller_name: "bulk-import",
+      target_prefix: "run",
+      hidden_action: "hidden.bs.modal->bulk-import#runModalHidden",
+      title: t("admin.employee_bulk_action_runs.modal.title"),
+      description: t("admin.employee_bulk_action_runs.modal.description"),
+      close_label: t("admin.employee_bulk_action_runs.modal.close") %>
   <% end %>
 </section>

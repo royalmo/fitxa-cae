@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import AsyncProgress from "controllers/async_progress"
 
 export default class extends Controller {
   static targets = [
@@ -14,14 +15,22 @@ export default class extends Controller {
     "affectedCount",
     "runButton",
     "runTooltip",
+    "confirmRunButton",
     "hiddenIds",
-    "confirmBody"
+    "confirmBody",
+    "runModal",
+    "runProgress",
+    "runProgressBar",
+    "runStatusMessage"
   ]
 
   static values = {
     simulateUrl: String,
+    runUrl: String,
     confirmModalId: String,
     requestErrorLabel: String,
+    runRequestErrorLabel: String,
+    runPollErrorLabel: String,
     missingNationalIdsLabel: String,
     missingActionLabel: String,
     missingBothLabel: String,
@@ -35,6 +44,15 @@ export default class extends Controller {
     this.simulation = null
     this.simulatedSignature = ""
     this.disposeTooltips = this.disposeTooltips.bind(this)
+    this.progress = new AsyncProgress(this, {
+      modalTargetName: "runModal",
+      progressTargetName: "runProgress",
+      progressBarTargetName: "runProgressBar",
+      statusMessageTargetName: "runStatusMessage",
+      startErrorLabel: this.runRequestErrorLabelValue,
+      pollErrorLabel: this.runPollErrorLabelValue,
+      onSuccessClosed: () => this.resetAfterSuccessfulRun()
+    })
     this.resetSimulationPanel()
     this.input()
     document.addEventListener("turbo:before-cache", this.disposeTooltips)
@@ -43,6 +61,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("turbo:before-cache", this.disposeTooltips)
     this.disposeTooltips()
+    this.progress.disconnect()
   }
 
   input() {
@@ -105,6 +124,29 @@ export default class extends Controller {
     const modalElement = document.getElementById(this.confirmModalIdValue)
     const Modal = window.bootstrap?.Modal
     if (modalElement && Modal) Modal.getOrCreateInstance(modalElement).show()
+  }
+
+  async startRun(event) {
+    event.preventDefault()
+    if (!this.currentSimulationReady) return
+
+    this.setConfirmLoading(true)
+    this.disableRunButton()
+    this.hideConfirmModal()
+    this.hideError()
+
+    try {
+      await this.progress.start(this.runUrlValue, this.runPayload())
+    } catch (_error) {
+      // The progress modal renders request and polling errors.
+    } finally {
+      this.setConfirmLoading(false)
+      if (!this.progress.running && !this.progress.completedSuccessfully) this.renderAffectedCount()
+    }
+  }
+
+  runModalHidden() {
+    this.progress.modalHidden()
   }
 
   renderSimulation() {
@@ -207,6 +249,40 @@ export default class extends Controller {
   hideError() {
     this.errorTarget.hidden = true
     this.errorTextTarget.textContent = ""
+  }
+
+  setConfirmLoading(loading) {
+    if (!this.hasConfirmRunButtonTarget) return
+
+    this.confirmRunButtonTarget.disabled = loading
+    this.confirmRunButtonTarget.toggleAttribute("aria-busy", loading)
+  }
+
+  disableRunButton() {
+    this.runButtonTarget.disabled = true
+    this.updateRunButtonTooltip()
+  }
+
+  hideConfirmModal() {
+    const modalElement = document.getElementById(this.confirmModalIdValue)
+    if (!modalElement || !window.bootstrap?.Modal) return
+
+    window.bootstrap.Modal.getOrCreateInstance(modalElement).hide()
+  }
+
+  runPayload() {
+    return {
+      national_ids: this.simulation?.ids || [],
+      bulk_action: {
+        action: this.selectedAction
+      }
+    }
+  }
+
+  resetAfterSuccessfulRun() {
+    this.textareaTarget.value = ""
+    this.actionTargets.forEach((action) => { action.checked = false })
+    this.clearSimulation()
   }
 
   replaceCount(template, count) {

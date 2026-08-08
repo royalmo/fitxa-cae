@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import AsyncProgress from "controllers/async_progress"
 
 export default class extends Controller {
   static targets = [
@@ -19,13 +20,21 @@ export default class extends Controller {
     "affectedCount",
     "runButton",
     "runTooltip",
-    "confirmBody"
+    "confirmRunButton",
+    "confirmBody",
+    "runModal",
+    "runProgress",
+    "runProgressBar",
+    "runStatusMessage"
   ]
 
   static values = {
     simulateUrl: String,
+    runUrl: String,
     confirmModalId: String,
     requestErrorLabel: String,
+    runRequestErrorLabel: String,
+    runPollErrorLabel: String,
     missingDataLabel: String,
     runRequiresSimulationLabel: String,
     runNoAffectedLabel: String,
@@ -44,6 +53,15 @@ export default class extends Controller {
     this.simulation = null
     this.simulatedSignature = ""
     this.disposeTooltips = this.disposeTooltips.bind(this)
+    this.progress = new AsyncProgress(this, {
+      modalTargetName: "runModal",
+      progressTargetName: "runProgress",
+      progressBarTargetName: "runProgressBar",
+      statusMessageTargetName: "runStatusMessage",
+      startErrorLabel: this.runRequestErrorLabelValue,
+      pollErrorLabel: this.runPollErrorLabelValue,
+      onSuccessClosed: () => this.resetAfterSuccessfulRun()
+    })
     this.resetSimulationPanel()
     this.updateSecondSurnameDependentContent()
     this.input()
@@ -53,6 +71,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("turbo:before-cache", this.disposeTooltips)
     this.disposeTooltips()
+    this.progress.disconnect()
     this.revokeTemplateLink()
   }
 
@@ -128,6 +147,32 @@ export default class extends Controller {
     const modalElement = document.getElementById(this.confirmModalIdValue)
     const Modal = window.bootstrap?.Modal
     if (modalElement && Modal) Modal.getOrCreateInstance(modalElement).show()
+  }
+
+  async startRun(event) {
+    event.preventDefault()
+    if (!this.currentSimulationReady) return
+
+    this.setConfirmLoading(true)
+    this.disableRunButton()
+    this.hideError()
+    let submitted = false
+
+    try {
+      const payload = await this.runPayload()
+      this.hideConfirmModal()
+      submitted = true
+      await this.progress.start(this.runUrlValue, payload)
+    } catch (error) {
+      if (!submitted) this.showError(error.message || this.runRequestErrorLabelValue)
+    } finally {
+      this.setConfirmLoading(false)
+      if (!this.progress.running && !this.progress.completedSuccessfully) this.updateRunButton()
+    }
+  }
+
+  runModalHidden() {
+    this.progress.modalHidden()
   }
 
   renderSimulation() {
@@ -242,6 +287,48 @@ export default class extends Controller {
   hideError() {
     this.errorTarget.hidden = true
     this.errorTextTarget.textContent = ""
+  }
+
+  setConfirmLoading(loading) {
+    if (!this.hasConfirmRunButtonTarget) return
+
+    this.confirmRunButtonTarget.disabled = loading
+    this.confirmRunButtonTarget.toggleAttribute("aria-busy", loading)
+  }
+
+  disableRunButton() {
+    this.runButtonTarget.disabled = true
+    this.updateRunButtonTooltip()
+  }
+
+  hideConfirmModal() {
+    const modalElement = document.getElementById(this.confirmModalIdValue)
+    if (!modalElement || !window.bootstrap?.Modal) return
+
+    window.bootstrap.Modal.getOrCreateInstance(modalElement).hide()
+  }
+
+  async runPayload() {
+    return {
+      source: this.source,
+      content: await this.importContent(),
+      allow_second_surname: this.allowSecondSurname,
+      tag_ids: this.selectedTagIds()
+    }
+  }
+
+  resetAfterSuccessfulRun() {
+    this.element.querySelector("form")?.reset()
+    this.sourceTarget.value = "paste"
+    this.clearTagSelector(this.tagSelectorTarget)
+    this.updateSecondSurnameDependentContent()
+    this.clearSimulation()
+  }
+
+  clearTagSelector(selector) {
+    selector.querySelectorAll("[data-tag-multi-search-id]").forEach((selection) => selection.remove())
+    selector.querySelectorAll(".admin-tag-multi-search-input").forEach((input) => { input.value = "" })
+    selector.dispatchEvent(new Event("change", { bubbles: true }))
   }
 
   async responseErrorMessage(response) {

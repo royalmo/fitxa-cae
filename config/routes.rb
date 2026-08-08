@@ -109,6 +109,7 @@ Rails.application.routes.draw do
     resources :report_exports, path: "reports/exports", only: %i[create show] do
       get :download, on: :member
     end
+    resources :employee_bulk_action_runs, path: "employees/bulk/actions", only: %i[show]
 
     resources :corrections, only: %i[index show new create edit update] do
       get :day, on: :collection

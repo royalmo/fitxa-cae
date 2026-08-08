@@ -5,8 +5,11 @@
   class="admin-bulk-action"
   data-controller="bulk-national-ids"
   data-bulk-national-ids-simulate-url-value="<%= simulate_path %>"
+  data-bulk-national-ids-run-url-value="<%= run_path %>"
   data-bulk-national-ids-confirm-modal-id-value="<%= confirm_modal_id %>"
   data-bulk-national-ids-request-error-label-value="<%= t("admin.employee_bulk_actions.national_ids.request_error") %>"
+  data-bulk-national-ids-run-request-error-label-value="<%= t("admin.employee_bulk_action_runs.errors.start") %>"
+  data-bulk-national-ids-run-poll-error-label-value="<%= t("admin.employee_bulk_action_runs.errors.poll") %>"
   data-bulk-national-ids-missing-national-ids-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_national_ids") %>"
   data-bulk-national-ids-missing-action-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_action") %>"
   data-bulk-national-ids-missing-both-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_both") %>"
@@ -144,12 +147,26 @@
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
               <%= t("shared.cancel") %>
             </button>
-            <%= button_tag type: :submit, class: "btn btn-danger", data: { submitting_label: t("shared.submitting.saving") } do %>
+            <%= button_tag type: :button,
+              class: "btn btn-danger",
+              data: {
+                bulk_national_ids_target: "confirmRunButton",
+                action: "bulk-national-ids#startRun"
+              } do %>
               <%= t("admin.employee_bulk_actions.national_ids.confirm_run") %>
             <% end %>
           </div>
         </div>
       </div>
     </div>
+
+    <%= render "admin/shared/async_progress_modal",
+      modal_id: "#{confirm_modal_id}Progress",
+      controller_name: "bulk-national-ids",
+      target_prefix: "run",
+      hidden_action: "hidden.bs.modal->bulk-national-ids#runModalHidden",
+      title: t("admin.employee_bulk_action_runs.modal.title"),
+      description: t("admin.employee_bulk_action_runs.modal.description"),
+      close_label: t("admin.employee_bulk_action_runs.modal.close") %>
   <% end %>
 </section>

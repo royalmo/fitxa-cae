@@ -1,0 +1,63 @@
+<% target_prefix = local_assigns[:target_prefix] %>
+<% target_name = ->(name) { [target_prefix, name].compact.join("_").camelize(:lower) } %>
+<% hidden_action = local_assigns[:hidden_action] %>
+<% download_label = local_assigns[:download_label] %>
+
+<div
+  class="modal fade"
+  id="<%= modal_id %>"
+  tabindex="-1"
+  aria-labelledby="<%= modal_id %>_label"
+  aria-hidden="true"
+  data-<%= controller_name %>-target="<%= target_name.call("modal") %>"
+  <% if hidden_action.present? %>
+    data-action="<%= hidden_action %>"
+  <% end %>>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title <%= local_assigns.fetch(:title_class, "fs-5") %>" id="<%= modal_id %>_label">
+          <%= title %>
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= close_label %>"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-body-secondary mb-3">
+          <%= description %>
+        </p>
+        <div
+          class="progress admin-async-progress mb-2"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          data-<%= controller_name %>-target="<%= target_name.call("progress") %>">
+          <div
+            class="progress-bar progress-bar-striped progress-bar-animated"
+            style="width: 0%"
+            data-<%= controller_name %>-target="<%= target_name.call("progress_bar") %>">
+            0%
+          </div>
+        </div>
+        <p class="mb-0 small text-body-secondary" data-<%= controller_name %>-target="<%= target_name.call("status_message") %>" aria-live="polite"></p>
+      </div>
+      <div class="modal-footer">
+        <% if download_label.present? %>
+          <button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">
+            <%= close_label %>
+          </button>
+          <a
+            class="btn btn-primary d-inline-flex align-items-center gap-2 disabled"
+            data-<%= controller_name %>-target="<%= target_name.call("download_link") %>"
+            aria-disabled="true">
+            <%= icon local_assigns.fetch(:download_icon, "download") %>
+            <span><%= download_label %></span>
+          </a>
+        <% else %>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+            <%= close_label %>
+          </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

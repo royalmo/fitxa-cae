@@ -23,6 +23,7 @@ class Manager < ApplicationRecord
   has_many :authored_audit_actions, as: :author, class_name: "AuditAction"
   has_many :received_audit_actions, as: :recipient, class_name: "AuditAction"
   has_many :report_exports, dependent: :destroy
+  has_many :employee_bulk_action_runs, dependent: :destroy
 
   validates :active, inclusion: { in: [ true, false ] }
   validates :email, presence: true, uniqueness: { case_sensitive: false }

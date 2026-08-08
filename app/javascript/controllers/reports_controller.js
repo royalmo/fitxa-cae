@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import AsyncProgress from "controllers/async_progress"
 
 export default class extends Controller {
   static targets = [
@@ -27,13 +28,20 @@ export default class extends Controller {
   }
 
   connect() {
-    this.pollTimeout = null
     this.downloadedExportIds = new Set()
+    this.progress = new AsyncProgress(this, {
+      startErrorLabel: "No s'ha pogut iniciar l'informe.",
+      pollErrorLabel: "No s'ha pogut consultar l'informe.",
+      isFinished: (data) => this.exportFinished(data),
+      isSuccess: (data) => data.status === "completed" && Boolean(data.download_url),
+      onReset: () => this.resetDownloadLink(),
+      onStatus: (data) => this.handleExportStatus(data)
+    })
     this.update()
   }
 
   disconnect() {
-    this.stopPolling()
+    this.progress.disconnect()
   }
 
   update() {
@@ -141,108 +149,32 @@ export default class extends Controller {
   }
 
   async startExport(payload) {
-    this.stopPolling()
-    this.resetModal()
-    this.showModal()
-
     try {
-      const response = await fetch(this.exportUrlValue, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "X-CSRF-Token": this.csrfToken
-        },
-        body: JSON.stringify(payload)
-      })
-      const data = await response.json()
-
-      if (!response.ok) throw new Error(data.error || "No s'ha pogut iniciar l'informe.")
-
-      this.renderExportStatus(data)
-      this.schedulePoll(data.status_url)
-    } catch (error) {
-      this.renderExportError(error.message)
+      await this.progress.start(this.exportUrlValue, payload)
+    } catch (_error) {
+      // The progress modal renders request and polling errors.
     }
   }
 
-  schedulePoll(statusUrl) {
-    if (!statusUrl) return
-
-    this.pollTimeout = window.setTimeout(() => this.poll(statusUrl), 2000)
+  exportFinished(data) {
+    return (data.status === "completed" && Boolean(data.download_url)) ||
+      data.status === "failed" ||
+      data.status === "expired"
   }
 
-  async poll(statusUrl) {
-    try {
-      const response = await fetch(statusUrl, { headers: { Accept: "application/json" } })
-      const data = await response.json()
+  handleExportStatus(data) {
+    if (data.status !== "completed" || !data.download_url) return
 
-      if (!response.ok) throw new Error(data.error || "No s'ha pogut consultar l'informe.")
-
-      this.renderExportStatus(data)
-      if (data.status === "completed" && data.download_url) {
-        this.enableDownload(data.download_url)
-        this.triggerDownload(data)
-      } else if (data.status !== "failed" && data.status !== "expired") {
-        this.schedulePoll(data.status_url)
-      }
-    } catch (error) {
-      this.renderExportError(error.message)
-    }
+    this.enableDownload(data.download_url)
+    this.triggerDownload(data)
   }
 
-  stopPolling() {
-    if (this.pollTimeout) window.clearTimeout(this.pollTimeout)
-    this.pollTimeout = null
-  }
+  resetDownloadLink() {
+    if (!this.hasDownloadLinkTarget) return
 
-  resetModal() {
-    this.setProgress(0)
-    if (this.hasStatusMessageTarget) this.statusMessageTarget.textContent = ""
-    if (this.hasProgressBarTarget) {
-      this.progressBarTarget.classList.add("progress-bar-animated", "progress-bar-striped")
-      this.progressBarTarget.classList.remove("bg-danger", "bg-success")
-    }
-    if (this.hasDownloadLinkTarget) {
-      this.downloadLinkTarget.removeAttribute("href")
-      this.downloadLinkTarget.classList.add("disabled")
-      this.downloadLinkTarget.setAttribute("aria-disabled", "true")
-    }
-  }
-
-  renderExportStatus(data) {
-    this.setProgress(data.progress || 0)
-    if (this.hasStatusMessageTarget) this.statusMessageTarget.textContent = data.message || ""
-
-    if (data.status === "completed" && this.hasProgressBarTarget) {
-      this.progressBarTarget.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-danger")
-      this.progressBarTarget.classList.add("bg-success")
-    } else if ((data.status === "failed" || data.status === "expired") && this.hasProgressBarTarget) {
-      this.progressBarTarget.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-success")
-      this.progressBarTarget.classList.add("bg-danger")
-    }
-  }
-
-  renderExportError(message) {
-    this.stopPolling()
-    this.setProgress(100)
-    if (this.hasStatusMessageTarget) this.statusMessageTarget.textContent = message
-    if (this.hasProgressBarTarget) {
-      this.progressBarTarget.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-success")
-      this.progressBarTarget.classList.add("bg-danger")
-    }
-  }
-
-  setProgress(progress) {
-    const normalizedProgress = Math.max(0, Math.min(Number.parseInt(progress, 10) || 0, 100))
-
-    if (this.hasProgressTarget) {
-      this.progressTarget.setAttribute("aria-valuenow", normalizedProgress.toString())
-    }
-    if (this.hasProgressBarTarget) {
-      this.progressBarTarget.style.width = `${normalizedProgress}%`
-      this.progressBarTarget.textContent = `${normalizedProgress}%`
-    }
+    this.downloadLinkTarget.removeAttribute("href")
+    this.downloadLinkTarget.classList.add("disabled")
+    this.downloadLinkTarget.setAttribute("aria-disabled", "true")
   }
 
   enableDownload(downloadUrl) {
@@ -260,13 +192,4 @@ export default class extends Controller {
     window.location.href = data.download_url
   }
 
-  showModal() {
-    if (!this.hasModalTarget || !window.bootstrap?.Modal) return
-
-    window.bootstrap.Modal.getOrCreateInstance(this.modalTarget).show()
-  }
-
-  get csrfToken() {
-    return document.querySelector("meta[name='csrf-token']")?.content || ""
-  }
 }

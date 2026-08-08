@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_08_174216) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_08_180725) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -60,6 +60,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_174216) do
     t.date "snapshot_at", null: false
     t.datetime "updated_at", null: false
     t.index ["snapshot_at"], name: "index_daily_statistics_on_snapshot_at", unique: true
+  end
+
+  create_table "employee_bulk_action_runs", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.datetime "failed_at"
+    t.string "kind", null: false
+    t.integer "manager_id", null: false
+    t.json "parameters", default: {}, null: false
+    t.integer "progress", default: 0, null: false
+    t.text "result_message"
+    t.string "status", default: "queued", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind"], name: "index_employee_bulk_action_runs_on_kind"
+    t.index ["manager_id"], name: "index_employee_bulk_action_runs_on_manager_id"
+    t.index ["status"], name: "index_employee_bulk_action_runs_on_status"
   end
 
   create_table "employees", force: :cascade do |t|
@@ -170,6 +187,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_174216) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "employee_bulk_action_runs", "managers"
   add_foreign_key "employment_periods", "employees"
   add_foreign_key "managers", "employees"
   add_foreign_key "report_exports", "managers"

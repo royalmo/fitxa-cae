@@ -112,7 +112,7 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
     )
 
     assert_includes html, "Resum mensual - Juliol de 2026"
-    assert_includes html, "Recompte d'hores per cada persona activa durant aquest mes o amb fitxatges en aquest mes."
+    assert_includes html, "Recompte d'hores per cada persona activa o amb fitxatges en aquest mes."
     refute_includes html, "class=\"report-kpis\""
     refute_includes html, "<h2>Persones</h2>"
     assert_includes html, "Clara Pons"

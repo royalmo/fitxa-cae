@@ -289,6 +289,21 @@ ca:
         confirm_title: Executar acció massiva
         confirm_body: S'actualitzaran les etiquetes de %{count} persones. Vols continuar?
         confirm_run: Sí, executar
+    employee_bulk_action_runs:
+      modal:
+        title: Executant l'acció massiva
+        description: Estem processant l'acció en segon pla. Pots mantenir aquesta finestra
+          oberta fins que acabi.
+        close: Tancar
+      statuses:
+        queued: Acció en cua...
+        running: Executant l'acció...
+        completed: Acció completada.
+        failed: No s'ha pogut executar l'acció.
+      errors:
+        generic: No s'ha pogut executar l'acció massiva.
+        start: No s'ha pogut iniciar l'acció massiva.
+        poll: No s'ha pogut consultar l'estat de l'acció massiva.
     imports:
       new:
         title: Importació

@@ -371,7 +371,7 @@ html[data-pwa="admin"] .turbo-progress-bar {
   padding-top: 1rem;
 }
 
-.admin-report-export-progress {
+.admin-async-progress {
   height: 1.25rem;
 }
 
