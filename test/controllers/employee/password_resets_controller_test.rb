@@ -1,4 +1,5 @@
 require "test_helper"
+require "stringio"
 
 class Employee::PasswordResetsControllerTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
@@ -119,6 +120,65 @@ class Employee::PasswordResetsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to employee_password_reset_code_path
     assert_enqueued_jobs 0, only: EmployeeLoginCodeDeliveryJob
+  end
+
+  test "password reset logs when employee code cooldown skips delivery" do
+    employee = create_employee(phone: "+34 600 111 222", password: "1234")
+    employee.generate_login_code!(delivery_method: "sms")
+    log_output = StringIO.new
+    logger = ActiveSupport::Logger.new(log_output)
+    original_logger = Rails.logger
+
+    Rails.logger = logger
+    begin
+      assert_enqueued_jobs 0, only: EmployeeLoginCodeDeliveryJob do
+        post employee_password_reset_path, params: {
+          authenticity_token: "test-token",
+          national_id: employee.national_id,
+          delivery_method: "sms",
+          commit: "Enviar codi"
+        }
+      end
+    ensure
+      Rails.logger = original_logger
+    end
+
+    assert_redirected_to employee_password_reset_code_path
+    assert_includes log_output.string, "Login code delivery skipped"
+    assert_includes log_output.string, "context=employee_password_reset_code_delivery"
+    assert_includes log_output.string, "employee_id=#{employee.id}"
+    assert_includes log_output.string, "delivery_method=sms"
+    assert_includes log_output.string, "reason=cooldown"
+    assert_not_includes log_output.string, "Unpermitted parameters"
+  end
+
+  test "password reset suppresses form metadata warnings but keeps unexpected parameter warnings" do
+    original_action = ActionController::Parameters.action_on_unpermitted_parameters
+
+    ActionController::Parameters.action_on_unpermitted_parameters = :raise
+    begin
+      post employee_password_reset_path, params: {
+        authenticity_token: "test-token",
+        national_id: "12345678A",
+        delivery_method: "email",
+        commit: "Enviar codi"
+      }
+
+      error = assert_raises(ActionController::UnpermittedParameters) do
+        post employee_password_reset_path, params: {
+          authenticity_token: "test-token",
+          national_id: "12345678A",
+          delivery_method: "email",
+          unexpected: "value",
+          commit: "Enviar codi"
+        }
+      end
+    ensure
+      ActionController::Parameters.action_on_unpermitted_parameters = original_action
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal [ "unexpected" ], error.params.map(&:to_s)
   end
 
   test "password setup requires matching passwords after a verified code" do

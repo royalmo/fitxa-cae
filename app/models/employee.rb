@@ -116,7 +116,16 @@ class Employee < ApplicationRecord
   end
 
   def login_code_rate_limited?(now: Time.current)
-    recent_login_code_requests(now: now).count >= LOGIN_CODE_LIMIT || login_code_cooldown_active?(now: now)
+    login_code_rate_limit_reason(now: now).present?
+  end
+
+  def login_code_rate_limit_reason(now: Time.current)
+    recent_login_code_request_count = recent_login_code_requests(now: now).count
+
+    return "request_limit" if recent_login_code_request_count >= LOGIN_CODE_LIMIT
+    return "cooldown" if login_code_cooldown_active?(now: now)
+
+    nil
   end
 
   def generate_login_code!(delivery_method:, expires_at: LOGIN_CODE_TTL.from_now, requested_at: Time.current)

@@ -119,4 +119,24 @@ class EmployeeTest < ActiveSupport::TestCase
 
     assert_not employee.authenticate_login_code("000000")
   end
+
+  test "reports login code rate limit reason" do
+    employee = create_employee
+    requested_at = Time.zone.local(2026, 8, 8, 10, 0)
+
+    assert_nil employee.login_code_rate_limit_reason(now: requested_at)
+
+    employee.generate_login_code!(delivery_method: "email", requested_at: requested_at)
+    assert_equal "cooldown", employee.reload.login_code_rate_limit_reason(now: requested_at + 30.seconds)
+
+    (Employee::LOGIN_CODE_LIMIT - 1).times do |index|
+      employee.generate_login_code!(
+        delivery_method: "email",
+        requested_at: requested_at + ((index + 1) * (Employee::LOGIN_CODE_COOLDOWN + 1.second))
+      )
+    end
+
+    assert_equal "request_limit",
+      employee.reload.login_code_rate_limit_reason(now: requested_at + 5.minutes)
+  end
 end

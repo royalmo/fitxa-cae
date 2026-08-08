@@ -124,7 +124,6 @@ module SmsProvider
         #{message}
         === End development SMS delivery ===
       MESSAGE
-      logger.info(console_message)
       write_to_console(console_message)
 
       Delivery.new(

@@ -7,26 +7,42 @@ class DevelopmentConsoleMailDelivery
   def deliver!(mail)
     message = message_for(mail)
 
-    logger.info(message)
     write_to_console(message)
   end
 
   private
 
-  attr_reader :logger, :output
+  attr_reader :output
 
   def message_for(mail)
-    <<~MESSAGE
+    <<~MESSAGE.chomp
 
       === Development email delivery ===
-      From: #{Array(mail.from).join(", ")}
-      To: #{Array(mail.to).join(", ")}
-      Reply-To: #{Array(mail.reply_to).join(", ")}
-      Subject: #{mail.subject}
+      #{header_lines(mail).join("\n")}
 
       #{mail_body(mail)}
       === End development email delivery ===
     MESSAGE
+  end
+
+  def header_lines(mail)
+    [
+      header_line("From", mail.from),
+      header_line("To", mail.to),
+      header_line("Cc", mail.cc),
+      header_line("Bcc", mail.bcc),
+      header_line("Reply-To", mail.reply_to),
+      subject_line(mail)
+    ].compact
+  end
+
+  def header_line(label, values)
+    addresses = Array(values).compact_blank
+    "#{label}: #{addresses.join(", ")}" if addresses.any?
+  end
+
+  def subject_line(mail)
+    "Subject: #{mail.subject}"
   end
 
   def mail_body(mail)

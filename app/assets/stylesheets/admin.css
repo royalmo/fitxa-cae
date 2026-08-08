@@ -860,7 +860,7 @@ html[data-pwa="admin"] .turbo-progress-bar {
   color: var(--bs-secondary-color);
 }
 
-.admin-status-radio-fieldset legend.form-label {
+.admin-shell legend.form-label {
   margin-bottom: 0.5rem;
   font-size: 1rem;
   line-height: 1.5;

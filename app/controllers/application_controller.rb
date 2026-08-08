@@ -1,4 +1,6 @@
 class ApplicationController < ActionController::Base
+  FORM_METADATA_PARAM_KEYS = %w[authenticity_token commit].freeze
+
   include EmployeeAuthentication
   include ManagerAuthentication
 
@@ -9,8 +11,13 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :authenticate_employee!, if: :employee_authentication_required?
+  before_action :discard_form_metadata_params
 
   private
+
+  def discard_form_metadata_params
+    FORM_METADATA_PARAM_KEYS.each { |key| params.delete(key) }
+  end
 
   def employee_authentication_required?
     controller_path.start_with?("employee/") && controller_name != "sessions"

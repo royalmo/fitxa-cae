@@ -35,7 +35,8 @@ class SmsProviderTest < ActiveSupport::TestCase
 
   test "writes mock delivery details to console output" do
     output = StringIO.new
-    logger = ActiveSupport::Logger.new(StringIO.new)
+    log_output = StringIO.new
+    logger = ActiveSupport::Logger.new(log_output)
 
     SmsProvider::Client.new(env: {}, logger: logger, output: output).deliver_login_code(
       phone: "+34 600 111 222",
@@ -45,6 +46,7 @@ class SmsProviderTest < ActiveSupport::TestCase
     assert_includes output.string, "Development SMS delivery"
     assert_includes output.string, "To: +34 600 111 222"
     assert_includes output.string, "654321"
+    assert_not_includes log_output.string, "Development SMS delivery"
   end
 
   test "reports production sms configuration readiness" do

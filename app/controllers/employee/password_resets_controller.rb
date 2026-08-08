@@ -41,9 +41,15 @@ class Employee::PasswordResetsController < ApplicationController
     employee = Employee.find_active_by_national_id(password_reset_params[:national_id])
     code_delivery_employee = employee if employee&.can_receive_login_code?(delivery_method)
 
-    if code_delivery_employee && !code_delivery_employee.login_code_rate_limited?
-      code = code_delivery_employee.generate_login_code!(delivery_method: delivery_method)
-      deliver_login_code(code_delivery_employee, code, delivery_method)
+    if code_delivery_employee
+      rate_limit_reason = code_delivery_employee.login_code_rate_limit_reason
+
+      if rate_limit_reason
+        log_login_code_rate_limited(code_delivery_employee, delivery_method, rate_limit_reason)
+      else
+        code = code_delivery_employee.generate_login_code!(delivery_method: delivery_method)
+        deliver_login_code(code_delivery_employee, code, delivery_method)
+      end
     end
 
     store_pending_employee_password_reset(
@@ -168,6 +174,14 @@ class Employee::PasswordResetsController < ApplicationController
   rescue StandardError => error
     employee.clear_login_code!
     notify_login_code_delivery_error(error, delivery_method: delivery_method, employee: employee)
+  end
+
+  def log_login_code_rate_limited(employee, delivery_method, reason)
+    Rails.logger.info(
+      "Login code delivery skipped: employee rate limit active " \
+      "(context=employee_password_reset_code_delivery employee_id=#{employee.id} " \
+      "delivery_method=#{delivery_method} reason=#{reason})"
+    )
   end
 
   def notify_login_code_delivery_error(error, delivery_method:, employee: nil)
