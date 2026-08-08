@@ -66,15 +66,20 @@ Rails.application.configure do
   config.x.mailer_from_email = ENV.fetch("MAILER_FROM_EMAIL", "no-reply@#{app_host}")
 
   if ENV["SMTP_ADDRESS"].present?
+    smtp_port = ENV.fetch("SMTP_PORT", 587).to_i
+    smtp_tls = boolean_env.call("SMTP_TLS", smtp_port == 465)
+    smtp_enable_starttls_auto = smtp_tls ? false : boolean_env.call("SMTP_ENABLE_STARTTLS_AUTO", true)
+
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.smtp_settings = {
       address: ENV.fetch("SMTP_ADDRESS"),
-      port: ENV.fetch("SMTP_PORT", 587).to_i,
+      port: smtp_port,
       domain: ENV.fetch("SMTP_DOMAIN", app_host),
       user_name: ENV.fetch("SMTP_USERNAME"),
       password: ENV.fetch("SMTP_PASSWORD"),
       authentication: ENV.fetch("SMTP_AUTHENTICATION", "plain").to_sym,
-      enable_starttls_auto: boolean_env.call("SMTP_ENABLE_STARTTLS_AUTO", true),
+      enable_starttls_auto: smtp_enable_starttls_auto,
+      tls: smtp_tls,
       openssl_verify_mode: ENV["SMTP_OPENSSL_VERIFY_MODE"].presence
     }.compact
   end

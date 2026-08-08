@@ -8,11 +8,12 @@ env:
   clear:
     APP_HOST: fitxa.cae.cat
     HUMAN_RESOURCES_EMAIL: rrhh@cae.cat
-    MAILER_FROM_EMAIL: fitxa@cae.cat
+    MAILER_FROM_EMAIL: cae@cae.cat
     ERROR_NOTIFICATION_RECIPIENTS: eric@ericroy.net
-    ERROR_NOTIFICATION_SENDER: FitxaCAE <fitxa@cae.cat>
-    SMTP_ADDRESS: mail.cae.cat
+    ERROR_NOTIFICATION_SENDER: FitxaCAE <cae@cae.cat>
+    SMTP_ADDRESS: mail.visio.cat
     SMTP_PORT: 465
+    SMTP_TLS: true
     LABSMOBILE_SENDER: FitxaCAE
     SMTP_DOMAIN: cae.cat
 volumes:
