@@ -13,7 +13,7 @@ class Employee::PasswordResetsController < ApplicationController
 
   before_action :redirect_signed_in_employee, only: %i[new create]
   before_action :load_pending_employee_password_reset, only: %i[code verify_code]
-  before_action :load_pending_employee_password_setup, only: %i[edit update]
+  before_action :load_pending_employee_password_setup, only: %i[edit update skip]
 
   def new
   end
@@ -79,6 +79,7 @@ class Employee::PasswordResetsController < ApplicationController
   end
 
   def edit
+    flash.now[:notice] = t(".first_login_notice") if pending_employee_password_setup_first_login?
   end
 
   def update
@@ -98,6 +99,18 @@ class Employee::PasswordResetsController < ApplicationController
     else
       render :edit, status: :unprocessable_entity
     end
+  end
+
+  def skip
+    unless pending_employee_password_setup_first_login?
+      redirect_to edit_employee_password_reset_path
+      return
+    end
+
+    remember = pending_employee_password_setup_remember?
+    installed_pwa = pending_employee_password_setup_installed_pwa?
+    clear_pending_employee_password_setup
+    sign_in_employee(@employee, remember: remember, installed_pwa: installed_pwa, redirect_path: root_path)
   end
 
   private

@@ -37,6 +37,7 @@ Rails.application.routes.draw do
   get "password-reset/code" => "employee/password_resets#code", as: :employee_password_reset_code
   post "password-reset/code/verify" => "employee/password_resets#verify_code", as: :verify_employee_password_reset_code
   get "password-reset/edit" => "employee/password_resets#edit", as: :edit_employee_password_reset
+  post "password-reset/skip" => "employee/password_resets#skip", as: :skip_employee_password_setup
   patch "password-reset" => "employee/password_resets#update", as: nil
   delete "logout" => "employee/sessions#destroy", as: :logout
 

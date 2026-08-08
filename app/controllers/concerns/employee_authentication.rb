@@ -5,7 +5,9 @@ module EmployeeAuthentication
   PASSWORD_SETUP_TTL = 30.minutes
 
   included do
-    helper_method :current_employee, :employee_signed_in?
+    helper_method :current_employee,
+      :employee_signed_in?,
+      :pending_employee_password_setup_first_login?
   end
 
   private
@@ -95,6 +97,10 @@ module EmployeeAuthentication
 
   def pending_employee_password_setup_installed_pwa?
     ActiveModel::Type::Boolean.new.cast(pending_employee_password_setup_state["installed_pwa"])
+  end
+
+  def pending_employee_password_setup_first_login?
+    pending_employee_password_setup_state["reason"].to_s == "first_login"
   end
 
   def pending_employee_login_delivery_method

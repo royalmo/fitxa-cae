@@ -61,7 +61,10 @@ class Employee::PasswordResetsControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_select "title", text: "Nova contrasenya | FitxaCAE"
+    assert_select ".auth-panel > .flash-notice", count: 0
     assert_select "form.auth-form[action='#{employee_password_reset_path}']"
+    assert_select "form#employee_password_setup_skip_form", count: 0
+    assert_select "button", text: I18n.t("employee.password_resets.edit.skip"), count: 0
     assert_select "input[name='password'][autocomplete='new-password'][required]"
     assert_select "input[name='password_confirmation'][autocomplete='new-password'][required]"
 
@@ -201,6 +204,27 @@ class Employee::PasswordResetsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".auth-panel > .error-summary.error-summary-single"
     assert_select ".error-summary-content", text: I18n.t("employee.password_resets.update.password_confirmation_invalid")
     assert employee.reload.authenticate("1234")
+  end
+
+  test "password setup skip does not apply to password resets" do
+    employee = create_employee(email: "ada@example.test", password: "1234")
+
+    with_secure_random_number(42) do
+      post employee_password_reset_path, params: {
+        national_id: employee.national_id,
+        delivery_method: "email"
+      }
+    end
+    post verify_employee_password_reset_code_path, params: { code: "000422" }
+
+    post skip_employee_password_setup_path
+
+    assert_redirected_to edit_employee_password_reset_path
+    assert employee.reload.authenticate("1234")
+
+    get root_path
+
+    assert_redirected_to login_path
   end
 
   test "password setup redirects without a verified code" do

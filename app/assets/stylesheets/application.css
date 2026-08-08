@@ -588,6 +588,33 @@ html[data-standalone-pwa="true"] .employee-install-prompt {
   gap: 0.9rem;
 }
 
+.auth-skip-form {
+  display: none;
+}
+
+.auth-submit-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.auth-submit-actions-with-skip {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.auth-submit-actions input[type="submit"] {
+  width: 100%;
+}
+
+.auth-submit-actions-with-skip input[type="submit"] {
+  width: auto;
+  justify-self: end;
+}
+
+.auth-skip-button {
+  justify-self: start;
+}
+
 .auth-forgot-link {
   justify-self: center;
   text-align: center;

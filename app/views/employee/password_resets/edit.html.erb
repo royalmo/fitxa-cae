@@ -1,4 +1,5 @@
 <% content_for :title, t(".title") %>
+<% first_login_password_setup = pending_employee_password_setup_first_login? %>
 
 <section class="auth-card auth-card-narrow employee-auth-card">
   <header class="auth-header">
@@ -8,6 +9,15 @@
 
   <section class="auth-panel">
     <%= render "layouts/error_summary", messages: @employee.errors.full_messages, title: t(".error_title") %>
+    <%= render "employee/sessions/flash_messages" %>
+
+    <% if first_login_password_setup %>
+      <%= form_with url: skip_employee_password_setup_path,
+        method: :post,
+        id: "employee_password_setup_skip_form",
+        class: "auth-skip-form" do %>
+      <% end %>
+    <% end %>
 
     <%= form_with url: employee_password_reset_path, method: :patch, class: "auth-form" do |form| %>
       <div class="field">
@@ -20,7 +30,18 @@
         <%= form.password_field :password_confirmation, autocomplete: "new-password", required: true %>
       </div>
 
-      <%= form.submit t(".submit"), data: { submitting_label: t(".submitting") } %>
+      <div class="auth-submit-actions <%= "auth-submit-actions-with-skip" if first_login_password_setup %>">
+        <% if first_login_password_setup %>
+          <%= button_tag t(".skip"),
+            type: :submit,
+            name: nil,
+            form: "employee_password_setup_skip_form",
+            formnovalidate: true,
+            class: "button button-secondary auth-skip-button" %>
+        <% end %>
+
+        <%= form.submit t(".submit"), data: { submitting_label: t(".submitting") } %>
+      </div>
     <% end %>
   </section>
 </section>

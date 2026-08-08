@@ -263,7 +263,11 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_select "title", text: "Nova contrasenya | FitxaCAE"
+    assert_select ".auth-panel > .flash-notice > span",
+      text: I18n.t("employee.password_resets.edit.first_login_notice")
     assert_select "form.auth-form[action='#{employee_password_reset_path}']"
+    assert_select "form#employee_password_setup_skip_form[action='#{skip_employee_password_setup_path}'][method='post']"
+    assert_select "button.auth-skip-button[form='employee_password_setup_skip_form']", text: I18n.t("employee.password_resets.edit.skip")
     assert_select "input[name='password'][autocomplete='new-password'][required]"
     assert_select "input[name='password_confirmation'][autocomplete='new-password'][required]"
 
@@ -279,6 +283,52 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_select ".employee-page-flash.flash-notice > span", text: I18n.t("employee.password_resets.update.success")
+  end
+
+  test "first login password setup can be skipped and is shown again on the next login" do
+    employee = create_employee(email: "ada@example.test")
+
+    with_secure_random_number(42) do
+      post request_login_code_path, params: {
+        national_id: employee.national_id,
+        delivery_method: "email"
+      }
+    end
+    post verify_login_code_path, params: { code: "000422" }
+
+    assert_redirected_to edit_employee_password_reset_path
+    follow_redirect!
+    assert_select "button.auth-skip-button[form='employee_password_setup_skip_form']", text: I18n.t("employee.password_resets.edit.skip")
+
+    post skip_employee_password_setup_path
+
+    assert_redirected_to root_path
+    assert_nil flash[:notice]
+    assert_not employee.reload.password_login_enabled?
+
+    follow_redirect!
+    assert_response :success
+
+    delete logout_path
+    assert_redirected_to login_path
+    follow_redirect!
+    assert_response :success
+
+    travel Employee::LOGIN_CODE_COOLDOWN + 1.second
+
+    with_secure_random_number(42) do
+      post request_login_code_path, params: {
+        national_id: employee.national_id,
+        delivery_method: "email"
+      }
+    end
+    post verify_login_code_path, params: { code: "000422" }
+
+    assert_redirected_to edit_employee_password_reset_path
+    follow_redirect!
+    assert_select ".auth-panel > .flash-notice > span",
+      text: I18n.t("employee.password_resets.edit.first_login_notice")
+    assert_not employee.reload.password_login_enabled?
   end
 
   test "sms code login handles sms provider delivery errors" do

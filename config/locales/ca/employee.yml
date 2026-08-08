@@ -253,9 +253,11 @@ ca:
       edit:
         title: Nova contrasenya
         heading: Crea una contrasenya
+        first_login_notice: Crea una contrasenya per accedir més fàcilment a FitxaCAE el proper cop.
         error_title: Revisa la contrasenya
         password: Nova contrasenya
         password_confirmation: Repeteix la contrasenya
+        skip: Ometre
         submit: Desar contrasenya
         submitting: Desant...
       update:
