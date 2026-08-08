@@ -21,7 +21,7 @@ module Reports
     def totals
       {
         people_count: employees.size,
-        active_people_count: employees.count(&:active?),
+        active_people_count: period_active_employee_ids.size,
         people_with_swipes_count: swipes_by_employee_id.keys.size,
         swipes_count: swipes.size,
         worked_seconds: rows.sum { |row| row[:worked_seconds] }
@@ -35,7 +35,7 @@ module Reports
         {
           employee: employee,
           tags: employee.tags.sort_by { |tag| tag.name.downcase },
-          active: employee.active?,
+          active: period_active_employee_ids.include?(employee.id),
           swipes_count: employee_swipes.size,
           worked_seconds: employee_swipes.group_by { |swipe| swipe.swipe_at.in_time_zone.to_date }
             .values
@@ -57,6 +57,14 @@ module Reports
 
     def swipes_by_employee_id
       @swipes_by_employee_id ||= swipes.group_by(&:employee_id)
+    end
+
+    def period_range
+      @period_range ||= period_start.beginning_of_day...period_end.next_day.beginning_of_day
+    end
+
+    def period_active_employee_ids
+      @period_active_employee_ids ||= Employee.active_during(period_range).where(id: employees.map(&:id)).ids
     end
   end
 end

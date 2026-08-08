@@ -7,6 +7,7 @@ module Reports
     def initialize(month:, year:, tag: nil)
       @period_start = Date.new(year.to_i, month.to_i, 1)
       @period_end = @period_start.end_of_month
+      @period_range = @period_start.beginning_of_day...@period_end.next_day.beginning_of_day
       @tag = tag
     end
 
@@ -24,12 +25,12 @@ module Reports
     end
 
     def active_employee_ids
-      Employee.active.pluck(:id)
+      Employee.active_during(@period_range).pluck(:id)
     end
 
     def swiped_employee_ids
       Swipe.kept
-        .where(swipe_at: @period_start.beginning_of_day..@period_end.end_of_day)
+        .where(swipe_at: @period_range)
         .distinct
         .pluck(:employee_id)
     end

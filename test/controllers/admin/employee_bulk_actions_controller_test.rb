@@ -248,12 +248,14 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_employees_path
     assert_predicate active_employee.reload, :active?
     assert_predicate inactive_employee.reload, :active?
+    assert_predicate inactive_employee.current_employment_period, :open?
     assert_equal "S'ha activat 1 persona.", flash[:notice]
   end
 
   test "runs deactivation bulk action" do
     active_employee = create_employee(national_id: valid_dni(44_000_007), active: true)
     inactive_employee = create_employee(national_id: valid_dni(44_000_008), active: false)
+    active_employee.current_employment_period.update!(started_at: 2.days.ago)
 
     post run_bulk_activation_admin_employees_path, params: {
       national_ids: [ active_employee.national_id, inactive_employee.national_id ],
@@ -263,6 +265,8 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_employees_path
     assert_not active_employee.reload.active?
     assert_not inactive_employee.reload.active?
+    assert_nil active_employee.current_employment_period
+    assert_not_nil active_employee.employment_periods.sole.ended_at
     assert_equal "S'ha desactivat 1 persona.", flash[:notice]
   end
 

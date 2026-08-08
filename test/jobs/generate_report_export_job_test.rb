@@ -38,8 +38,12 @@ class GenerateReportExportJobTest < ActiveJob::TestCase
     manager = create_manager
     tag = Tag.create!(name: "Informes test #{SecureRandom.hex(4)}", color: "#2563eb", active: true)
     ActiveRecord::Base.connection.execute("DELETE FROM employees_tags WHERE tag_id = #{tag.id}")
-    create_employee(first_name: "Aina", last_name: "Martinez").tags << tag
-    create_employee(first_name: "Clara", last_name: "Pons").tags << tag
+
+    travel_to Time.zone.local(2026, 7, 1, 8, 0) do
+      create_employee(first_name: "Aina", last_name: "Martinez").tags << tag
+      create_employee(first_name: "Clara", last_name: "Pons").tags << tag
+    end
+
     report_export = manager.report_exports.create!(
       kind: "tag_zip",
       parameters: { month: 7, year: 2026, tag_id: tag.id }

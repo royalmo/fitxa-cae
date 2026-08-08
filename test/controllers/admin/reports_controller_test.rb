@@ -124,13 +124,19 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "downloads monthly summary csv" do
-    employee = create_employee(first_name: "Clara", last_name: "Pons", national_id: valid_dni(12_345_681))
+    employee = nil
+    empty_employee = nil
     obra = Tag.create!(name: "Obra", color: "#0f766e", active: true)
     oficina = Tag.create!(name: "Oficina", color: "#2563eb", active: true)
+
+    travel_to Time.zone.local(2026, 7, 1, 8, 0) do
+      employee = create_employee(first_name: "Clara", last_name: "Pons", national_id: valid_dni(12_345_681))
+      empty_employee = create_employee(first_name: "Aina", last_name: "Sense hores", national_id: valid_dni(12_345_682))
+    end
+
     employee.tags << [ oficina, obra ]
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 9, 0))
     employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 2, 17, 0))
-    create_employee(first_name: "Aina", last_name: "Sense hores", national_id: valid_dni(12_345_682))
 
     get admin_reports_monthly_summary_path(format: :csv), params: { month: 7, year: 2026 }
 
@@ -147,6 +153,7 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "2", csv[0]["Fitxatges"]
     assert_equal "8 h 00 min", csv[0]["Hores"]
     assert_equal "Aina Sense hores", csv[1]["Persona"]
+    assert_equal empty_employee.national_id, csv[1]["DNI/NIE"]
     assert_equal "0 h 00 min", csv[1]["Hores"]
   end
 end

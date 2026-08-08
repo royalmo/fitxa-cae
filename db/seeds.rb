@@ -110,13 +110,22 @@ def demo_multi_swipe_patterns
 end
 
 ActiveRecord::Base.transaction do
-  AuditAction.delete_all
-  SwipeCorrection.delete_all
-  Swipe.delete_all
-  Manager.delete_all
-  ActiveRecord::Base.connection.execute("DELETE FROM employees_tags")
-  Employee.delete_all
-  Tag.delete_all
+  ReportExport.find_each { |report_export| report_export.artifact.purge if report_export.artifact.attached? }
+  connection = ActiveRecord::Base.connection
+
+  %w[
+    audit_actions
+    swipe_corrections
+    swipes
+    report_exports
+    managers
+    employment_periods
+    employees_tags
+    employees
+    tags
+  ].each do |table|
+    connection.execute("DELETE FROM #{table}")
+  end
 
   tags = {
     office: Tag.create!(name: "office", active: true, color: "#2563eb"),
@@ -230,8 +239,14 @@ ActiveRecord::Base.transaction do
 
   employees.each do |employee|
     first_swipe_at = employee.swipes.kept.minimum(:swipe_at)
+    last_swipe_at = employee.swipes.kept.maximum(:swipe_at)
     next unless first_swipe_at
 
+    employee.employment_periods.delete_all
+    employee.employment_periods.create!(
+      started_at: first_swipe_at,
+      ended_at: employee.active? ? nil : last_swipe_at + 1.second
+    )
     employee.update_columns(
       created_at: [ employee.created_at, first_swipe_at ].min,
       updated_at: Time.current

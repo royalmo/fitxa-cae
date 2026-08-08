@@ -266,6 +266,24 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "renders employment period summary on edit when employee has history" do
+    employee = create_employee(first_name: "Iria", last_name: "Mas", national_id: valid_dni(41_000_014))
+    employee.current_employment_period.update!(started_at: Time.zone.local(2026, 8, 1, 8, 0))
+    employee.employment_periods.create!(
+      started_at: Time.zone.local(2026, 7, 1, 8, 0),
+      ended_at: Time.zone.local(2026, 7, 15, 18, 0)
+    )
+
+    get edit_admin_employee_path(employee)
+
+    assert_response :success
+    assert_select ".admin-employment-periods" do
+      assert_select "h2", text: "Períodes d'activació"
+      assert_select "li", text: /1\/7\/2026\s+-\s+15\/7\/2026/
+      assert_select "li", text: /1\/8\/2026\s+-\s+Actualment/
+    end
+  end
+
   test "renders old employee national id field disabled with tooltip" do
     employee = create_employee(first_name: "Iria", last_name: "Mas", national_id: valid_dni(41_000_010))
     employee.update_columns(created_at: 25.hours.ago)
@@ -319,6 +337,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_employees_path
     employee = Employee.last
     assert_predicate employee, :active?
+    assert_predicate employee.current_employment_period, :open?
     assert_equal [ tag ], employee.tags.to_a
     assert_not employee.password_login_enabled?
 

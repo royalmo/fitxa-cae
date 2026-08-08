@@ -98,4 +98,21 @@
       <span><%= t(employee.persisted? ? "shared.save" : "admin.employees.form.create") %></span>
     <% end %>
   </div>
+
+  <% if employee.persisted? && employee.multiple_employment_periods? %>
+    <hr>
+
+    <section class="admin-employment-periods">
+      <h2 class="h5"><%= t("admin.employees.form.employment_periods") %></h2>
+      <ul class="list-unstyled mb-0 d-flex flex-column gap-1">
+        <% employee.employment_periods.chronological.each do |period| %>
+          <li class="small text-body-secondary">
+            <%= l(period.started_at.to_date, format: :short) %>
+            -
+            <%= period.ended_at ? l(period.ended_at.to_date, format: :short) : t("admin.employees.form.current_employment_period") %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
 <% end %>

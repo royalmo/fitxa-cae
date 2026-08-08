@@ -9,6 +9,24 @@ class EmployeeTest < ActiveSupport::TestCase
     assert_equal "system", employee.theme_preference
   end
 
+  test "creates an open employment period for active employees" do
+    employee = nil
+
+    travel_to Time.zone.local(2026, 7, 1, 8, 0) do
+      employee = create_employee(active: true)
+    end
+
+    period = employee.reload.employment_periods.sole
+    assert_equal employee.created_at, period.started_at
+    assert_nil period.ended_at
+  end
+
+  test "does not create an employment period for inactive employees" do
+    employee = create_employee(active: false)
+
+    assert_empty employee.employment_periods
+  end
+
   test "stores theme preference in settings" do
     employee = create_employee
 
@@ -81,6 +99,96 @@ class EmployeeTest < ActiveSupport::TestCase
       assert_not employee.valid?
       assert_model_error employee, :national_id, :locked_after_creation
     end
+  end
+
+  test "closes and creates employment periods for activation changes after the undo window" do
+    employee = nil
+
+    travel_to Time.zone.local(2026, 7, 1, 8, 0) do
+      employee = create_employee(active: true)
+    end
+
+    travel_to Time.zone.local(2026, 7, 3, 9, 0) do
+      employee.update!(active: false)
+    end
+
+    first_period = employee.reload.employment_periods.sole
+    assert_not first_period.open?
+    assert_equal employee.updated_at, first_period.ended_at
+
+    travel_to Time.zone.local(2026, 7, 5, 10, 0) do
+      employee.update!(active: true)
+    end
+
+    periods = employee.reload.employment_periods.chronological.to_a
+    assert_equal 2, periods.size
+    assert_not periods.first.open?
+    assert_predicate periods.second, :open?
+    assert_equal employee.updated_at, periods.second.started_at
+  end
+
+  test "reactivating within the undo window reopens the latest period" do
+    employee = nil
+
+    travel_to Time.zone.local(2026, 7, 1, 8, 0) do
+      employee = create_employee(active: true)
+    end
+
+    travel_to Time.zone.local(2026, 7, 3, 9, 0) do
+      employee.update!(active: false)
+    end
+
+    closed_period_id = employee.reload.employment_periods.sole.id
+
+    travel_to Time.zone.local(2026, 7, 3, 18, 0) do
+      employee.update!(active: true)
+    end
+
+    period = employee.reload.employment_periods.sole
+    assert_equal closed_period_id, period.id
+    assert_predicate period, :open?
+  end
+
+  test "deactivating within the undo window removes a short activation period" do
+    employee = create_employee(active: false)
+    original_period = employee.employment_periods.create!(
+      started_at: Time.zone.local(2026, 6, 1),
+      ended_at: Time.zone.local(2026, 6, 30)
+    )
+
+    travel_to Time.zone.local(2026, 7, 3, 9, 0) do
+      employee.update!(active: true)
+    end
+
+    assert_equal 2, employee.reload.employment_periods.count
+    assert_predicate employee.current_employment_period, :open?
+
+    travel_to Time.zone.local(2026, 7, 3, 18, 0) do
+      employee.update!(active: false)
+    end
+
+    periods = employee.reload.employment_periods.to_a
+    assert_equal [ original_period.id ], periods.map(&:id)
+    assert_nil employee.current_employment_period
+  end
+
+  test "active during returns employees with employment periods overlapping the range" do
+    range = Time.zone.local(2026, 7, 1)...Time.zone.local(2026, 8, 1)
+    active_in_month = create_employee(national_id: valid_dni(12_345_690), active: false)
+    active_in_month.employment_periods.create!(
+      started_at: Time.zone.local(2026, 6, 20),
+      ended_at: Time.zone.local(2026, 7, 10)
+    )
+    active_after_month = create_employee(national_id: valid_dni(12_345_691), active: false)
+    active_after_month.employment_periods.create!(
+      started_at: Time.zone.local(2026, 8, 1),
+      ended_at: Time.zone.local(2026, 8, 10)
+    )
+
+    employees = Employee.active_during(range)
+
+    assert_includes employees, active_in_month
+    assert_not_includes employees, active_after_month
   end
 
   test "connects to manager, swipes, corrections, tags and audit actions" do

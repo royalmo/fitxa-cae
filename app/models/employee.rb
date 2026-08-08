@@ -10,15 +10,19 @@ class Employee < ApplicationRecord
   LOGIN_CODE_LENGTH = LOGIN_CODE_RANDOM_DIGITS + 1
   LOGIN_CODE_CHECKSUM = "weighted_mod10_sum"
   LOGIN_CODE_CHECKSUM_WEIGHTS = [ 2, 1, 2, 1, 2, 1 ].freeze
+  EMPLOYMENT_PERIOD_UNDO_WINDOW = 24.hours
   NATIONAL_ID_EDIT_WINDOW = 24.hours
   THEME_PREFERENCES = %w[light dark system].freeze
   DEFAULT_THEME_PREFERENCE = "system"
 
   before_validation :normalize_national_id_attribute
+  after_create :create_initial_employment_period, if: :active?
+  after_update :sync_employment_periods_after_active_change, if: :saved_change_to_active?
 
   has_secure_password validations: false
 
   has_one :manager, dependent: :nullify
+  has_many :employment_periods, dependent: :destroy
   has_many :swipes
   has_many :swipe_corrections, dependent: :destroy
   has_many :requested_swipe_corrections, as: :requester, class_name: "SwipeCorrection"
@@ -28,6 +32,9 @@ class Employee < ApplicationRecord
 
   scope :active, -> { where(active: true) }
   scope :inactive, -> { where(active: false) }
+  scope :active_during, ->(range) {
+    joins(:employment_periods).merge(EmploymentPeriod.overlapping(range)).distinct
+  }
 
   validates :first_name, :national_id, presence: true
   validate :national_id_has_valid_spanish_check_letter
@@ -92,6 +99,14 @@ class Employee < ApplicationRecord
 
   def national_id_locked?(at: Time.current)
     persisted? && created_at.present? && created_at <= at - NATIONAL_ID_EDIT_WINDOW
+  end
+
+  def current_employment_period
+    employment_periods.open.order(started_at: :desc, id: :desc).first
+  end
+
+  def multiple_employment_periods?
+    employment_periods.limit(2).size > 1
   end
 
   def latest_swipe(at: Time.current, on: nil)
@@ -186,6 +201,46 @@ class Employee < ApplicationRecord
 
   def national_id_change_allowed
     errors.add(:national_id, :locked_after_creation) if national_id_locked?
+  end
+
+  def create_initial_employment_period
+    employment_periods.create!(started_at: created_at || Time.current)
+  end
+
+  def sync_employment_periods_after_active_change
+    if active?
+      open_or_create_employment_period
+    else
+      close_or_remove_open_employment_period
+    end
+  end
+
+  def open_or_create_employment_period
+    action_at = employment_period_action_at
+    latest_period = employment_periods.order(started_at: :desc, id: :desc).first
+    return if latest_period&.open?
+
+    if latest_period&.ended_at && latest_period.ended_at > action_at - EMPLOYMENT_PERIOD_UNDO_WINDOW
+      latest_period.update!(ended_at: nil)
+    else
+      employment_periods.create!(started_at: action_at)
+    end
+  end
+
+  def close_or_remove_open_employment_period
+    action_at = employment_period_action_at
+    open_period = current_employment_period
+    return unless open_period
+
+    if open_period.started_at > action_at - EMPLOYMENT_PERIOD_UNDO_WINDOW
+      open_period.destroy!
+    else
+      open_period.update!(ended_at: action_at)
+    end
+  end
+
+  def employment_period_action_at
+    updated_at || Time.current
   end
 
   def self.expected_national_id_letter(national_id)

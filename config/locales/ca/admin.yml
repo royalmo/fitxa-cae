@@ -197,6 +197,8 @@ ca:
         back_to_list: Tornar a persones
         create: Crear
         email: Correu
+        employment_periods: Períodes d'activació
+        current_employment_period: Actualment
         first_name: Nom
         last_name: Cognoms
         national_id: DNI/NIE
@@ -371,9 +373,9 @@ ca:
           title: Resum mensual
           download: Descarregar PDF
           download_csv: Descarregar CSV
-          description: Informe mensual amb totes les persones actives i les persones
-            que han fitxat durant el període, incloent etiquetes, nombre de fitxatges
-            i hores treballades.
+          description: Informe mensual amb totes les persones actives en algun moment
+            del període i les persones que hi han fitxat, incloent etiquetes, nombre
+            de fitxatges i hores treballades.
     report_exports:
       modal:
         title: Preparant l'informe

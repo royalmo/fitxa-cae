@@ -53,7 +53,9 @@ class Admin::EmployeeBulkActionsController < Admin::BaseController
     affected_count = affected_scope.count
     raise NoAffectedEmployees if affected_count.zero?
 
-    affected_scope.update_all(active: target_active, updated_at: Time.current)
+    Employee.transaction do
+      affected_scope.find_each { |employee| employee.update!(active: target_active) }
+    end
 
     flash_key = target_active ? "admin.flash.employee_bulk_activated" : "admin.flash.employee_bulk_deactivated"
 

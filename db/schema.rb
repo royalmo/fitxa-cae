@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_07_085920) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_08_174216) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -80,6 +80,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_085920) do
     t.integer "tag_id", null: false
     t.index ["employee_id", "tag_id"], name: "index_employees_tags_on_employee_id_and_tag_id", unique: true
     t.index ["tag_id", "employee_id"], name: "index_employees_tags_on_tag_id_and_employee_id"
+  end
+
+  create_table "employment_periods", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "employee_id", null: false
+    t.datetime "ended_at"
+    t.datetime "started_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id", "ended_at"], name: "index_employment_periods_on_employee_id_and_ended_at"
+    t.index ["employee_id", "started_at"], name: "index_employment_periods_on_employee_id_and_started_at"
+    t.index ["employee_id"], name: "index_employment_periods_on_employee_id"
+    t.index ["employee_id"], name: "index_employment_periods_on_employee_open_period", unique: true, where: "ended_at IS NULL"
   end
 
   create_table "managers", force: :cascade do |t|
@@ -158,6 +170,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_085920) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "employment_periods", "employees"
   add_foreign_key "managers", "employees"
   add_foreign_key "report_exports", "managers"
   add_foreign_key "swipe_corrections", "employees"

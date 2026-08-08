@@ -94,10 +94,15 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
   end
 
   test "renders monthly summary pdf html" do
-    employee = create_employee(first_name: "Clara", last_name: "Pons")
+    employee = nil
+
+    travel_to Time.zone.local(2026, 7, 1, 8, 0) do
+      employee = create_employee(first_name: "Clara", last_name: "Pons")
+      create_employee(first_name: "Aina", last_name: "Sense hores", national_id: valid_dni(12_345_679))
+    end
+
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 9, 0))
     employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 2, 17, 0))
-    create_employee(first_name: "Aina", last_name: "Sense hores", national_id: valid_dni(12_345_679))
     report = Reports::MonthlySummaryReport.new(month: 7, year: 2026).to_h
 
     html = ApplicationController.render(
@@ -107,7 +112,7 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
     )
 
     assert_includes html, "Resum mensual - Juliol de 2026"
-    assert_includes html, "Recompte d'hores per cada persona activa o amb fitxatges en aquest mes."
+    assert_includes html, "Recompte d'hores per cada persona activa durant aquest mes o amb fitxatges en aquest mes."
     refute_includes html, "class=\"report-kpis\""
     refute_includes html, "<h2>Persones</h2>"
     assert_includes html, "Clara Pons"

@@ -2,6 +2,7 @@ ca:
   activerecord:
     models:
       employee: Persona
+      employment_period: Període d'activació
       manager: Responsable
       tag: Etiqueta
     attributes:
@@ -13,6 +14,10 @@ ca:
         national_id: DNI
         password: Contrasenya
         phone: Telèfon
+      employment_period:
+        employee: Persona
+        ended_at: Final
+        started_at: Inici
       manager:
         active: Estat
         email: Correu
@@ -36,6 +41,10 @@ ca:
           attributes:
             national_id:
               locked_after_creation: no es pot canviar passades 24 hores de la creació
+        employment_period:
+          attributes:
+            ended_at:
+              after_started_at: ha de ser posterior a l'inici
         tag:
           attributes:
             name:

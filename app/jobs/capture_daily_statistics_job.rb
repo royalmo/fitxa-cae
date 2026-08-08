@@ -6,7 +6,7 @@ class CaptureDailyStatisticsJob < ApplicationJob
 
     DailyStatistic.find_or_initialize_by(snapshot_at: snapshot_at).tap do |daily_statistic|
       daily_statistic.update!(
-        active_user_count: Employee.active.count,
+        active_user_count: active_user_count(snapshot_at),
         pending_correction_count: SwipeCorrection.pending.count,
         people_worked: people_worked_count(snapshot_at)
       )
@@ -24,5 +24,9 @@ class CaptureDailyStatisticsJob < ApplicationJob
       .where(swipe_at: snapshot_at.all_day)
       .distinct
       .count(:employee_id)
+  end
+
+  def active_user_count(snapshot_at)
+    Employee.active_during(snapshot_at.beginning_of_day...snapshot_at.next_day.beginning_of_day).count
   end
 end
