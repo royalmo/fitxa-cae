@@ -84,9 +84,7 @@ class Admin::EmployeesController < Admin::BaseController
   end
 
   def employee_params
-    attributes = params.require(:employee).permit(:first_name, :last_name, :national_id, :email, :phone, :active, :password)
-    attributes.delete(:password) if attributes[:password].blank?
-    attributes
+    params.require(:employee).permit(:first_name, :last_name, :national_id, :email, :phone, :active)
   end
 
   def employee_activation_params

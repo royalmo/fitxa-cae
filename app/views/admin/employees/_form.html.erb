@@ -27,27 +27,26 @@
       <%= form.text_field :national_id, class: "form-control" %>
     </div>
 
-    <% if employee.persisted? %>
-      <fieldset class="col-12 col-md-6 admin-status-radio-fieldset">
-        <legend class="form-label"><%= t("admin.employees.form.status") %></legend>
-        <div class="btn-group w-100 admin-status-radio-group" role="group" aria-label="<%= t("admin.employees.form.status") %>">
-          <% [[t("admin.tags.statuses.active"), true], [t("admin.tags.statuses.disabled"), false]].each do |(label, value)| %>
-            <% option_id = "employee_active_#{status_id_suffix}_#{value}" %>
-            <%= form.radio_button :active,
-              value,
-              id: option_id,
-              checked: value ? employee.active? : !employee.active?,
-              class: "btn-check" %>
-            <%= form.label :active,
-              for: option_id,
-              class: class_names("btn admin-status-radio-option", "is-active": value, "is-inactive": !value) do %>
-              <%= icon value ? "circle-check" : "circle-off", class: "admin-status-radio-icon" %>
-              <span><%= label %></span>
-            <% end %>
+    <fieldset class="col-12 col-md-6 admin-status-radio-fieldset">
+      <legend class="form-label"><%= t("admin.employees.form.status") %></legend>
+      <div class="btn-group w-100 admin-status-radio-group" role="group" aria-label="<%= t("admin.employees.form.status") %>">
+        <% [[t("admin.tags.statuses.active"), true], [t("admin.tags.statuses.disabled"), false]].each do |(label, value)| %>
+          <% option_id = "employee_active_#{status_id_suffix}_#{value}" %>
+          <%= form.radio_button :active,
+            value,
+            id: option_id,
+            checked: value ? employee.active? : !employee.active?,
+            disabled: !employee.persisted?,
+            class: "btn-check" %>
+          <%= form.label :active,
+            for: option_id,
+            class: class_names("btn admin-status-radio-option", "is-active": value, "is-inactive": !value) do %>
+            <%= icon value ? "circle-check" : "circle-off", class: "admin-status-radio-icon" %>
+            <span><%= label %></span>
           <% end %>
-        </div>
-      </fieldset>
-    <% end %>
+        <% end %>
+      </div>
+    </fieldset>
 
     <div class="col-12 col-md-6">
       <%= form.label :email, t("admin.employees.form.email"), class: "form-label" %>
@@ -57,13 +56,6 @@
       <%= form.label :phone, t("admin.employees.form.phone"), class: "form-label" %>
       <%= form.telephone_field :phone, autocomplete: "tel", class: "form-control" %>
     </div>
-
-    <% if employee.persisted? %>
-      <div class="col-12">
-        <%= form.label :password, t("admin.employees.form.password"), class: "form-label" %>
-        <%= form.password_field :password, autocomplete: "new-password", class: "form-control" %>
-      </div>
-    <% end %>
 
     <fieldset class="col-12">
       <legend class="form-label"><%= t("admin.employees.form.tags") %></legend>

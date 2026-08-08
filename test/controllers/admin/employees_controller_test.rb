@@ -201,7 +201,19 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "button[type='submit']", text: "Desar", count: 0
     assert_select "input[type='password'][name='employee[password]']", count: 0
     assert_select "select[name='employee[active]']", count: 0
-    assert_select "input[name='employee[active]']", count: 0
+    assert_select "fieldset.admin-status-radio-fieldset" do
+      assert_select "legend.form-label", text: "Estat"
+      assert_select ".admin-status-radio-group.btn-group.w-100" do
+        assert_select "input[type='radio'][name='employee[active]'][value='true'][checked='checked'][disabled] + label.admin-status-radio-option.is-active" do
+          assert_select "svg.admin-status-radio-icon"
+          assert_select "span", text: "Activa"
+        end
+        assert_select "input[type='radio'][name='employee[active]'][value='false'][disabled] + label.admin-status-radio-option.is-inactive" do
+          assert_select "svg.admin-status-radio-icon"
+          assert_select "span", text: "Inactiva"
+        end
+      end
+    end
     assert_select "input[type='checkbox'][name='employee[tag_ids][]']", count: 0
     assert_select ".admin-tag-multi-search[data-controller='tag-multi-search'][data-tag-multi-search-url-value='#{admin_tag_search_path}']" do
       assert_select "input.admin-tag-multi-search-input[name='employee_tag_query'][placeholder='Cerca una etiqueta'][role='combobox']"
@@ -225,16 +237,16 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.admin-page-close-action[href='#{admin_employees_path}'][aria-label='Tornar a persones'] svg.icon"
     assert_select "button[type='submit']", text: "Desar"
     assert_select "button[type='submit']", text: "Crear", count: 0
-    assert_select "input[type='password'][name='employee[password]']", count: 1
+    assert_select "input[type='password'][name='employee[password]']", count: 0
     assert_select "select[name='employee[active]']", count: 0
     assert_select "fieldset.admin-status-radio-fieldset" do
       assert_select "legend.form-label", text: "Estat"
       assert_select ".admin-status-radio-group.btn-group.w-100" do
-        assert_select "input[type='radio'][name='employee[active]'][value='true'] + label.admin-status-radio-option.is-active" do
+        assert_select "input[type='radio'][name='employee[active]'][value='true']:not([disabled]) + label.admin-status-radio-option.is-active" do
           assert_select "svg.admin-status-radio-icon"
           assert_select "span", text: "Activa"
         end
-        assert_select "input[type='radio'][name='employee[active]'][value='false'][checked='checked'] + label.admin-status-radio-option.is-inactive" do
+        assert_select "input[type='radio'][name='employee[active]'][value='false'][checked='checked']:not([disabled]) + label.admin-status-radio-option.is-inactive" do
           assert_select "svg.admin-status-radio-icon"
           assert_select "span", text: "Inactiva"
         end
