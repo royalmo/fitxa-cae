@@ -12,6 +12,7 @@ env:
     ERROR_NOTIFICATION_RECIPIENTS: eric@ericroy.net
     ERROR_NOTIFICATION_SENDER: FitxaCAE <fitxa@cae.cat>
     SMTP_ADDRESS: mail.cae.cat
+    SMTP_PORT: 465
     LABSMOBILE_SENDER: FitxaCAE
     SMTP_DOMAIN: cae.cat
 volumes:
