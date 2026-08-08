@@ -2,15 +2,13 @@ require "csv"
 
 module Reports
   class MonthlySummaryCsv
-    HEADERS = [ "Persona", "DNI/NIE", "Etiquetes", "Fitxatges", "Hores" ].freeze
-
     def initialize(report:)
       @report = report
     end
 
     def to_csv
       CSV.generate do |csv|
-        csv << HEADERS
+        csv << headers
 
         report.fetch(:rows).each do |row|
           csv << row_values(row)
@@ -21,6 +19,10 @@ module Reports
     private
 
     attr_reader :report
+
+    def headers
+      I18n.t("admin.reports.csv.monthly_summary.headers")
+    end
 
     def row_values(row)
       employee = row.fetch(:employee)
@@ -37,7 +39,7 @@ module Reports
     def employee_name(employee, active:)
       name = employee.full_name.presence || employee.first_name
 
-      active ? name : "#{name} (inactiva)"
+      active ? name : "#{name} (#{I18n.t("admin.reports.csv.monthly_summary.inactive")})"
     end
 
     def duration_text(total_seconds)

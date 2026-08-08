@@ -10,14 +10,14 @@ module Admin::ReportsHelper
   def pdf_brand_logo
     tag.div(class: "report-logo", aria: { label: t("app.name") }) do
       safe_join([
-        tag.span("Fitxa", class: "report-logo-fitxa"),
+        tag.span(t("app.short_name"), class: "report-logo-fitxa"),
         tag.img(src: pdf_brand_logo_image_src, alt: "CAE", class: "report-logo-image")
       ])
     end
   end
 
   def pdf_month_year_title(date)
-    l(date, format: "%B de %Y").sub(/\A./) { |character| character.upcase }
+    l(date, format: t("admin.reports.pdf.month_year_format")).sub(/\A./) { |character| character.upcase }
   end
 
   private

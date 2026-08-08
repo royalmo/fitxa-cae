@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ca">
+<html lang="<%= I18n.locale %>">
   <head>
     <meta charset="utf-8">
     <style>
@@ -305,9 +305,10 @@
       <footer class="report-generation-footer">
         <div class="report-footer-legend"><%= yield :report_footer_legend %></div>
         <div class="report-generation-note">
-          Informe generat per <%= manager_display_name(@report_generated_by) %>
-          el dia <%= l(@report_generated_at.to_date, format: :long) %>
-          a les <%= l(@report_generated_at, format: :hour_minute) %>.
+          <%= t("admin.reports.pdf.footer.generated_note",
+            manager: manager_display_name(@report_generated_by),
+            date: l(@report_generated_at.to_date, format: :long),
+            time: l(@report_generated_at, format: :hour_minute)) %>
         </div>
       </footer>
     <% end %>

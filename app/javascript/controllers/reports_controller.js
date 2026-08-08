@@ -24,14 +24,16 @@ export default class extends Controller {
   ]
   static values = {
     exportUrl: String,
-    summaryCsvUrl: String
+    summaryCsvUrl: String,
+    startErrorLabel: String,
+    pollErrorLabel: String
   }
 
   connect() {
     this.downloadedExportIds = new Set()
     this.progress = new AsyncProgress(this, {
-      startErrorLabel: "No s'ha pogut iniciar l'informe.",
-      pollErrorLabel: "No s'ha pogut consultar l'informe.",
+      startErrorLabel: this.startErrorLabelValue,
+      pollErrorLabel: this.pollErrorLabelValue,
       isFinished: (data) => this.exportFinished(data),
       isSuccess: (data) => data.status === "completed" && Boolean(data.download_url),
       onReset: () => this.resetDownloadLink(),

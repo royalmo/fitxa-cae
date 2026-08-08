@@ -18,6 +18,9 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
         assert_select "select[name='year'][data-reports-target='year'] option[selected][value='#{Time.zone.today.year}']"
       end
       assert_select ".admin-reports-tabs-nav", count: 0
+      form = css_select("form.admin-reports-form").first
+      assert_equal I18n.t("admin.reports.index.export_start_error"), form["data-reports-start-error-label-value"]
+      assert_equal I18n.t("admin.reports.index.export_poll_error"), form["data-reports-poll-error-label-value"]
       assert_select ".admin-report-card", count: 2
       assert_select ".admin-report-card", text: /Resum per persona/ do
         assert_select "h2", text: "Resum per persona"
@@ -145,15 +148,17 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.headers.fetch("Content-Disposition"), "fitxa-cae-resum-mensual-2026-07.csv"
 
     csv = CSV.parse(response.body, headers: true)
-    assert_equal [ "Persona", "DNI/NIE", "Etiquetes", "Fitxatges", "Hores" ], csv.headers
+    headers = I18n.t("admin.reports.csv.monthly_summary.headers")
+    assert_equal headers, csv.headers
     assert_equal 2, csv.size
-    assert_equal "Clara Pons", csv[0]["Persona"]
-    assert_equal employee.national_id, csv[0]["DNI/NIE"]
-    assert_equal "Obra;Oficina", csv[0]["Etiquetes"]
-    assert_equal "2", csv[0]["Fitxatges"]
-    assert_equal "8 h 00 min", csv[0]["Hores"]
-    assert_equal "Aina Sense hores", csv[1]["Persona"]
-    assert_equal empty_employee.national_id, csv[1]["DNI/NIE"]
-    assert_equal "0 h 00 min", csv[1]["Hores"]
+    person_header, national_id_header, tags_header, swipes_header, hours_header = headers
+    assert_equal "Clara Pons", csv[0][person_header]
+    assert_equal employee.national_id, csv[0][national_id_header]
+    assert_equal "Obra;Oficina", csv[0][tags_header]
+    assert_equal "2", csv[0][swipes_header]
+    assert_equal "8 h 00 min", csv[0][hours_header]
+    assert_equal "Aina Sense hores", csv[1][person_header]
+    assert_equal empty_employee.national_id, csv[1][national_id_header]
+    assert_equal "0 h 00 min", csv[1][hours_header]
   end
 end

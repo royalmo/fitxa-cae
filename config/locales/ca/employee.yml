@@ -129,6 +129,7 @@ ca:
         title: Correccions
         heading: Correccions
         new_request: Nova correcció
+        new_request_short: Nova
         status: Estat
         filters: Filtrar per
         month: Mes

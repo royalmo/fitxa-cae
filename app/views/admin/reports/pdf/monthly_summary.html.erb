@@ -1,23 +1,22 @@
 <header class="report-header report-summary-header">
   <%= pdf_brand_logo %>
   <h1 class="report-summary-title">
-    Resum mensual - <%= pdf_month_year_title(@report.fetch(:period_start)) %>
+    <%= t("admin.reports.pdf.monthly_summary.title", period: pdf_month_year_title(@report.fetch(:period_start))) %>
   </h1>
 </header>
 
 <section class="report-section">
   <p class="report-muted">
-    Recompte d'hores per cada persona activa o amb fitxatges en aquest mes.
-    S'apliquen correccions aprovades, i s'ignoren fitxatges incorrectes o correccions pendents.
+    <%= t("admin.reports.pdf.monthly_summary.description") %>
   </p>
   <table>
     <thead>
       <tr>
-        <th>Persona</th>
-        <th>DNI/NIE</th>
-        <th>Etiquetes</th>
-        <th class="report-text-end">Fitxatges</th>
-        <th class="report-text-end">Hores</th>
+        <th><%= t("admin.reports.pdf.monthly_summary.table.person") %></th>
+        <th><%= t("admin.reports.pdf.monthly_summary.table.national_id") %></th>
+        <th><%= t("admin.reports.pdf.monthly_summary.table.tags") %></th>
+        <th class="report-text-end"><%= t("admin.reports.pdf.monthly_summary.table.swipes") %></th>
+        <th class="report-text-end"><%= t("admin.reports.pdf.monthly_summary.table.hours") %></th>
       </tr>
     </thead>
     <tbody>
@@ -27,7 +26,7 @@
           <td>
             <%= employee_display_name(employee) %>
             <% unless row.fetch(:active) %>
-              <span class="report-muted">(inactiva)</span>
+              <span class="report-muted">(<%= t("admin.reports.pdf.monthly_summary.inactive") %>)</span>
             <% end %>
           </td>
           <td><em class="report-muted"><%= employee.national_id %></em></td>

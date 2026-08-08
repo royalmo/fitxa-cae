@@ -68,7 +68,8 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
     end
 
     assert_includes html, "Aina Martinez"
-    assert_includes html, "Fitxatges - Juliol de 2026"
+    period_title = pdf_period_title(Date.new(2026, 7, 1))
+    assert_includes html, I18n.t("admin.reports.pdf.employee.title", period: period_title)
     assert_includes html, "600 111 222"
     assert_includes html, "Obra"
     assert_includes html, "report-employee-tags"
@@ -84,13 +85,16 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
     assert_includes html, "report-swipe-time"
     assert_includes html, "report-swipe-deleted-time"
     assert_includes html, "report-swipe-corrected"
-    assert_includes html, "Informe generat per Marta Serra"
-    assert_includes html, "el dia #{I18n.l(generated_at.to_date, format: :long)}"
-    assert_includes html, "a les 14:30."
-    assert_includes html, "Entrada"
-    assert_includes html, "Sortida"
-    assert_includes html, "Corregida"
-    assert_includes html, "Eliminada"
+    assert_includes html, I18n.t(
+      "admin.reports.pdf.footer.generated_note",
+      manager: "Marta Serra",
+      date: I18n.l(generated_at.to_date, format: :long),
+      time: I18n.l(generated_at, format: :hour_minute)
+    )
+    assert_includes html, I18n.t("admin.reports.pdf.employee.legend.entry")
+    assert_includes html, I18n.t("admin.reports.pdf.employee.legend.exit")
+    assert_includes html, I18n.t("admin.reports.pdf.employee.legend.corrected")
+    assert_includes html, I18n.t("admin.reports.pdf.employee.legend.deleted")
   end
 
   test "renders monthly summary pdf html" do
@@ -111,8 +115,10 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
       assigns: { report: report }
     )
 
-    assert_includes html, "Resum mensual - Juliol de 2026"
-    assert_includes html, "Recompte d'hores per cada persona activa o amb fitxatges en aquest mes."
+    period_title = pdf_period_title(Date.new(2026, 7, 1))
+    assert_includes html, I18n.t("admin.reports.pdf.monthly_summary.title", period: period_title)
+    description_intro = I18n.t("admin.reports.pdf.monthly_summary.description").split(".").first
+    assert_includes html, ERB::Util.html_escape(description_intro).to_s
     refute_includes html, "class=\"report-kpis\""
     refute_includes html, "<h2>Persones</h2>"
     assert_includes html, "Clara Pons"
@@ -133,5 +139,9 @@ class ReportsPdfTemplatesTest < ActiveSupport::TestCase
     yield
   ensure
     singleton.define_method(:render_pdf, original_method) if original_method
+  end
+
+  def pdf_period_title(date)
+    I18n.l(date, format: I18n.t("admin.reports.pdf.month_year_format")).sub(/\A./) { |character| character.upcase }
   end
 end

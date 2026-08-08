@@ -67,6 +67,28 @@ class GenerateReportExportJobTest < ActiveJob::TestCase
     assert_match(/\A002-.*-2026-07\.pdf\z/, zip_entries.second)
   end
 
+  test "generates a translated empty marker for an empty zip export" do
+    manager = create_manager
+    tag = Tag.create!(name: "Sense persones #{SecureRandom.hex(4)}", color: "#2563eb", active: true)
+    report_export = manager.report_exports.create!(
+      kind: "tag_zip",
+      parameters: { month: 7, year: 2026, tag_id: tag.id }
+    )
+    purge_stale_artifact(report_export)
+
+    GenerateReportExportJob.perform_now(report_export)
+
+    report_export.reload
+    assert_predicate report_export, :completed?
+    assert_equal "application/zip", report_export.content_type
+
+    empty_entry_name = I18n.t("admin.reports.exports.empty_zip.filename")
+    Zip::File.open_buffer(artifact_data(report_export)) do |zip|
+      assert_equal [ empty_entry_name ], zip.map(&:name)
+      assert_equal I18n.t("admin.reports.exports.empty_zip.body"), zip.read(empty_entry_name)
+    end
+  end
+
   test "marks export failed when generation raises" do
     manager = create_manager
     employee = create_employee

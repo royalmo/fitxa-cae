@@ -2,15 +2,15 @@
 <% totals = @report.fetch(:totals) %>
 
 <% content_for :report_footer_legend do %>
-  <span class="report-footer-legend-item"><%= icon "log-in", class: "report-footer-icon" %> Entrada</span>
-  <span class="report-footer-legend-item"><%= icon "log-out", class: "report-footer-icon" %> Sortida</span>
-  <span class="report-footer-legend-item"><%= icon "asterisk", class: "report-footer-icon" %> Corregida</span>
-  <span class="report-footer-legend-item"><span class="report-footer-deleted-example">08:00</span> Eliminada</span>
+  <span class="report-footer-legend-item"><%= icon "log-in", class: "report-footer-icon" %> <%= t("admin.reports.pdf.employee.legend.entry") %></span>
+  <span class="report-footer-legend-item"><%= icon "log-out", class: "report-footer-icon" %> <%= t("admin.reports.pdf.employee.legend.exit") %></span>
+  <span class="report-footer-legend-item"><%= icon "asterisk", class: "report-footer-icon" %> <%= t("admin.reports.pdf.employee.legend.corrected") %></span>
+  <span class="report-footer-legend-item"><span class="report-footer-deleted-example">08:00</span> <%= t("admin.reports.pdf.employee.legend.deleted") %></span>
 <% end %>
 
 <header class="report-header report-summary-header">
   <%= pdf_brand_logo %>
-  <div class="report-employee-period">Fitxatges - <%= pdf_month_year_title(@report.fetch(:period_start)) %></div>
+  <div class="report-employee-period"><%= t("admin.reports.pdf.employee.title", period: pdf_month_year_title(@report.fetch(:period_start))) %></div>
 </header>
 
 <section class="report-section">
@@ -34,19 +34,19 @@
 <section class="report-section">
   <div class="report-kpis">
     <div class="report-kpi">
-      <div class="report-kpi-label">Hores treballades</div>
+      <div class="report-kpi-label"><%= t("admin.reports.pdf.employee.kpis.worked_hours") %></div>
       <div class="report-kpi-value"><%= duration_text(totals.fetch(:worked_seconds)) %></div>
     </div>
     <div class="report-kpi">
-      <div class="report-kpi-label">Dies amb fitxatges</div>
+      <div class="report-kpi-label"><%= t("admin.reports.pdf.employee.kpis.worked_days") %></div>
       <div class="report-kpi-value"><%= totals.fetch(:worked_days) %></div>
     </div>
     <div class="report-kpi">
-      <div class="report-kpi-label">Fitxatges</div>
+      <div class="report-kpi-label"><%= t("admin.reports.pdf.employee.kpis.swipes") %></div>
       <div class="report-kpi-value"><%= totals.fetch(:swipes_count) %></div>
     </div>
     <div class="report-kpi">
-      <div class="report-kpi-label">Correccions</div>
+      <div class="report-kpi-label"><%= t("admin.reports.pdf.employee.kpis.corrections") %></div>
       <div class="report-kpi-value"><%= totals.fetch(:corrections_count) %></div>
     </div>
   </div>
@@ -56,9 +56,9 @@
   <table>
     <thead>
       <tr>
-        <th>Dia</th>
-        <th>Fitxatges</th>
-        <th class="report-text-end">Hores</th>
+        <th><%= t("admin.reports.pdf.employee.table.day") %></th>
+        <th><%= t("admin.reports.pdf.employee.table.swipes") %></th>
+        <th class="report-text-end"><%= t("admin.reports.pdf.employee.table.hours") %></th>
       </tr>
     </thead>
     <tbody>

@@ -92,8 +92,8 @@ module Reports
 
         Zip::File.open(file.path, create: true) do |zip|
           if employees.empty?
-            zip.get_output_stream("sense-persones.txt") do |entry|
-              entry.write("No hi ha persones per a aquest informe.\n")
+            zip.get_output_stream(I18n.t("admin.reports.exports.empty_zip.filename")) do |entry|
+              entry.write(I18n.t("admin.reports.exports.empty_zip.body"))
             end
           end
 

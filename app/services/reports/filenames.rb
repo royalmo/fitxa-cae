@@ -3,23 +3,23 @@ module Reports
     module_function
 
     def employee_pdf(employee, period_start)
-      "#{slug(employee.full_name.presence || "persona-#{employee.id}")}-#{period_start.strftime("%Y-%m")}.pdf"
+      "#{slug(employee.full_name.presence || I18n.t("admin.reports.exports.filenames.employee_fallback", id: employee.id))}-#{period(period_start)}.pdf"
     end
 
     def tag_zip(tag, period_start)
-      "fitxa-cae-#{slug(tag.name)}-#{period_start.strftime("%Y-%m")}.zip"
+      "fitxa-cae-#{slug(tag.name)}-#{period(period_start)}.zip"
     end
 
     def company_zip(period_start)
-      "fitxa-cae-empresa-#{period_start.strftime("%Y-%m")}.zip"
+      I18n.t("admin.reports.exports.filenames.company_zip", period: period(period_start))
     end
 
     def monthly_summary_pdf(period_start)
-      "fitxa-cae-resum-mensual-#{period_start.strftime("%Y-%m")}.pdf"
+      I18n.t("admin.reports.exports.filenames.monthly_summary_pdf", period: period(period_start))
     end
 
     def monthly_summary_csv(period_start)
-      "fitxa-cae-resum-mensual-#{period_start.strftime("%Y-%m")}.csv"
+      I18n.t("admin.reports.exports.filenames.monthly_summary_csv", period: period(period_start))
     end
 
     def slug(value)
@@ -27,7 +27,11 @@ module Reports
         .downcase
         .gsub(/[^a-z0-9]+/, "-")
         .gsub(/\A-|-+\z/, "")
-        .presence || "informe"
+        .presence || I18n.t("admin.reports.exports.filenames.empty_slug")
+    end
+
+    def period(period_start)
+      period_start.strftime("%Y-%m")
     end
   end
 end

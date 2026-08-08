@@ -391,6 +391,60 @@ ca:
           description: Informe mensual amb totes les persones actives en algun moment
             del període i les persones que hi han fitxat, incloent etiquetes, nombre
             de fitxatges i hores treballades.
+        export_start_error: No s'ha pogut iniciar l'informe.
+        export_poll_error: No s'ha pogut consultar l'informe.
+      pdf:
+        month_year_format: "%B de %Y"
+        footer:
+          generated_note: Informe generat per %{manager} el dia %{date} a les %{time}.
+        employee:
+          title: Fitxatges - %{period}
+          legend:
+            entry: Entrada
+            exit: Sortida
+            corrected: Corregida
+            deleted: Eliminada
+          kpis:
+            worked_hours: Hores treballades
+            worked_days: Dies amb fitxatges
+            swipes: Fitxatges
+            corrections: Correccions
+          table:
+            day: Dia
+            swipes: Fitxatges
+            hours: Hores
+        monthly_summary:
+          title: Resum mensual - %{period}
+          description: >
+            Recompte d'hores per cada persona activa o amb fitxatges en aquest mes.
+            S'apliquen correccions aprovades, i s'ignoren fitxatges incorrectes o correccions pendents.
+          inactive: inactiva
+          table:
+            person: Persona
+            national_id: DNI/NIE
+            tags: Etiquetes
+            swipes: Fitxatges
+            hours: Hores
+      csv:
+        monthly_summary:
+          headers:
+            - Persona
+            - DNI/NIE
+            - Etiquetes
+            - Fitxatges
+            - Hores
+          inactive: inactiva
+      exports:
+        filenames:
+          employee_fallback: persona-%{id}
+          company_zip: fitxa-cae-empresa-%{period}.zip
+          monthly_summary_pdf: fitxa-cae-resum-mensual-%{period}.pdf
+          monthly_summary_csv: fitxa-cae-resum-mensual-%{period}.csv
+          empty_slug: informe
+        empty_zip:
+          filename: sense-persones.txt
+          body: |
+            No hi ha persones per a aquest informe.
     report_exports:
       modal:
         title: Preparant l'informe
