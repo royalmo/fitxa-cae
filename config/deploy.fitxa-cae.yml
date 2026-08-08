@@ -3,10 +3,13 @@ servers:
     hosts:
     - fitxa-cae.compila.cat
 proxy:
-  host: fitxa.cae.cat
+  hosts:
+  - fitxa.cae.cat
+  - fitxar.cae.cat
 env:
   clear:
     APP_HOST: fitxa.cae.cat
+    APP_REDIRECT_HOSTS: fitxar.cae.cat
     HUMAN_RESOURCES_EMAIL: rrhh@cae.cat
     MAILER_FROM_EMAIL: cae@cae.cat
     ERROR_NOTIFICATION_RECIPIENTS: eric@ericroy.net

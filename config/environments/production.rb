@@ -1,8 +1,11 @@
 require "active_support/core_ext/integer/time"
+require_relative "../../lib/canonical_host_redirect"
 
 Rails.application.configure do
   app_host = ENV.fetch("APP_HOST", "example.com")
   app_protocol = ENV.fetch("APP_PROTOCOL", "https")
+  additional_hosts = ENV.fetch("APP_ADDITIONAL_HOSTS", "").split(",").map(&:strip).reject(&:blank?)
+  redirect_hosts = ENV.fetch("APP_REDIRECT_HOSTS", "").split(",").map(&:strip).reject(&:blank?)
   boolean_env = ->(name, default) { ActiveModel::Type::Boolean.new.cast(ENV.fetch(name, default)) }
 
   # Settings specified here will take precedence over those in config/application.rb.
@@ -96,9 +99,19 @@ Rails.application.configure do
 
   # Enable DNS rebinding protection and other `Host` header attacks.
   config.hosts.concat(
-    [ app_host, *ENV.fetch("APP_ADDITIONAL_HOSTS", "").split(",") ].map(&:strip).reject(&:blank?)
+    [ app_host, *additional_hosts, *redirect_hosts ]
   )
   #
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  if redirect_hosts.any?
+    config.middleware.insert_before(
+      ActionDispatch::HostAuthorization,
+      CanonicalHostRedirect,
+      redirect_hosts: redirect_hosts,
+      target_host: app_host,
+      target_protocol: app_protocol
+    )
+  end
 end
