@@ -31,8 +31,14 @@ class Admin::ManagersController < Admin::BaseController
 
   def update
     @manager = Manager.find(params[:id])
+    attributes = manager_params
 
-    if @manager.update(manager_params)
+    if self_deactivation_attempt?(@manager, attributes)
+      @manager.assign_attributes(attributes)
+      @manager.active = true
+      @manager.errors.add(:active, :self_deactivation)
+      render_manager_form(:edit)
+    elsif @manager.update(attributes)
       redirect_to admin_managers_path, notice: t("admin.flash.manager_updated")
     else
       render_manager_form(:edit)
@@ -43,7 +49,9 @@ class Admin::ManagersController < Admin::BaseController
     @manager = Manager.find(params[:id])
     target_active = ActiveModel::Type::Boolean.new.cast(manager_activation_params[:active])
 
-    if @manager.update(active: target_active)
+    if self_deactivation_attempt?(@manager, active: target_active)
+      redirect_back fallback_location: admin_managers_path, alert: t("admin.flash.manager_self_deactivation_blocked")
+    elsif @manager.update(active: target_active)
       redirect_back fallback_location: admin_managers_path,
         notice: t(target_active ? "admin.flash.manager_activated" : "admin.flash.manager_deactivated")
     else
@@ -66,6 +74,13 @@ class Admin::ManagersController < Admin::BaseController
 
   def record_not_unique_attribute(error)
     error.message.include?("index_managers_on_lower_email") ? :email : :employee_id
+  end
+
+  def self_deactivation_attempt?(manager, attributes)
+    return false unless manager.id == current_manager&.id
+    return false unless attributes.key?(:active) || attributes.key?("active")
+
+    !ActiveModel::Type::Boolean.new.cast(attributes[:active])
   end
 
   def filtered_managers

@@ -80,14 +80,24 @@
           <div class="btn-group w-100 admin-status-radio-group" role="group" aria-label="<%= t("admin.managers.form.status") %>">
             <% [[status_text(:active), true], [status_text(:disabled), false]].each do |(label, value)| %>
               <% option_id = "manager_active_#{status_id_suffix}_#{value}" %>
+              <% option_disabled = admin_manager_active_option_disabled?(manager, value) %>
+              <% label_options = {
+                for: option_id,
+                class: class_names("btn admin-status-radio-option", "is-active": value, "is-inactive": !value, disabled: option_disabled)
+              } %>
+              <% if option_disabled %>
+                <% label_options[:title] = t("admin.managers.activation.self_deactivation_disabled") %>
+                <% label_options[:tabindex] = "0" %>
+                <% label_options[:aria] = { disabled: "true" } %>
+                <% label_options[:data] = { controller: "bootstrap-tooltip", bs_toggle: "tooltip", bs_placement: "top" } %>
+              <% end %>
               <%= form.radio_button :active,
                 value,
                 id: option_id,
                 checked: value ? manager.active? : !manager.active?,
+                disabled: option_disabled,
                 class: "btn-check" %>
-              <%= form.label :active,
-                for: option_id,
-                class: class_names("btn admin-status-radio-option", "is-active": value, "is-inactive": !value) do %>
+              <%= form.label :active, **label_options do %>
                 <%= icon value ? "circle-check" : "circle-off", class: "admin-status-radio-icon" %>
                 <span><%= label %></span>
               <% end %>

@@ -28,6 +28,8 @@ ca:
       models:
         manager:
           attributes:
+            active:
+              self_deactivation: no es pot desactivar per al teu propi compte
             employee_id:
               taken: ja està assignada a un altre responsable
         tag:

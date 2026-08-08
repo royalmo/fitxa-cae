@@ -65,6 +65,8 @@
               <% manager_name = manager_display_name(manager) %>
               <% activation_action = admin_manager_activation_action(manager) %>
               <% activation_modal_id = admin_manager_activation_modal_id(manager) %>
+              <% activation_disabled = admin_manager_self_deactivation_disabled?(manager) %>
+              <% activation_button_title = admin_manager_activation_button_title(manager, activation_action) %>
               <tr class="<%= class_names("admin-manager-row", "is-inactive": manager_status == :disabled) %>">
                 <td>
                   <span class="admin-manager-name">
@@ -78,14 +80,29 @@
                 <td class="text-nowrap"><%= admin_manager_last_access_text(manager) %></td>
                 <td class="text-end">
                   <div class="d-inline-flex align-items-center justify-content-end gap-1">
-                    <button type="button"
-                      class="<%= admin_manager_activation_button_class(manager) %>"
-                      title="<%= t("admin.managers.activation.#{activation_action}.button", name: manager_name) %>"
-                      aria-label="<%= t("admin.managers.activation.#{activation_action}.button", name: manager_name) %>"
-                      data-bs-toggle="modal"
-                      data-bs-target="#<%= activation_modal_id %>">
-                      <%= icon admin_manager_activation_icon(manager) %>
-                    </button>
+                    <% if activation_disabled %>
+                      <span
+                        class="d-inline-block"
+                        title="<%= activation_button_title %>"
+                        tabindex="0"
+                        data-controller="bootstrap-tooltip"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top">
+                    <% end %>
+                      <button type="button"
+                        class="<%= admin_manager_activation_button_class(manager) %>"
+                        title="<%= activation_button_title %>"
+                        aria-label="<%= activation_button_title %>"
+                        <%= "disabled" if activation_disabled %>
+                        <% unless activation_disabled %>
+                          data-bs-toggle="modal"
+                          data-bs-target="#<%= activation_modal_id %>"
+                        <% end %>>
+                        <%= icon admin_manager_activation_icon(manager) %>
+                      </button>
+                    <% if activation_disabled %>
+                      </span>
+                    <% end %>
 
                     <%= link_to edit_admin_manager_path(manager),
                       class: "btn btn-sm btn-outline-secondary admin-row-action",
@@ -102,7 +119,9 @@
       </div>
 
       <% @managers.each do |manager| %>
-        <%= render "activation_modal", manager: manager, action: admin_manager_activation_action(manager) %>
+        <% unless admin_manager_self_deactivation_disabled?(manager) %>
+          <%= render "activation_modal", manager: manager, action: admin_manager_activation_action(manager) %>
+        <% end %>
       <% end %>
 
       <% if @managers.empty? %>

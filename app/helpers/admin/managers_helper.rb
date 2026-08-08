@@ -27,6 +27,24 @@ module Admin::ManagersHelper
     "manager_activation_modal_#{manager.id}"
   end
 
+  def admin_manager_self?(manager)
+    manager.persisted? && manager.id == current_manager&.id
+  end
+
+  def admin_manager_self_deactivation_disabled?(manager)
+    admin_manager_self?(manager) && manager.active?
+  end
+
+  def admin_manager_active_option_disabled?(manager, value)
+    admin_manager_self?(manager) && ActiveModel::Type::Boolean.new.cast(value) == false
+  end
+
+  def admin_manager_activation_button_title(manager, action)
+    return t("admin.managers.activation.self_deactivation_disabled") if admin_manager_self_deactivation_disabled?(manager)
+
+    t("admin.managers.activation.#{action}.button", name: manager_display_name(manager))
+  end
+
   def admin_manager_activation_button_class(manager)
     class_names(
       "btn btn-sm admin-row-action",

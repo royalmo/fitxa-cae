@@ -166,6 +166,35 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='manager[last_name]'][value='Editat']"
   end
 
+  test "disables self deactivation controls in list and form" do
+    signed_in_manager = create_manager(
+      first_name: "Sessio",
+      last_name: "Actual",
+      email: "signed.in.manager@example.test"
+    )
+    log_in_manager(signed_in_manager)
+
+    get admin_managers_path, params: { q: "signed.in.manager@example.test" }
+
+    assert_response :success
+    tooltip = "No et pots desactivar a tu mateix."
+    activation_modal_id = "manager_activation_modal_#{signed_in_manager.id}"
+    assert_select "span[data-controller='bootstrap-tooltip'][data-bs-toggle='tooltip'][title='#{tooltip}']" do
+      assert_select "button.admin-row-action[disabled][aria-label='#{tooltip}'] svg.icon"
+      assert_select "button[data-bs-toggle='modal']", count: 0
+      assert_select "button[data-bs-target='##{activation_modal_id}']", count: 0
+    end
+    assert_select "##{activation_modal_id}", count: 0
+
+    get edit_admin_manager_path(signed_in_manager)
+
+    assert_response :success
+    assert_select "input[type='radio'][name='manager[active]'][value='true'][checked='checked']"
+    assert_select "input[type='radio'][name='manager[active]'][value='true'][disabled]", count: 0
+    assert_select "input[type='radio'][name='manager[active]'][value='false'][disabled='disabled'] + label.admin-status-radio-option.is-inactive.disabled[title='#{tooltip}'][aria-disabled='true'][data-controller='bootstrap-tooltip'][data-bs-toggle='tooltip']",
+      text: "Inactiu"
+  end
+
   test "renders validation error when linked employee already has a manager" do
     employee = create_employee(first_name: "Ona", last_name: "Prat")
     create_manager(employee: employee, email: "first.manager@example.test")
@@ -358,5 +387,39 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_managers_path
     assert_predicate manager.reload, :active?
     assert_equal "Responsable activat.", flash[:notice]
+  end
+
+  test "does not allow the signed in manager to disable themselves from the list action" do
+    signed_in_manager = create_manager(email: "signed.in.manager@example.test")
+    log_in_manager(signed_in_manager)
+
+    patch activation_admin_manager_path(signed_in_manager), params: { manager: { active: "false" } }
+
+    assert_redirected_to admin_managers_path
+    assert_predicate signed_in_manager.reload, :active?
+    assert_equal "No et pots desactivar a tu mateix.", flash[:alert]
+  end
+
+  test "does not allow the signed in manager to disable themselves from the edit form" do
+    signed_in_manager = create_manager(
+      first_name: "Sessio",
+      last_name: "Actual",
+      email: "signed.in.manager@example.test"
+    )
+    log_in_manager(signed_in_manager)
+
+    patch admin_manager_path(signed_in_manager), params: {
+      manager: {
+        first_name: "Sessio",
+        last_name: "Actual",
+        email: "signed.in.manager@example.test",
+        employee_id: "",
+        active: "0"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_predicate signed_in_manager.reload, :active?
+    assert_select ".error-summary li", text: "Estat no es pot desactivar per al teu propi compte"
   end
 end

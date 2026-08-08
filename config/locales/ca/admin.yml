@@ -44,6 +44,7 @@ ca:
       manager_activated: Responsable activat.
       manager_activation_failed: No s'ha pogut actualitzar l'estat del responsable.
       manager_deactivated: Responsable desactivat.
+      manager_self_deactivation_blocked: No et pots desactivar a tu mateix.
       manager_updated: Responsable actualitzat.
     nav:
       admin_badge: ADMIN
@@ -621,6 +622,7 @@ ca:
         no_email: Sense correu
         empty: No hi ha responsables amb aquests filtres.
       activation:
+        self_deactivation_disabled: No et pots desactivar a tu mateix.
         activate:
           button: Activar responsable %{name}
           title: Activar responsable
