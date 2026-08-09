@@ -46,7 +46,7 @@ cd /path/to/this/repo
 bundle install
 bin/rails db:prepare
 bin/rails db:seed:replant
-# start the server with `rails s`
+# start the server with `bin/dev` so generated Sass assets are built first
 # test the app with `rails test` or `bin/ci`
 ```
 

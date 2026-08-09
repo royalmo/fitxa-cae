@@ -88,7 +88,12 @@ module SmsProvider
     end
 
     def deliver_login_code(phone:, code:)
-      message = I18n.t("employee.sessions.sms.body", code: code, minutes: Employee::LOGIN_CODE_TTL.in_minutes.to_i)
+      message = I18n.t(
+        "employee.sessions.sms.body",
+        app_name: Rails.configuration.x.app_name,
+        code: code,
+        minutes: Employee::LOGIN_CODE_TTL.in_minutes.to_i
+      )
 
       return mock_delivery(phone: phone, message: message) unless enabled?
 

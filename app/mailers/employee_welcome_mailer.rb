@@ -5,6 +5,6 @@ class EmployeeWelcomeMailer < ApplicationMailer
     @app_url = mailer_app_url
     @password_url = employee_password_setup_url(employee.password_setup_token)
 
-    mail to: employee.email, subject: t(".subject")
+    mail to: employee.email, subject: t(".subject", app_name: app_name)
   end
 end

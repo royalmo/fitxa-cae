@@ -4,7 +4,7 @@ class ManagerPasswordMailer < ApplicationMailer
     @manager_name = manager.full_name.presence || manager.email
     @password_url = edit_admin_password_reset_url(manager.password_setup_token)
 
-    mail to: manager.email, subject: t(".subject")
+    mail to: manager.email, subject: t(".subject", app_name: app_name)
   end
 
   def password_reset(manager)
@@ -12,6 +12,6 @@ class ManagerPasswordMailer < ApplicationMailer
     @manager_name = manager.full_name.presence || manager.email
     @password_url = edit_admin_password_reset_url(manager.password_reset_token)
 
-    mail to: manager.email, subject: t(".subject")
+    mail to: manager.email, subject: t(".subject", admin_name: app_admin_name, app_name: app_name)
   end
 end

@@ -3,7 +3,6 @@ class ErrorReportMailer < ApplicationMailer
   layout "plain_mailer"
 
   DEFAULT_RECIPIENTS = "eric@ericroy.net"
-  DEFAULT_SENDER = "FitxaCAE Errors <errors@fitxacae.invalid>"
 
   def report(error_report)
     @error_report = error_report
@@ -22,11 +21,11 @@ class ErrorReportMailer < ApplicationMailer
   end
 
   def error_sender
-    ENV.fetch("ERROR_NOTIFICATION_SENDER", DEFAULT_SENDER)
+    ENV.fetch("ERROR_NOTIFICATION_SENDER", "#{app_name} Errors <errors@#{Rails.configuration.x.app_slug}.invalid>")
   end
 
   def error_subject
     message = @error_report.fetch(:message).to_s.tr("\n", " ").truncate(80)
-    "[FitxaCAE #{@error_report.fetch(:environment)} ERROR] #{@error_report.fetch(:error_class)}: #{message}"
+    "[#{app_name} #{@error_report.fetch(:environment)} ERROR] #{@error_report.fetch(:error_class)}: #{message}"
   end
 end

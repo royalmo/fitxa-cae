@@ -7,19 +7,23 @@ module Reports
     end
 
     def tag_zip(tag, period_start)
-      "fitxa-cae-#{slug(tag.name)}-#{period(period_start)}.zip"
+      "#{app_slug}-#{slug(tag.name)}-#{period(period_start)}.zip"
     end
 
     def company_zip(period_start)
-      I18n.t("admin.reports.exports.filenames.company_zip", period: period(period_start))
+      I18n.t("admin.reports.exports.filenames.company_zip", app_slug: app_slug, period: period(period_start))
     end
 
     def monthly_summary_pdf(period_start)
-      I18n.t("admin.reports.exports.filenames.monthly_summary_pdf", period: period(period_start))
+      I18n.t("admin.reports.exports.filenames.monthly_summary_pdf", app_slug: app_slug, period: period(period_start))
     end
 
     def monthly_summary_csv(period_start)
-      I18n.t("admin.reports.exports.filenames.monthly_summary_csv", period: period(period_start))
+      I18n.t("admin.reports.exports.filenames.monthly_summary_csv", app_slug: app_slug, period: period(period_start))
+    end
+
+    def app_slug
+      Rails.configuration.x.app_slug
     end
 
     def slug(value)

@@ -6,12 +6,12 @@ ca:
       dark: Fosc
       system: Predeterminat
     sessions:
-      install_prompt: Instal·la FitxaCAE
+      install_prompt: Instal·la %{app_name}
       flash:
         require_login: Inicia sessió per continuar.
         code_required: Demana un codi nou per continuar.
       sms:
-        body: El teu codi de Fitxa CAE és %{code}. Caduca en %{minutes} minuts.
+        body: El teu codi de %{app_name} és %{code}. Caduca en %{minutes} minuts.
       new:
         title: Iniciar sessió
         heading: Inicia sessió
@@ -256,7 +256,7 @@ ca:
       edit:
         title: Nova contrasenya
         heading: Crea una contrasenya
-        first_login_notice: Crea una contrasenya per accedir més fàcilment a FitxaCAE el proper cop.
+        first_login_notice: Crea una contrasenya per accedir més fàcilment a %{app_name} el proper cop.
         error_title: Revisa la contrasenya
         password: Nova contrasenya
         password_confirmation: Repeteix la contrasenya

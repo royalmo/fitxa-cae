@@ -1,7 +1,5 @@
 ca:
   app:
-    name: Fitxa CAE
-    short_name: Fitxa
     description: Registre de temps simple per a equips operatius.
   date:
     formats:

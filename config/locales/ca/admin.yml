@@ -437,9 +437,9 @@ ca:
       exports:
         filenames:
           employee_fallback: persona-%{id}
-          company_zip: fitxa-cae-empresa-%{period}.zip
-          monthly_summary_pdf: fitxa-cae-resum-mensual-%{period}.pdf
-          monthly_summary_csv: fitxa-cae-resum-mensual-%{period}.csv
+          company_zip: "%{app_slug}-empresa-%{period}.zip"
+          monthly_summary_pdf: "%{app_slug}-resum-mensual-%{period}.pdf"
+          monthly_summary_csv: "%{app_slug}-resum-mensual-%{period}.csv"
           empty_slug: informe
         empty_zip:
           filename: sense-persones.txt

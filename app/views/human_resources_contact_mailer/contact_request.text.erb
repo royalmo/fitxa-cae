@@ -1,6 +1,6 @@
 <%= t(".greeting") %>
 
-<%= t(".intro") %>
+<%= t(".intro", app_name: app_name) %>
 
 <%= t(".employee") %>: <%= @employee.full_name %>
 <%= t(".national_id") %>: <%= @employee.national_id %>

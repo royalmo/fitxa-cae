@@ -1,6 +1,6 @@
 <%= t("mailers.shared.greeting", name: @employee_name) %>
 
-<%= t(".intro_text", app_name: t("mailers.shared.app_name")) %>
+<%= t(".intro_text", app_name: app_name) %>
 <%= @app_url %>
 
 <%= @code %>
@@ -9,4 +9,4 @@
 
 <%= t("mailers.shared.signoff") %>
 
-<%= t("mailers.shared.platform_signature") %>
+<%= t("mailers.shared.platform_signature", app_name: app_name) %>

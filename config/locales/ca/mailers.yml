@@ -1,7 +1,6 @@
 ca:
   mailers:
     shared:
-      app_name: FitxaCAE
       greeting: Hola %{name},
       greeting_prefix: Hola
       create_password_button: Crea la contrasenya
@@ -9,25 +8,25 @@ ca:
       password_fallback: "Si el botó no funciona, copia i enganxa aquest enllaç al navegador:"
       password_setup_expires: Aquest enllaç caduca d'aquí a 1 mes.
       signoff: Salutacions,
-      platform_signature: La plataforma FitxaCAE
+      platform_signature: La plataforma %{app_name}
   employee_login_mailer:
     code:
-      subject: "[FitxaCAE] Codi d'accés: %{code}"
+      subject: "[%{app_name}] Codi d'accés: %{code}"
       intro_text: "Utilitza el següent codi per accedir a %{app_name}:"
       intro_prefix: Utilitza el següent codi per accedir a
       expires: Aquest codi caduca en %{minutes} minuts. Si no l'has demanat tu, pots ignorar aquest missatge.
   employee_welcome_mailer:
     welcome:
-      subject: Et donem la benvinguda a FitxaCAE
+      subject: Et donem la benvinguda a %{app_name}
       account_created_text: "S'ha creat un compte amb aquest correu a %{app_name} (%{app_url}): l'eina que hauràs d'utilitzar per dur control del teu registre horari laboral."
       account_created_prefix: S'ha creat un compte amb aquest correu a
       account_created_suffix: l'eina que hauràs d'utilitzar per dur control del teu registre horari laboral.
       contact: Per a qualsevol dubte ens pots contactar responent aquest correu o pels mitjans habituals de Recursos Humans.
   human_resources_contact_mailer:
     contact_request:
-      subject: "[FitxaCAE] %{subject}"
+      subject: "[%{app_name}] %{subject}"
       greeting: Hola,
-      intro: S'ha rebut un nou missatge des de FitxaCAE.
+      intro: S'ha rebut un nou missatge des de %{app_name}.
       employee: Treballador
       national_id: DNI/NIE
       email: Correu
@@ -36,10 +35,10 @@ ca:
       blank: No informat
   manager_password_mailer:
     password_setup:
-      subject: "[FitxaCAE] Compte de responsable creat"
-      body: S'ha creat el teu compte de responsable a FitxaCAE.
+      subject: "[%{app_name}] Compte de responsable creat"
+      body: S'ha creat el teu compte de responsable a %{app_name}.
     password_reset:
-      subject: "[FitxaCAE] Restableix la contrasenya de FitxaCAE Admin"
+      subject: "[%{app_name}] Restableix la contrasenya de %{admin_name}"
       body: Hem rebut una sol·licitud per restablir la contrasenya del teu compte de responsable.
       link: Restableix la contrasenya
       button: Canviar contrasenya

@@ -90,7 +90,7 @@ class Employee::PasswordResetsController < ApplicationController
   end
 
   def edit
-    flash.now[:notice] = t(".first_login_notice") if pending_employee_password_setup_first_login?
+    flash.now[:notice] = t(".first_login_notice", app_name: Rails.configuration.x.app_name) if pending_employee_password_setup_first_login?
   end
 
   def update

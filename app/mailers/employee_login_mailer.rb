@@ -6,6 +6,6 @@ class EmployeeLoginMailer < ApplicationMailer
     @ttl_minutes = Employee::LOGIN_CODE_TTL.in_minutes.to_i
     @app_url = mailer_app_url
 
-    mail to: employee.email, subject: t(".subject", code: code)
+    mail to: employee.email, subject: t(".subject", app_name: app_name, code: code)
   end
 end

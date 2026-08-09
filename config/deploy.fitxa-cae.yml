@@ -1,3 +1,4 @@
+service: fitxa_cae
 servers:
   web:
     hosts:
@@ -8,9 +9,12 @@ proxy:
   - fitxar.cae.cat
 env:
   clear:
+    APP_NAME: FitxaCAE
     APP_HOST: fitxa.cae.cat
+    APP_SLUG: fitxa-cae
     APP_REDIRECT_HOSTS: fitxar.cae.cat
     HUMAN_RESOURCES_EMAIL: rrhh@cae.cat
+    LEGAL_NOTICE_URL: https://cae.cat/avisos-legals/
     MAILER_FROM_EMAIL: cae@cae.cat
     ERROR_NOTIFICATION_RECIPIENTS: eric@ericroy.net
     ERROR_NOTIFICATION_SENDER: FitxaCAE <cae@cae.cat>

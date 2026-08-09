@@ -8,7 +8,7 @@ ca:
         actions:
           home: Torna a l'inici
           human_resources: Contacta amb RRHH
-        mail_subject: Incidència FitxaCAE - Error %{code}
+        mail_subject: Incidència %{app_name} - Error %{code}
         bad_request:
           title: Sol·licitud incorrecta
           heading: No podem obrir aquesta sol·licitud.
@@ -20,7 +20,7 @@ ca:
         not_acceptable:
           title: Navegador no compatible
           heading: Aquest navegador no és compatible.
-          body: Obre FitxaCAE amb un navegador actual per continuar.
+          body: Obre %{app_name} amb un navegador actual per continuar.
         unprocessable_entity:
           title: Canvi rebutjat
           heading: No s'ha pogut aplicar aquest canvi.

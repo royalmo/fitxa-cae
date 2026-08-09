@@ -15,13 +15,13 @@ end %>
 
 <section <%= tag.attributes(section_attributes.merge(aria: { labelledby: "error-page-title" })) %>>
   <h1 id="error-page-title" class="<%= "mb-0" if @admin_error_page %>"><%= t("errors.pages.show.#{@error_key}.heading") %></h1>
-  <p class="<%= "mb-0 text-body-secondary" if @admin_error_page %>"><%= t("errors.pages.show.#{@error_key}.body") %></p>
+  <p class="<%= "mb-0 text-body-secondary" if @admin_error_page %>"><%= t("errors.pages.show.#{@error_key}.body", app_name: app_name) %></p>
 
   <div class="<%= action_classes %>">
     <%= link_to t("errors.pages.show.actions.home"), home_path, class: home_button_class %>
     <%= mail_to @human_resources_email,
       t("errors.pages.show.actions.human_resources"),
-      subject: t("errors.pages.show.mail_subject", code: @error_code),
+      subject: t("errors.pages.show.mail_subject", app_name: app_name, code: @error_code),
       class: support_button_class %>
   </div>
 </section>

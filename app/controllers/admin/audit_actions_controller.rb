@@ -32,7 +32,7 @@ class Admin::AuditActionsController < Admin::BaseController
     )
 
     send_data csv,
-      filename: "fitxa-cae-activitat-#{Time.zone.today.strftime("%Y%m%d")}.csv",
+      filename: "#{Rails.configuration.x.app_slug}-activitat-#{Time.zone.today.strftime("%Y%m%d")}.csv",
       type: "text/csv; charset=utf-8"
   end
 

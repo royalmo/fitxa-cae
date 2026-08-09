@@ -2,7 +2,7 @@
 
 <p>
   <%= t(".intro_prefix") %>
-  <%= link_to t("mailers.shared.app_name"), @app_url %>:
+  <%= link_to app_name, @app_url %>:
 </p>
 
 <p class="mailer-code-wrap"><span class="mailer-code"><%= @code %></span></p>
@@ -11,5 +11,5 @@
 
 <p>
   <%= t("mailers.shared.signoff") %><br>
-  <%= t("mailers.shared.platform_signature") %>
+  <%= t("mailers.shared.platform_signature", app_name: app_name) %>
 </p>
