@@ -1,17 +1,13 @@
 ca:
   admin:
-    area: Gestió
     guest: Responsable
-    role: Responsable
     flash:
       correction_already_reviewed: Aquesta correcció ja està revisada.
       correction_approved: Correcció aprovada.
-      correction_created: Correcció creada.
       correction_created_and_approved: Correcció creada i aprovada.
       correction_approved_with_modifications: Correcció aprovada amb modificacions.
       correction_rejected: Correcció rebutjada.
       correction_stale: Aquesta correcció ha canviat. Revisa-la abans de tornar-la a desar.
-      correction_updated: Correcció actualitzada.
       tag_activated: Etiqueta activada.
       tag_activation_failed: No s'ha pogut actualitzar l'estat de l'etiqueta.
       tag_created: Etiqueta creada.
@@ -32,7 +28,6 @@ ca:
       employee_created: Persona creada.
       employee_deactivated: Persona desactivada.
       employee_updated: Persona actualitzada.
-      import_started: Importació iniciada.
       import_completed:
         one: S'ha importat 1 persona.
         other: S'han importat %{count} persones.
@@ -68,8 +63,6 @@ ca:
       pending_corrections:
         one: 1 correcció pendent
         other: "%{count} correccions pendents"
-    filters:
-      title: Filtres
     shared:
       employee_search:
         clear: Esborrar persona
@@ -133,23 +126,11 @@ ca:
       index:
         title: Resum
         heading: Hola, %{name}.
-        live_title: Fitxatges recents
-        corrections_title: Correccions pendents
-        employee: Persona
-        tags: Etiquetes
-        last_clocking: Últim fitxatge
-        no_pending_corrections: No hi ha correccions pendents.
-        no_recent_swipes: Encara no hi ha fitxatges.
-        no_tags: Sense etiquetes
         stats:
           present: Treballant
           pending_corrections: Correccions pendents
           month_hours: Hores del mes
           year_hours: Hores de l'any
-          inactive: Persones inactives
-          now: Ara
-          open: Obertes
-          employees: Persones
         statistics:
           tabs:
             active_people: Persones actives
@@ -186,8 +167,6 @@ ca:
         all_tags: Totes les etiquetes
         status: Estat
         all_statuses: Qualsevol estat
-        active_statuses: Actives
-        disabled_statuses: Inactives
         national_id: DNI/NIE
         name: Nom
         last_clocking: Últim fitxatge
@@ -205,7 +184,6 @@ ca:
         last_name: Cognoms
         national_id: DNI/NIE
         national_id_locked_tooltip: Crea una nova persona si vols canvia el DNI/NIE.
-        password: Contrasenya
         phone: Telèfon
         status: Estat
         tags: Etiquetes
@@ -313,7 +291,6 @@ ca:
         tags: Etiquetes per a les noves persones (opcional)
         paste_tab: Enganxar dades
         file_tab: Pujar fitxer
-        pasted_data: Dades
         pasted_data_hint: Enganxa aquí les graelles d'excel que vols importar.
         pasted_data_placeholder: |-
           Aina,Martinez Vidal,12345678Z,aina@example.test,600 111 222
@@ -480,7 +457,6 @@ ca:
         date: Data
         hours: Hores
         swipes: Fitxatges
-        status: Estat
         empty: Selecciona una persona per veure els fitxatges.
         empty_day: Sense fitxatges
         create_day: Crear fitxatges el %{date}
@@ -488,7 +464,6 @@ ca:
         day_corrections:
           button: Veure correccions del %{date}
           title: Correccions del %{date}
-          no_comments: Sense comentari.
         review:
           employee: Persona
           day: Dia
@@ -510,7 +485,6 @@ ca:
         heading: Calendaris
         employee: Persona
         employee_search_placeholder: Cerca per nom, DNI, correu o telèfon
-        year: Any
         previous_year: Any anterior
         next_year: Any següent
         loading: Carregant calendari...
@@ -549,8 +523,6 @@ ca:
         new_tag: Nova etiqueta
         search_placeholder: Nom
         all_statuses: Totes
-        active_statuses: Actives
-        disabled_statuses: Inactives
         name: Nom
         status: Estat
         employees: Persones
@@ -607,7 +579,6 @@ ca:
         author: Fet per
         activity: Activitat
         recipient: Afecta a
-        extra_info: Detall
         view_action: Veure activitat
         modal_title: Detall de l'activitat
         raw_details: Detalls en brut
@@ -625,8 +596,6 @@ ca:
         new_manager: Alta de responsable
         search_placeholder: Nom, cognoms o correu
         all_statuses: Qualsevol estat
-        active_statuses: Actives
-        disabled_statuses: Inactives
         name: Nom
         email: Correu
         last_access: Darrer accés
@@ -668,8 +637,6 @@ ca:
         first_name: Nom
         last_name: Cognoms
         email: Correu
-        password: Contrasenya
-        password_keep_blank: deixar en blanc per no modificar
         employee: Persona vinculada
         employee_search_placeholder: Cerca per nom, DNI, correu o telèfon
         no_employee: Sense persona vinculada
@@ -694,7 +661,6 @@ ca:
         date: Data
         request: Petició
         status: Estat
-        all_statuses: Tots
         status_filters:
           all: Totes
           pending: Pendents
@@ -707,7 +673,6 @@ ca:
         year: Any
         all_years: Tots els anys
         validator: Validat per
-        age: Antiguitat
         empty: No hi ha correccions registrades.
         summary:
           existing: "%{kind} existent"
@@ -749,12 +714,6 @@ ca:
         title: Correcció
         heading: Correcció
         back_to_list: Tornar
-        request: Petició
-        validator: Validat per
-        not_reviewed: Sense revisar
-        created_at: Creada
-        answered_at: 'Resposta: %{date}'
-        sent_at: 'Enviada: %{date}'
         requested_ago: Sol·licitada %{distance}
         created_by: Creada per %{name} %{distance}
         reviewed_by:
@@ -778,13 +737,10 @@ ca:
         employee: Persona
         employee_search_placeholder: Cerca per nom, DNI, correu o telèfon
         clear_employee: Esborrar persona
-        select_employee: Selecciona una persona
         day: Dia
         swipes: Fitxatges
-        existing_swipes: Fitxatges existents
         invalidate: Invalidar
         keep_swipe: Restaurar
-        no_existing_swipes: No hi ha fitxatges per aquest dia.
         select_employee_day_empty: Selecciona una persona i un dia per veure els fitxatges.
         loading_day: Carregant fitxatges...
         existing_correction: Ja hi ha una correcció per aquesta persona i dia.
@@ -804,16 +760,11 @@ ca:
         employee_note: Comentari de la persona
         no_employee_note: Sense comentari.
         hr_note: Comentari de RRHH
-        no_modified_changes: Canvia algun fitxatge per aprovar amb modificacions.
-        requested_swipes: Fitxatges sol·licitats
         entries: Entrades
         exits: Sortides
         request_entry: Afegir entrada
         request_exit: Afegir sortida
         remove_requested_swipe: Eliminar fitxatge sol·licitat
-        no_requested_swipe: Sense fitxatge
-        kind: Tipus
-        hour: Hora
         note: Comentari
       review:
         approved: Aprovada des de gestió.

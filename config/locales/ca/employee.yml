@@ -7,6 +7,7 @@ ca:
       system: Predeterminat
     sessions:
       install_prompt: Instal·la %{app_name}
+      link_button_prefix: "Anar a:"
       flash:
         require_login: Inicia sessió per continuar.
         code_required: Demana un codi nou per continuar.
@@ -15,8 +16,6 @@ ca:
       new:
         title: Iniciar sessió
         heading: Inicia sessió
-        password_heading: Amb contrasenya
-        code_heading: Amb codi
         tabs_label: Mètode d'accés
         password_tab: Contrasenya
         code_tab: Rebre codi
