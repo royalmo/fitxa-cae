@@ -11,6 +11,7 @@ env:
     APP_HOST: fitxa-xarranca.cae.cat
     APP_SLUG: fitxa-xarranca
     APP_FAVICON: fitxa_xarranca_favicon.ico
+    APP_ICON_192_PNG: fitxa_xarranca_icon_192.png
     APP_ICON_PNG: fitxa_xarranca_icon.png
     APP_ICON_SVG: fitxa_xarranca_icon.svg
     LINK_BUTTON_HREF: https://fitxa.cae.cat/login

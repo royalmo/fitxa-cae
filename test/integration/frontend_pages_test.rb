@@ -307,6 +307,17 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     get pwa_manifest_path(format: :json)
     assert_response :success
     assert_match Rails.configuration.x.app_name, response.body
+    assert_no_match "&quot;", response.body
+
+    manifest = JSON.parse(response.body)
+    assert_equal Rails.configuration.x.app_name, manifest.fetch("name")
+    assert_equal Rails.configuration.x.app_name, manifest.fetch("short_name")
+    assert_equal "/", manifest.fetch("id")
+    assert_equal "/", manifest.fetch("start_url")
+    assert_equal "/", manifest.fetch("scope")
+    assert_equal "standalone", manifest.fetch("display")
+    assert_includes manifest.fetch("icons").pluck("sizes"), "192x192"
+    assert_includes manifest.fetch("icons").pluck("sizes"), "512x512"
 
     get pwa_service_worker_path(format: :js)
     assert_response :success

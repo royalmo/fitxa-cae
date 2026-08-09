@@ -1,4 +1,4 @@
-const VERSION = <%= raw "#{app_slug}-v8".to_json %>
+const VERSION = <%= raw "#{app_slug}-v9".to_json %>
 const SHELL_CACHE = `${VERSION}-shell`
 const ASSET_CACHE = `${VERSION}-assets`
 
@@ -23,6 +23,7 @@ const APP_SHELL = [
   "/fonts/LiberGrotesqueFamily-ExtBd.woff2",
   <%= raw app_favicon_path.to_json %>,
   <%= raw app_icon_svg_path.to_json %>,
+  <%= raw app_icon_192_png_path.to_json %>,
   <%= raw app_icon_png_path.to_json %>
 ]
 
@@ -58,7 +59,7 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/fonts/") || url.pathname.startsWith("/icon.") || url.pathname === "/favicon.ico") {
+  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/fonts/") || url.pathname.startsWith("/icon.") || url.pathname === "/icon-192.png" || url.pathname === "/favicon.ico") {
     event.respondWith(cacheFirst(request))
   }
 })

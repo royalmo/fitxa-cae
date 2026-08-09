@@ -72,6 +72,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       legal_notice_url: "https://xarranca.example.test/legal",
       brand_suffix_image: nil,
       favicon: "fitxa_xarranca_favicon.ico",
+      icon_192_png: "fitxa_xarranca_icon_192.png",
       icon_png: "fitxa_xarranca_icon.png",
       icon_svg: "fitxa_xarranca_icon.svg"
     ) do
@@ -99,11 +100,16 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_match "FitxaXarranca", response.body
       assert_match "fitxa_xarranca_icon", response.body
+      assert_no_match "&quot;", response.body
+
+      manifest = JSON.parse(response.body)
+      assert_equal "FitxaXarranca", manifest.fetch("name")
+      assert_includes manifest.fetch("icons").pluck("src").join(" "), "fitxa_xarranca_icon_192"
 
       get pwa_service_worker_path(format: :js)
 
       assert_response :success
-      assert_match "fitxa-xarranca-v8", response.body
+      assert_match "fitxa-xarranca-v9", response.body
       assert_match "fitxa_xarranca_favicon", response.body
       assert_no_match "cae_logo", response.body
     end

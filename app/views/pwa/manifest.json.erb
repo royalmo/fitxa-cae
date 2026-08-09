@@ -1,35 +1,41 @@
 {
-  "name": <%= app_name.to_json %>,
-  "short_name": <%= app_short_name.to_json %>,
+  "name": <%= raw app_name.to_json %>,
+  "short_name": <%= raw app_short_name.to_json %>,
   "icons": [
     {
-      "src": <%= app_icon_png_path.to_json %>,
+      "src": <%= raw app_icon_192_png_path.to_json %>,
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": <%= raw app_icon_png_path.to_json %>,
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": <%= app_icon_png_path.to_json %>,
+      "src": <%= raw app_icon_png_path.to_json %>,
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
     }
   ],
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
   "scope": "/",
-  "description": <%= t("app.description").to_json %>,
+  "description": <%= raw t("app.description").to_json %>,
   "theme_color": "#e30613",
   "background_color": "#fff7f7",
   "shortcuts": [
     {
-      "name": <%= t("employee.nav.today").to_json %>,
+      "name": <%= raw t("employee.nav.today").to_json %>,
       "url": "/",
-      "description": <%= t("employee.dashboard.show.title").to_json %>
+      "description": <%= raw t("employee.dashboard.show.title").to_json %>
     },
     {
-      "name": <%= t("employee.nav.clockings").to_json %>,
+      "name": <%= raw t("employee.nav.clockings").to_json %>,
       "url": "/clockings",
-      "description": <%= t("employee.clockings.index.title").to_json %>
+      "description": <%= raw t("employee.clockings.index.title").to_json %>
     }
   ]
 }

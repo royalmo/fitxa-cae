@@ -3121,19 +3121,21 @@ input[type="submit"].is-submitting {
   }
 
   .employee-auth-shell {
+    min-height: 100dvh;
     grid-template-rows:
-      minmax(1.25rem, 1fr)
+      minmax(0.2rem, 1fr)
       auto
-      minmax(1rem, 0.5fr)
+      minmax(0.2rem, 0.5fr)
       auto
-      minmax(1rem, 0.5fr)
+      minmax(0.2rem, 0.5fr)
       auto
       auto;
   }
 
   .employee-auth-shell .auth-main {
     grid-row: 2;
-    padding-bottom: 0;
+    padding: 0 1.25rem;
+    padding-top: env(safe-area-inset-top, 0);
   }
 
   .employee-install-prompt {
