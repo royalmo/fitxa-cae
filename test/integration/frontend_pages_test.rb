@@ -158,7 +158,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "script[src*='bootstrap']", 1
     assert_select "nav.navbar a.admin-topbar-corrections-button[href='#{admin_corrections_path(status: "pending")}'][aria-label='#{pending_corrections_label}'] .admin-topbar-count-badge", text: pending_corrections_badge
     assert_select "nav.navbar a.admin-topbar-corrections-button", text: /Correccions/, count: 0
-    assert_select "nav.navbar a.admin-topbar-employee-button[href='#{root_path}'][aria-label='Anar a la part de la persona'] svg.icon"
+    assert_select "nav.navbar a.admin-topbar-employee-button[href='#{root_path}'][aria-label='Anar a l\\'espai personal'] svg.icon"
     assert_select "nav.navbar a.admin-topbar-button[href='#{admin_account_path}'][aria-label='Compte']", text: /Laia Riera/
     assert_select "nav.navbar form[action='#{admin_logout_path}'] button.admin-topbar-button[aria-label='Tancar sessió'] svg.icon"
     assert_select "aside#adminSidebar.admin-sidebar.offcanvas-lg nav ul.nav.nav-pills"

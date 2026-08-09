@@ -1,6 +1,6 @@
 ca:
   employee:
-    guest: Treballador
+    guest: Persona
     themes:
       light: Clar
       dark: Fosc

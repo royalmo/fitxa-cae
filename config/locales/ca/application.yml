@@ -23,7 +23,7 @@ ca:
       developer: Eric Roy
       legal_notice: Avís legal
       admin_access: Accés admin
-      employee_access: Accés empleat
+      employee_access: Accés de personal
     approve: Aprovar
     cancel: Cancel·lar
     edit: Editar
@@ -42,11 +42,11 @@ ca:
       sending: Enviant...
     view: Veure
   statuses:
-    active: Actiu
+    active: Actives
     approved: Aprovat
     complete: Complet
     corrected: Corregit
-    disabled: Inactiu
+    disabled: Inactives
     empty: Buit
     odd: Senar
     open: Obert

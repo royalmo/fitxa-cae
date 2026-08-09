@@ -36,7 +36,7 @@ ca:
             active:
               self_deactivation: no es pot desactivar per al teu propi compte
             employee_id:
-              taken: ja està assignada a un altre responsable
+              taken: ja està assignada a un altre compte de responsable
         employee:
           attributes:
             national_id:

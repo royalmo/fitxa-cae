@@ -27,7 +27,7 @@ ca:
       subject: "[%{app_name}] %{subject}"
       greeting: Hola,
       intro: S'ha rebut un nou missatge des de %{app_name}.
-      employee: Treballador
+      employee: Persona
       national_id: DNI/NIE
       email: Correu
       phone: Telèfon

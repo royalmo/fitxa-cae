@@ -35,25 +35,25 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[type='radio'][name='status'][value='']", count: 1
       assert_select "input[type='radio'][name='status'][value='active'][checked='checked']", count: 1
       assert_select "input[type='radio'][name='status'][value='disabled']", count: 1
-      assert_select "label[for='manager_status_all']", text: "Tots"
-      assert_select "label[for='manager_status_active']", text: "Actius"
-      assert_select "label[for='manager_status_disabled']", text: "Inactius"
+      assert_select "label[for='manager_status_all']", text: "Qualsevol estat"
+      assert_select "label[for='manager_status_active']", text: "Actives"
+      assert_select "label[for='manager_status_disabled']", text: "Inactives"
       assert_select "button", text: "Filtrar", count: 0
     end
     assert_select ".admin-result-count[data-list-loading-target='results']", text: "Mostrant 1-1 de 1"
     assert_select ".text-center .admin-result-count", text: "Mostrant 1-1 de 1"
     assert_select "tbody tr.admin-manager-row.is-inactive", count: 0
     assert_select "tbody .admin-manager-name" do
-      assert_select "svg.admin-manager-status-icon.is-active[aria-label='Actiu']"
+      assert_select "svg.admin-manager-status-icon.is-active[aria-label='Actives']"
       assert_select "strong", text: "Marta Serra"
     end
     assert_select "tbody td:nth-child(3)", text: "Fa 2 hores"
     assert_select "tbody td:nth-child(4)", text: "Actiu", count: 0
     activation_modal_id = "manager_activation_modal_#{visible.id}"
-    assert_select "button.admin-row-action[data-bs-toggle='modal'][data-bs-target='##{activation_modal_id}'][aria-label='Desactivar responsable Marta Serra'] svg.icon"
+    assert_select "button.admin-row-action[data-bs-toggle='modal'][data-bs-target='##{activation_modal_id}'][aria-label='Desactivar el compte de Marta Serra'] svg.icon"
     assert_select "##{activation_modal_id}.modal.fade[aria-labelledby='#{activation_modal_id}_label']" do
-      assert_select "h2##{activation_modal_id}_label", text: "Desactivar responsable"
-      assert_select ".modal-body", text: "Vols desactivar Marta Serra?"
+      assert_select "h2##{activation_modal_id}_label", text: "Desactivar compte de responsable"
+      assert_select ".modal-body", text: "Vols desactivar el compte de Marta Serra?"
       assert_select "form[action='#{activation_admin_manager_path(visible)}'][method='post']" do
         assert_select "input[name='_method'][value='patch']"
         assert_select "input[name='manager[active]'][value='false']"
@@ -81,16 +81,16 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "Marta Serra", response.body
     assert_select "tbody tr.admin-manager-row.is-inactive", count: 1
     assert_select "tbody .admin-manager-name" do
-      assert_select "svg.admin-manager-status-icon.is-inactive[aria-label='Inactiu']"
+      assert_select "svg.admin-manager-status-icon.is-inactive[aria-label='Inactives']"
       assert_select "strong", text: "Pau Vila"
     end
     assert_select "tbody td:nth-child(3)", text: "Mai"
     inactive = Manager.find_by!(email: "pau.vila@example.test")
     activation_modal_id = "manager_activation_modal_#{inactive.id}"
-    assert_select "button.admin-row-action[data-bs-toggle='modal'][data-bs-target='##{activation_modal_id}'][aria-label='Activar responsable Pau Vila'] svg.icon"
+    assert_select "button.admin-row-action[data-bs-toggle='modal'][data-bs-target='##{activation_modal_id}'][aria-label='Activar el compte de Pau Vila'] svg.icon"
     assert_select "##{activation_modal_id}.modal.fade[aria-labelledby='#{activation_modal_id}_label']" do
-      assert_select "h2##{activation_modal_id}_label", text: "Activar responsable"
-      assert_select ".modal-body", text: "Vols activar Pau Vila?"
+      assert_select "h2##{activation_modal_id}_label", text: "Activar compte de responsable"
+      assert_select ".modal-body", text: "Vols activar el compte de Pau Vila?"
       assert_select "form[action='#{activation_admin_manager_path(inactive)}'][method='post']" do
         assert_select "input[name='_method'][value='patch']"
         assert_select "input[name='manager[active]'][value='true']"
@@ -122,11 +122,11 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-status-radio-group.btn-group.w-100" do
         assert_select "input[type='radio'][name='manager[active]'][value='true'][checked='checked'] + label.admin-status-radio-option.is-active" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Actiu"
+          assert_select "span", text: "Actives"
         end
         assert_select "input[type='radio'][name='manager[active]'][value='false'] + label.admin-status-radio-option.is-inactive" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Inactiu"
+          assert_select "span", text: "Inactives"
         end
       end
     end
@@ -177,7 +177,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     get admin_managers_path, params: { q: "signed.in.manager@example.test" }
 
     assert_response :success
-    tooltip = "No et pots desactivar a tu mateix."
+    tooltip = "No pots desactivar el teu propi compte."
     activation_modal_id = "manager_activation_modal_#{signed_in_manager.id}"
     assert_select "span[data-controller='bootstrap-tooltip'][data-bs-toggle='tooltip'][title='#{tooltip}']" do
       assert_select "button.admin-row-action[disabled][aria-label='#{tooltip}'] svg.icon"
@@ -192,7 +192,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type='radio'][name='manager[active]'][value='true'][checked='checked']"
     assert_select "input[type='radio'][name='manager[active]'][value='true'][disabled]", count: 0
     assert_select "input[type='radio'][name='manager[active]'][value='false'][disabled='disabled'] + label.admin-status-radio-option.is-inactive.disabled[title='#{tooltip}'][aria-disabled='true'][data-controller='bootstrap-tooltip'][data-bs-toggle='tooltip']",
-      text: "Inactiu"
+      text: "Inactives"
   end
 
   test "renders validation error when linked employee already has a manager" do
@@ -212,9 +212,9 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_no_match "Aquesta persona ja està vinculada a un altre responsable.", response.body
+    assert_no_match "Aquesta persona ja està vinculada a un altre compte de responsable.", response.body
     assert_select ".error-summary", count: 1
-    assert_select ".error-summary li", text: "Persona vinculada ja està assignada a un altre responsable"
+    assert_select ".error-summary li", text: "Persona vinculada ja està assignada a un altre compte de responsable"
     assert_nil manager.reload.employee
   end
 
@@ -381,13 +381,13 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to admin_managers_path
     assert_not manager.reload.active?
-    assert_equal "Responsable desactivat.", flash[:notice]
+    assert_equal "Compte de responsable desactivat.", flash[:notice]
 
     patch activation_admin_manager_path(manager), params: { manager: { active: "true" } }
 
     assert_redirected_to admin_managers_path
     assert_predicate manager.reload, :active?
-    assert_equal "Responsable activat.", flash[:notice]
+    assert_equal "Compte de responsable activat.", flash[:notice]
   end
 
   test "does not allow the signed in manager to disable themselves from the list action" do
@@ -398,7 +398,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to admin_managers_path
     assert_predicate signed_in_manager.reload, :active?
-    assert_equal "No et pots desactivar a tu mateix.", flash[:alert]
+    assert_equal "No pots desactivar el teu propi compte.", flash[:alert]
   end
 
   test "does not allow the signed in manager to disable themselves from the edit form" do

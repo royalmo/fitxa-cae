@@ -90,7 +90,7 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_select "#admin-dashboard-active-people input.btn-check[value='1y'] + label", text: "1 any"
     assert_select "#admin-dashboard-active-people input.btn-check[value='total'] + label", text: "Total"
     assert_select "#admin-dashboard-recent-activity table" do
-      assert_select "th", text: "Causant"
+      assert_select "th", text: "Fet per"
       assert_select "th", text: "Data"
       assert_select "th", text: "Acció"
       assert_select "td", text: "Laia Riera"

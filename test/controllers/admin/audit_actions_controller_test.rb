@@ -51,10 +51,10 @@ class Admin::AuditActionsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "swipe_correction.approved", response.body
     assert_select "table thead" do
       assert_select "th", text: "Data i hora"
-      assert_select "th", text: "Autor/a"
+      assert_select "th", text: "Fet per"
       assert_select "th", text: "Activitat"
       assert_select "th", text: "Accions"
-      assert_select "th", text: "Receptor/a", count: 0
+      assert_select "th", text: "Afecta a", count: 0
       assert_select "th", text: "Detall", count: 0
     end
     assert_select "td.admin-audit-author-cell a.admin-audit-subject-link[href='#{edit_admin_manager_path(@manager)}']" do
@@ -65,16 +65,16 @@ class Admin::AuditActionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button[data-bs-toggle='modal'][data-bs-target^='#admin_audit_action_modal_'] svg.icon"
     assert_select ".modal[id^='admin_audit_action_modal_']" do
       assert_select "dt", text: "Data i hora"
-      assert_select "dt", text: "Autor/a"
-      assert_select "dt", text: "Receptor/a"
+      assert_select "dt", text: "Fet per"
+      assert_select "dt", text: "Afecta a"
       assert_select "dd a.admin-audit-subject-link[href='#{edit_admin_employee_path(employee)}']", text: "Iu Bosch"
       assert_select "dd", text: "Actualitzada la persona Iu Bosch: estat."
       assert_select "textarea.admin-audit-action-raw-details[disabled]", text: /"field": "active"/
     end
     assert_select "h2", text: "Filtres", count: 0
     assert_select "form.admin-audit-actions-filter-form[action='#{admin_audit_actions_path}'][method='get'][data-controller='audit-filters']" do
-      assert_select ".admin-audit-actions-author-kind-filter[role='group'][aria-label='Tipus d\\'autor']" do
-        assert_select "input[type='radio'][name='author_type'][value=''][autocomplete='off'] + label", text: "Tots"
+      assert_select ".admin-audit-actions-author-kind-filter[role='group'][aria-label='Tipus de persona']" do
+        assert_select "input[type='radio'][name='author_type'][value=''][autocomplete='off'] + label", text: "Qualsevol"
         assert_select "input[type='radio'][name='author_type'][value='Employee'][autocomplete='off'] + label", text: "Persones"
         assert_select "input[type='radio'][name='author_type'][value='Manager'][checked='checked'][autocomplete='off'] + label", text: "Responsables"
       end
@@ -96,7 +96,7 @@ class Admin::AuditActionsControllerTest < ActionDispatch::IntegrationTest
           assert_select "button[data-audit-author-search-target='clearButton'][disabled]", count: 0
           assert_select "#admin-audit-actions-author-results.admin-audit-author-search-results[role='listbox']"
         end
-        assert_select "label[for='recipient']", text: "Receptor/a:"
+        assert_select "label[for='recipient']", text: "Afecta a:"
         assert_select ".admin-audit-author-search[data-controller='audit-author-search'][data-audit-author-search-url-value='#{admin_audit_author_search_path}'][data-audit-author-search-use-author-type-value='false']" do
           assert_select "input[type='hidden'][name='recipient'][value='Employee:#{employee.id}'][data-audit-author-search-target='author']"
           assert_select "input[name='recipient_query'][value='Iu Bosch'][placeholder='Cerca per nom, DNI, correu o telèfon'][role='combobox']"

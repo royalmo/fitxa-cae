@@ -66,22 +66,22 @@ ca:
         description: "Enviat un missatge a RRHH: %{subject}."
     manager:
       created:
-        name: Responsable creat
-        description: Creat el responsable %{recipient_name}.
+        name: Compte de responsable creat
+        description: Creat el compte de responsable de %{recipient_name}.
       updated:
-        name: Responsable actualitzat
-        description: "Actualitzat el responsable %{recipient_name}: %{fields}."
+        name: Compte de responsable actualitzat
+        description: "Actualitzat el compte de responsable de %{recipient_name}: %{fields}."
       activated:
-        name: Responsable activat
-        description: Activat el responsable %{recipient_name}.
+        name: Compte de responsable activat
+        description: Activat el compte de responsable de %{recipient_name}.
       deactivated:
-        name: Responsable desactivat
-        description: Desactivat el responsable %{recipient_name}.
+        name: Compte de responsable desactivat
+        description: Desactivat el compte de responsable de %{recipient_name}.
       self_email_changed:
         name: Correu propi canviat
         description: Canviat el correu de %{recipient_name}.
       password_changed:
-        name: Contrasenya de responsable canviada
+        name: Contrasenya de compte de responsable canviada
         description: Canviada la contrasenya de %{recipient_name} (%{origin}).
     report:
       monthly_summary_csv_downloaded:

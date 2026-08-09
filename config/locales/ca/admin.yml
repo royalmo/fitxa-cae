@@ -1,8 +1,8 @@
 ca:
   admin:
     area: Gestió
-    guest: Gestor
-    role: Manager
+    guest: Responsable
+    role: Responsable
     flash:
       correction_already_reviewed: Aquesta correcció ja està revisada.
       correction_approved: Correcció aprovada.
@@ -41,12 +41,12 @@ ca:
       import_existing_tags_updated:
         one: S'han actualitzat les etiquetes d'1 persona existent.
         other: S'han actualitzat les etiquetes de %{count} persones existents.
-      manager_created: Responsable creat. Hem enviat un correu per definir la contrasenya.
-      manager_activated: Responsable activat.
-      manager_activation_failed: No s'ha pogut actualitzar l'estat del responsable.
-      manager_deactivated: Responsable desactivat.
-      manager_self_deactivation_blocked: No et pots desactivar a tu mateix.
-      manager_updated: Responsable actualitzat.
+      manager_created: Compte de responsable creat. Hem enviat un correu per definir la contrasenya.
+      manager_activated: Compte de responsable activat.
+      manager_activation_failed: No s'ha pogut actualitzar l'estat del compte de responsable.
+      manager_deactivated: Compte de responsable desactivat.
+      manager_self_deactivation_blocked: No pots desactivar el teu propi compte.
+      manager_updated: Compte de responsable actualitzat.
     nav:
       admin_badge: ADMIN
       audit_actions: Activitat
@@ -64,7 +64,7 @@ ca:
       swipes: Fitxatges
     topbar:
       account: Compte
-      employee_side: Anar a la part de la persona
+      employee_side: Anar a l'espai personal
       pending_corrections:
         one: 1 correcció pendent
         other: "%{count} correccions pendents"
@@ -84,7 +84,7 @@ ca:
     tag_search:
       no_results: Cap etiqueta activa trobada.
     audit_author_search:
-      no_results: Cap autor trobat.
+      no_results: Cap persona trobada.
     audit_kind_search:
       no_results: Cap tipus d'activitat trobat.
     pagination:
@@ -168,7 +168,7 @@ ca:
           error: No s'han pogut carregar les dades.
           view_all_activity: Veure activitat
           activity:
-            author: Causant
+            author: Fet per
             created_at: Data
             action: Acció
             empty: No hi ha activitat recent.
@@ -185,7 +185,9 @@ ca:
         tags: Etiquetes
         all_tags: Totes les etiquetes
         status: Estat
-        all_statuses: Totes
+        all_statuses: Qualsevol estat
+        active_statuses: Actives
+        disabled_statuses: Inactives
         national_id: DNI/NIE
         name: Nom
         last_clocking: Últim fitxatge
@@ -224,7 +226,7 @@ ca:
           button: Desactivar persona %{name}
           title: Desactivar persona
           body: Vols desactivar %{name}?
-          description: No podrà iniciar sessió ni fitxar mentre estigui inactiva.
+          description: No podrà iniciar sessió ni fitxar mentre el compte estigui inactiu.
           confirm: Desactivar
     employee_bulk_actions:
       back: Tornar
@@ -418,7 +420,7 @@ ca:
           description: >
             Recompte d'hores per cada persona activa o amb fitxatges en aquest mes.
             S'apliquen correccions aprovades, i s'ignoren fitxatges incorrectes o correccions pendents.
-          inactive: inactiva
+          inactive: compte inactiu
           table:
             person: Persona
             national_id: DNI/NIE
@@ -433,7 +435,7 @@ ca:
             - Etiquetes
             - Fitxatges
             - Hores
-          inactive: inactiva
+          inactive: compte inactiu
       exports:
         filenames:
           employee_fallback: persona-%{id}
@@ -586,14 +588,14 @@ ca:
         kind: Tipus
         kind_placeholder: Tipus d'acció
         clear_kind: Esborrar tipus d'acció
-        author_kind: Tipus d'autor
+        author_kind: Tipus de persona
         author_filter: Fet per
         author_placeholder: Cerca per nom, DNI, correu o telèfon
-        clear_author: Esborrar autor
-        recipient_filter: 'Receptor/a:'
-        clear_recipient: Esborrar receptor/a
+        clear_author: Esborrar qui ho ha fet
+        recipient_filter: 'Afecta a:'
+        clear_recipient: Esborrar afectació
         author_kind_filters:
-          all: Tots
+          all: Qualsevol
           employees: Persones
           managers: Responsables
         month: Mes
@@ -602,9 +604,9 @@ ca:
         all_years: Tots els anys
         period_connector: de
         created_at: Data i hora
-        author: Autor/a
+        author: Fet per
         activity: Activitat
-        recipient: Receptor/a
+        recipient: Afecta a
         extra_info: Detall
         view_action: Veure activitat
         modal_title: Detall de l'activitat
@@ -613,18 +615,18 @@ ca:
       export_modal:
         title: Exportar activitat
         body: S'exportarà l'activitat amb els filtres actuals en format CSV.
-        format: 'Format: data, autora, receptora, tipus, descripció, detalls.'
+        format: 'Format: data, fet per, afecta a, tipus, descripció, detalls.'
         limit: Registres a descarregar
         confirm: Exportar CSV
     managers:
       index:
         title: Responsables
         heading: Responsables
-        new_manager: Nou responsable
+        new_manager: Alta de responsable
         search_placeholder: Nom, cognoms o correu
-        all_statuses: Tots
-        active_statuses: Actius
-        disabled_statuses: Inactius
+        all_statuses: Qualsevol estat
+        active_statuses: Actives
+        disabled_statuses: Inactives
         name: Nom
         email: Correu
         last_access: Darrer accés
@@ -650,19 +652,19 @@ ca:
         no_email: Sense correu
         empty: No hi ha responsables amb aquests filtres.
       activation:
-        self_deactivation_disabled: No et pots desactivar a tu mateix.
+        self_deactivation_disabled: No pots desactivar el teu propi compte.
         activate:
-          button: Activar responsable %{name}
-          title: Activar responsable
-          body: Vols activar %{name}?
+          button: Activar el compte de %{name}
+          title: Activar compte de responsable
+          body: Vols activar el compte de %{name}?
           confirm: Activar
         deactivate:
-          button: Desactivar responsable %{name}
-          title: Desactivar responsable
-          body: Vols desactivar %{name}?
+          button: Desactivar el compte de %{name}
+          title: Desactivar compte de responsable
+          body: Vols desactivar el compte de %{name}?
           confirm: Desactivar
       form:
-        error_title: Revisa el responsable
+        error_title: Revisa les dades de responsable
         first_name: Nom
         last_name: Cognoms
         email: Correu
@@ -673,8 +675,8 @@ ca:
         no_employee: Sense persona vinculada
         status: Estat
       new:
-        title: Nou responsable
-        heading: Nou responsable
+        title: Alta de responsable
+        heading: Alta de responsable
       edit:
         title: Editar responsable
         heading: Editar responsable
@@ -827,7 +829,7 @@ ca:
         submit: Enviar enllaç
         back: Tornar
       create:
-        sent: Si el correu correspon a un responsable actiu, rebrà un enllaç per restablir
+        sent: Si el correu correspon a un compte de responsable actiu, rebrà un enllaç per restablir
           la contrasenya.
         rate_limited: Has demanat massa enllaços de restabliment. Espera un moment i torna-ho a provar.
       edit:

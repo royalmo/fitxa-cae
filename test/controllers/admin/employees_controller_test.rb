@@ -74,7 +74,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       end
       assert_select "select[name='tag_id']", count: 0
       assert_select "select[name='status']", count: 0
-      assert_select "input[type='radio'][name='status'][value=''][checked='checked'][autocomplete='off'] + label", text: "Totes"
+      assert_select "input[type='radio'][name='status'][value=''][checked='checked'][autocomplete='off'] + label", text: "Qualsevol estat"
       assert_select "input[type='radio'][name='status'][value='active'][autocomplete='off'] + label", text: "Actives"
       assert_select "input[type='radio'][name='status'][value='disabled'][autocomplete='off'] + label", text: "Inactives"
       assert_select "button", text: "Filtrar", count: 0
@@ -86,7 +86,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tbody tr.admin-employee-row.is-inactive", count: 1
     assert_select "tbody .admin-employee-name strong[title='Nora Vidal']", text: "Nora Vidal"
     assert_select "tbody .admin-employee-name svg.admin-employee-status-icon.is-active", count: 0
-    assert_select "tbody tr.admin-employee-row.is-inactive .admin-employee-name svg.admin-employee-status-icon.is-inactive[aria-label='Inactiu'] + strong[title='Ona Costa']",
+    assert_select "tbody tr.admin-employee-row.is-inactive .admin-employee-name svg.admin-employee-status-icon.is-inactive[aria-label='Inactives'] + strong[title='Ona Costa']",
       text: "Ona Costa"
     assert_select ".admin-employee-contact[title='+34 600 111 222 · nora@example.test']", text: "+34 600 111 222 · nora@example.test"
     assert_select ".admin-employee-tags .admin-tag-label[style*='#2563eb']" do
@@ -107,7 +107,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "##{activation_modal_id}.modal.fade[aria-labelledby='#{activation_modal_id}_label']" do
       assert_select "h2##{activation_modal_id}_label", text: "Desactivar persona"
       assert_select ".modal-body", text: /Vols desactivar Nora Vidal\?/
-      assert_select ".modal-body", text: /No podrà iniciar sessió ni fitxar mentre estigui inactiva/
+      assert_select ".modal-body", text: /No podrà iniciar sessió ni fitxar mentre el compte estigui inactiu/
       assert_select "form[action='#{activation_admin_employee_path(employee)}'][method='post']" do
         assert_select "input[name='_method'][value='patch']"
         assert_select "input[name='employee[active]'][value='false']"
@@ -207,11 +207,11 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-status-radio-group.btn-group.w-100" do
         assert_select "input[type='radio'][name='employee[active]'][value='true'][checked='checked'][disabled] + label.admin-status-radio-option.is-active" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Activa"
+          assert_select "span", text: "Actives"
         end
         assert_select "input[type='radio'][name='employee[active]'][value='false'][disabled] + label.admin-status-radio-option.is-inactive" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Inactiva"
+          assert_select "span", text: "Inactives"
         end
       end
     end
@@ -246,11 +246,11 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-status-radio-group.btn-group.w-100" do
         assert_select "input[type='radio'][name='employee[active]'][value='true']:not([disabled]) + label.admin-status-radio-option.is-active" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Activa"
+          assert_select "span", text: "Actives"
         end
         assert_select "input[type='radio'][name='employee[active]'][value='false'][checked='checked']:not([disabled]) + label.admin-status-radio-option.is-inactive" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Inactiva"
+          assert_select "span", text: "Inactives"
         end
       end
     end

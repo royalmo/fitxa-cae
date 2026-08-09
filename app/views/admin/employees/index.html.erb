@@ -76,7 +76,7 @@
       </div>
 
       <fieldset class="admin-tags-status-filter btn-group" role="group" aria-label="<%= t(".status") %>">
-        <% [[t("admin.tags.index.all_statuses"), ""], [t("admin.tags.index.active_statuses"), "active"], [t("admin.tags.index.disabled_statuses"), "disabled"]].each do |(label, value)| %>
+        <% [[t(".all_statuses"), ""], [t(".active_statuses"), "active"], [t(".disabled_statuses"), "disabled"]].each do |(label, value)| %>
           <% option_id = "employee_status_#{value.presence || "all"}" %>
           <%= form.radio_button :status,
             value,

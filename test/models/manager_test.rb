@@ -41,7 +41,7 @@ class ManagerTest < ActiveSupport::TestCase
 
     assert_not manager.valid?
     assert_model_error manager, :employee_id, :taken
-    assert_equal "Persona vinculada ja està assignada a un altre responsable",
+    assert_equal "Persona vinculada ja està assignada a un altre compte de responsable",
       manager.errors.full_messages_for(:employee_id).first
   end
 
