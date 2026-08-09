@@ -42,7 +42,7 @@ html[data-pwa="admin"] .turbo-progress-bar {
 }
 
 .admin-auth-card .auth-header .brand-text-suffix {
-  font-size: 2.7rem;
+  font-size: 3.675rem;
 }
 
 .admin-auth-card .auth-header .brand-logo {
@@ -227,7 +227,7 @@ html[data-pwa="admin"] .turbo-progress-bar {
 .admin-brand .brand-text-suffix {
   align-self: center;
   color: var(--brand-red);
-  font-size: 1.55rem;
+  font-size: 1.72rem;
   font-weight: 900;
   letter-spacing: 0;
   line-height: 1;

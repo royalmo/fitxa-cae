@@ -50,6 +50,24 @@ bin/rails db:seed:replant
 # test the app with `rails test` or `bin/ci`
 ```
 
+For local brand switching, `bin/dev` loads an ignored `.env` file from the repo root before booting Rails. Keep one block active and restart `bin/dev`:
+
+```sh
+APP_NAME=FitxaCAE
+APP_SLUG=fitxa-cae
+APP_BRAND_SUFFIX_IMAGE=cae_logo_trimmed.png
+APP_FAVICON=
+APP_ICON_PNG=
+APP_ICON_SVG=
+
+# APP_NAME=FitxaXarranca
+# APP_SLUG=fitxa-xarranca
+# APP_BRAND_SUFFIX_IMAGE=
+# APP_FAVICON=fitxa_xarranca_favicon.ico
+# APP_ICON_PNG=fitxa_xarranca_icon.png
+# APP_ICON_SVG=fitxa_xarranca_icon.svg
+```
+
 ### Seed Data
 
 Good password-login examples:
