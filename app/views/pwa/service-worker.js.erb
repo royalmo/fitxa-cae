@@ -1,4 +1,4 @@
-const VERSION = "fitxa-cae-v7"
+const VERSION = <%= raw "#{app_slug}-v8".to_json %>
 const SHELL_CACHE = `${VERSION}-shell`
 const ASSET_CACHE = `${VERSION}-assets`
 
@@ -13,15 +13,17 @@ const APP_SHELL = [
   <%= raw asset_path("stimulus-loading.js").to_json %>,
   <%= raw asset_path("controllers/application.js").to_json %>,
   <%= raw asset_path("controllers/index.js").to_json %>,
-  <%= raw asset_path("cae_logo.png").to_json %>,
-  <%= raw asset_path("cae_logo_trimmed.png").to_json %>,
+  <% if app_brand_suffix_image_path.present? %>
+  <%= raw app_brand_suffix_image_path.to_json %>,
+  <% end %>
   "/fonts/LiberGrotesqueFamily-Regular.woff2",
   "/fonts/LiberGrotesqueFamily-News.woff2",
   "/fonts/LiberGrotesqueFamily-SemiBold.woff2",
   "/fonts/LiberGrotesqueFamily-Bold.woff2",
   "/fonts/LiberGrotesqueFamily-ExtBd.woff2",
-  "/favicon.ico",
-  "/icon.png"
+  <%= raw app_favicon_path.to_json %>,
+  <%= raw app_icon_svg_path.to_json %>,
+  <%= raw app_icon_png_path.to_json %>
 ]
 
 self.addEventListener("install", (event) => {

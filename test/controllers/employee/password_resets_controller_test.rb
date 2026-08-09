@@ -238,7 +238,7 @@ class Employee::PasswordResetsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Nova contrasenya | FitxaCAE"
     assert_select ".auth-panel > .flash-notice > span",
-      text: I18n.t("employee.password_resets.edit.first_login_notice")
+      text: I18n.t("employee.password_resets.edit.first_login_notice", app_name: Rails.configuration.x.app_name)
     assert_select "form.auth-form[action='#{employee_password_reset_path}']"
     assert_select "form#employee_password_setup_skip_form[action='#{skip_employee_password_setup_path}'][method='post']"
 

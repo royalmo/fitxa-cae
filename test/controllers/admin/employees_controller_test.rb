@@ -344,7 +344,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     deliver_enqueued_emails
     mail = ActionMailer::Base.deliveries.last
     assert_equal [ "pau@example.test" ], mail.to
-    assert_equal I18n.t("employee_welcome_mailer.welcome.subject"), mail.subject
+    assert_equal I18n.t("employee_welcome_mailer.welcome.subject", app_name: Rails.configuration.x.app_name), mail.subject
     assert_equal [ "rrhh@cae.cat" ], mail.reply_to
     assert_match "Pau Costa", mail.text_part.body.decoded
     assert_match "crea la teva contrasenya", mail.text_part.body.decoded

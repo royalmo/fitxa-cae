@@ -1,12 +1,17 @@
-<%= link_to local_assigns.fetch(:path), class: class_names("brand-mark", local_assigns[:class]), aria: { label: app_name } do %>
+<% brand_suffix_image_path = app_brand_suffix_image_path %>
+<% text_suffix = brand_suffix_image_path.blank? && app_brand_suffix.present? %>
+
+<%= link_to local_assigns.fetch(:path),
+  class: class_names("brand-mark", local_assigns[:class], "brand-mark-text-suffix": text_suffix),
+  aria: { label: app_name } do %>
   <span class="brand-wordmark">
     <span class="brand-fitxa"><%= app_brand_prefix %></span>
     <% if local_assigns[:badge].present? %>
       <span class="brand-badge"><%= local_assigns[:badge] %></span>
     <% end %>
   </span>
-  <% if app_brand_logo_asset.present? %>
-    <%= image_tag app_brand_logo_asset, alt: app_brand_suffix, class: "brand-logo" %>
+  <% if brand_suffix_image_path.present? %>
+    <%= image_tag brand_suffix_image_path, alt: app_brand_suffix, class: "brand-logo" %>
   <% elsif app_brand_suffix.present? %>
     <span class="brand-text-suffix"><%= app_brand_suffix %></span>
   <% end %>

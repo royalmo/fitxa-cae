@@ -32,6 +32,10 @@ module FitxaCae
     config.x.app_version = "1.0"
     config.x.app_name = ENV.fetch("APP_NAME", "FitxaCAE")
     config.x.app_slug = ENV.fetch("APP_SLUG", "fitxa-cae")
+    config.x.app_brand_suffix_image = ENV["APP_BRAND_SUFFIX_IMAGE"].presence
+    config.x.app_favicon = ENV["APP_FAVICON"].presence
+    config.x.app_icon_png = ENV["APP_ICON_PNG"].presence
+    config.x.app_icon_svg = ENV["APP_ICON_SVG"].presence
     config.x.human_resources_email = ENV.fetch("HUMAN_RESOURCES_EMAIL", "rrhh@cae.cat")
     config.x.legal_notice_url = ENV.fetch("LEGAL_NOTICE_URL", "https://cae.cat/avisos-legals/")
     config.x.mailer_from_email = ENV.fetch("MAILER_FROM_EMAIL", "from@example.com")

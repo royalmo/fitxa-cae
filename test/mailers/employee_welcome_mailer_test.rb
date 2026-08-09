@@ -6,7 +6,7 @@ class EmployeeWelcomeMailerTest < ActionMailer::TestCase
 
     mail = EmployeeWelcomeMailer.welcome(employee)
 
-    assert_equal I18n.t("employee_welcome_mailer.welcome.subject"), mail.subject
+    assert_equal I18n.t("employee_welcome_mailer.welcome.subject", app_name: Rails.configuration.x.app_name), mail.subject
     assert_equal [ "ada@example.test" ], mail.to
     assert_equal [ "from@example.com" ], mail.from
     assert_equal [ "rrhh@cae.cat" ], mail.reply_to

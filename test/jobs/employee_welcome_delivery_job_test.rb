@@ -15,6 +15,7 @@ class EmployeeWelcomeDeliveryJobTest < ActiveJob::TestCase
     end
 
     assert_equal [ "ada@example.test", "laia@example.test" ], ActionMailer::Base.deliveries.map { |mail| mail.to.first }.sort
-    assert_equal [ I18n.t("employee_welcome_mailer.welcome.subject") ], ActionMailer::Base.deliveries.map(&:subject).uniq
+    assert_equal [ I18n.t("employee_welcome_mailer.welcome.subject", app_name: Rails.configuration.x.app_name) ],
+      ActionMailer::Base.deliveries.map(&:subject).uniq
   end
 end

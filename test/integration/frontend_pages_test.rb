@@ -306,7 +306,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
   test "pwa endpoints render" do
     get pwa_manifest_path(format: :json)
     assert_response :success
-    assert_match "Fitxa CAE", response.body
+    assert_match Rails.configuration.x.app_name, response.body
 
     get pwa_service_worker_path(format: :js)
     assert_response :success

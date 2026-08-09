@@ -56,7 +56,7 @@ class ErrorsControllerTest < ActionDispatch::IntegrationTest
     html = body.each.to_a.join
 
     assert_equal 404, status
-    assert_includes html, "brand-logo"
+    assert_includes html, "brand-text-suffix"
     assert_includes html, "No hem trobat aquesta pantalla."
     assert_includes html, "employee-login-button"
     assert_includes html, "Entrar"

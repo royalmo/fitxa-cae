@@ -42,11 +42,28 @@
       }
 
       .mailer-brand {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
         color: #e30613;
         font-size: 22px;
         font-weight: 700;
+        line-height: 1;
         text-decoration: none;
+      }
+
+      .mailer-brand-text-suffix {
+        gap: 0;
+      }
+
+      .mailer-brand-prefix,
+      .mailer-brand-suffix {
+        font-weight: 900;
+      }
+
+      .mailer-brand-suffix {
+        color: #e30613;
+        font-size: 20px;
       }
 
       .mailer-logo {
@@ -119,8 +136,16 @@
     <div class="mailer-shell">
       <div class="mailer-panel">
         <div class="mailer-header">
-          <%= link_to mailer_app_url, class: "mailer-brand" do %>
-            <span>Fitxa</span><%= image_tag mailer_logo_url, alt: "CAE", class: "mailer-logo" %>
+          <% logo_url = mailer_logo_url %>
+          <% mailer_brand_classes = [ "mailer-brand" ] %>
+          <% mailer_brand_classes << "mailer-brand-text-suffix" if logo_url.blank? && app_brand_suffix.present? %>
+          <%= link_to mailer_app_url, class: mailer_brand_classes.join(" ") do %>
+            <span class="mailer-brand-prefix"><%= app_brand_prefix %></span>
+            <% if logo_url.present? %>
+              <%= image_tag logo_url, alt: app_brand_suffix, class: "mailer-logo" %>
+            <% elsif app_brand_suffix.present? %>
+              <span class="mailer-brand-suffix"><%= app_brand_suffix %></span>
+            <% end %>
           <% end %>
         </div>
 

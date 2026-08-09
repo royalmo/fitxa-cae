@@ -41,6 +41,10 @@ html[data-pwa="admin"] .turbo-progress-bar {
   font-size: 3.675rem;
 }
 
+.admin-auth-card .auth-header .brand-text-suffix {
+  font-size: 2.7rem;
+}
+
 .admin-auth-card .auth-header .brand-logo {
   height: 5.4rem;
 }
@@ -177,6 +181,10 @@ html[data-pwa="admin"] .turbo-progress-bar {
   text-decoration: none;
 }
 
+.admin-brand.brand-mark-text-suffix {
+  gap: 0;
+}
+
 .admin-brand:hover {
   color: inherit;
 }
@@ -214,6 +222,16 @@ html[data-pwa="admin"] .turbo-progress-bar {
   width: auto;
   height: 2.65rem;
   object-fit: contain;
+}
+
+.admin-brand .brand-text-suffix {
+  align-self: center;
+  color: var(--brand-red);
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .stat-card-icon {

@@ -28,6 +28,10 @@ body {
   flex-shrink: 0;
 }
 
+.brand-mark.brand-mark-text-suffix {
+  gap: 0;
+}
+
 .brand-wordmark {
   display: inline-grid;
   align-items: start;
@@ -38,6 +42,15 @@ body {
   font-size: 1.5rem;
   font-weight: 900;
   line-height: 1;
+}
+
+.brand-text-suffix {
+  color: var(--brand-red);
+  font-size: 1.36rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .brand-badge {
@@ -69,6 +82,10 @@ body {
 
 .auth-header .brand-fitxa {
   font-size: 1.8rem;
+}
+
+.auth-header .brand-text-suffix {
+  font-size: 1.62rem;
 }
 
 .employee-shell {

@@ -12,6 +12,7 @@ env:
     APP_NAME: FitxaCAE
     APP_HOST: fitxa.cae.cat
     APP_SLUG: fitxa-cae
+    APP_BRAND_SUFFIX_IMAGE: cae_logo_trimmed.png
     APP_REDIRECT_HOSTS: fitxar.cae.cat
     HUMAN_RESOURCES_EMAIL: rrhh@cae.cat
     LEGAL_NOTICE_URL: https://cae.cat/avisos-legals/

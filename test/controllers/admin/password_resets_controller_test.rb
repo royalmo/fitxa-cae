@@ -36,7 +36,11 @@ class Admin::PasswordResetsControllerTest < ActionDispatch::IntegrationTest
     deliver_enqueued_emails
     mail = ActionMailer::Base.deliveries.last
     assert_equal [ "laia.riera@example.test" ], mail.to
-    assert_equal I18n.t("manager_password_mailer.password_reset.subject"), mail.subject
+    assert_equal I18n.t(
+      "manager_password_mailer.password_reset.subject",
+      admin_name: "#{Rails.configuration.x.app_name} Admin",
+      app_name: Rails.configuration.x.app_name
+    ), mail.subject
     assert_equal manager, Manager.find_by_password_reset_token(token_from_mail(mail))
 
     assert_no_enqueued_emails do

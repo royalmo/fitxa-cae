@@ -123,5 +123,40 @@ module ActiveSupport
     ensure
       singleton.define_method(:notify, original_method) if original_method
     end
+
+    def with_app_brand(
+      name:,
+      slug:,
+      legal_notice_url: Rails.configuration.x.legal_notice_url,
+      brand_suffix_image: Rails.configuration.x.app_brand_suffix_image,
+      favicon: Rails.configuration.x.app_favicon,
+      icon_png: Rails.configuration.x.app_icon_png,
+      icon_svg: Rails.configuration.x.app_icon_svg
+    )
+      previous_name = Rails.configuration.x.app_name
+      previous_slug = Rails.configuration.x.app_slug
+      previous_legal_notice_url = Rails.configuration.x.legal_notice_url
+      previous_brand_suffix_image = Rails.configuration.x.app_brand_suffix_image
+      previous_favicon = Rails.configuration.x.app_favicon
+      previous_icon_png = Rails.configuration.x.app_icon_png
+      previous_icon_svg = Rails.configuration.x.app_icon_svg
+
+      Rails.configuration.x.app_name = name
+      Rails.configuration.x.app_slug = slug
+      Rails.configuration.x.legal_notice_url = legal_notice_url
+      Rails.configuration.x.app_brand_suffix_image = brand_suffix_image
+      Rails.configuration.x.app_favicon = favicon
+      Rails.configuration.x.app_icon_png = icon_png
+      Rails.configuration.x.app_icon_svg = icon_svg
+      yield
+    ensure
+      Rails.configuration.x.app_name = previous_name
+      Rails.configuration.x.app_slug = previous_slug
+      Rails.configuration.x.legal_notice_url = previous_legal_notice_url
+      Rails.configuration.x.app_brand_suffix_image = previous_brand_suffix_image
+      Rails.configuration.x.app_favicon = previous_favicon
+      Rails.configuration.x.app_icon_png = previous_icon_png
+      Rails.configuration.x.app_icon_svg = previous_icon_svg
+    end
   end
 end

@@ -16,6 +16,9 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Iniciar sessió | FitxaCAE"
     assert_select "html[data-pwa='employee'][data-employee-signed-in='false'][data-employee-theme-preference='system'][data-theme-preference='system']"
     assert_select ".employee-auth-card .brand-mark"
+    assert_select ".employee-auth-card .brand-mark.brand-mark-text-suffix"
+    assert_select ".employee-auth-card .brand-text-suffix", text: "CAE"
+    assert_select ".employee-auth-card .brand-logo", 0
     assert_select ".employee-auth-card .auth-panel", 1
     assert_select ".auth-methods", 0
     assert_select "body[data-controller~='employee-theme'][data-controller~='pwa-session'][data-controller~='submit-feedback'][data-employee-theme-preference-value='system'][data-employee-theme-signed-in-value='false']"
@@ -49,6 +52,59 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to login_path
     assert_equal I18n.t("employee.sessions.flash.require_login"), flash[:alert]
+  end
+
+  test "configured brand suffix image renders as logo" do
+    with_app_brand(name: "FitxaCAE", slug: "fitxa-cae", brand_suffix_image: "cae_logo_trimmed.png") do
+      get login_path
+
+      assert_response :success
+      assert_select ".employee-auth-card .brand-logo[alt='CAE']"
+      assert_select ".employee-auth-card .brand-text-suffix", 0
+    end
+  end
+
+  test "runtime Xarranca branding renders outside auth footer exception" do
+    with_app_brand(
+      name: "FitxaXarranca",
+      slug: "fitxa-xarranca",
+      legal_notice_url: "https://xarranca.example.test/legal",
+      brand_suffix_image: nil,
+      favicon: "fitxa_xarranca_favicon.ico",
+      icon_png: "fitxa_xarranca_icon.png",
+      icon_svg: "fitxa_xarranca_icon.svg"
+    ) do
+      get login_path
+
+      assert_response :success
+      assert_select "title", text: "Iniciar sessió | FitxaXarranca"
+      assert_select "meta[name='application-name'][content='FitxaXarranca']"
+      assert_select "link[rel='icon'][href*='fitxa_xarranca_favicon']"
+      assert_select "link[rel='icon'][type='image/svg+xml'][href*='fitxa_xarranca_icon']"
+      assert_select "link[rel='icon'][type='image/png'][href*='fitxa_xarranca_icon']"
+      assert_select ".employee-auth-card .brand-mark[aria-label='FitxaXarranca']"
+      assert_select ".employee-auth-card .brand-mark.brand-mark-text-suffix"
+      assert_select ".employee-auth-card .brand-fitxa", text: "Fitxa"
+      assert_select ".employee-auth-card .brand-text-suffix", text: "Xarranca"
+      assert_select ".employee-auth-card .brand-logo", 0
+      assert_select ".employee-install-prompt .employee-install-button", text: /Instal·la FitxaXarranca/
+      assert_select ".employee-auth-footer a[href='https://xarranca.example.test/legal']", text: "Avís legal"
+      assert_equal "FitxaCAE v#{Rails.configuration.x.app_version} · Avís legal · Accés admin",
+        css_select(".employee-auth-footer").first.text.squish
+
+      get pwa_manifest_path(format: :json)
+
+      assert_response :success
+      assert_match "FitxaXarranca", response.body
+      assert_match "fitxa_xarranca_icon", response.body
+
+      get pwa_service_worker_path(format: :js)
+
+      assert_response :success
+      assert_match "fitxa-xarranca-v8", response.body
+      assert_match "fitxa_xarranca_favicon", response.body
+      assert_no_match "cae_logo", response.body
+    end
   end
 
   test "password login signs in an active employee" do
@@ -264,7 +320,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Nova contrasenya | FitxaCAE"
     assert_select ".auth-panel > .flash-notice > span",
-      text: I18n.t("employee.password_resets.edit.first_login_notice")
+      text: I18n.t("employee.password_resets.edit.first_login_notice", app_name: Rails.configuration.x.app_name)
     assert_select "form.auth-form[action='#{employee_password_reset_path}']"
     assert_select "form#employee_password_setup_skip_form[action='#{skip_employee_password_setup_path}'][method='post']"
     assert_select "button.auth-skip-button[form='employee_password_setup_skip_form']", text: I18n.t("employee.password_resets.edit.skip")
@@ -327,7 +383,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_redirected_to edit_employee_password_reset_path
     follow_redirect!
     assert_select ".auth-panel > .flash-notice > span",
-      text: I18n.t("employee.password_resets.edit.first_login_notice")
+      text: I18n.t("employee.password_resets.edit.first_login_notice", app_name: Rails.configuration.x.app_name)
     assert_not employee.reload.password_login_enabled?
   end
 

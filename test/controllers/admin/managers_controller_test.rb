@@ -276,7 +276,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     deliver_enqueued_emails
     mail = ActionMailer::Base.deliveries.last
     assert_equal [ "arnau.mas@example.test" ], mail.to
-    assert_equal I18n.t("manager_password_mailer.password_setup.subject"), mail.subject
+    assert_equal I18n.t("manager_password_mailer.password_setup.subject", app_name: Rails.configuration.x.app_name), mail.subject
     assert_equal [ "rrhh@cae.cat" ], mail.reply_to
     assert_match "crea la teva contrasenya", mail.text_part.body.decoded
 

@@ -5,6 +5,56 @@ module ApplicationHelper
   EMPLOYEE_LIGHT_THEME_COLOR = "#e30613"
   EMPLOYEE_DARK_THEME_COLOR = "#121214"
 
+  def app_name
+    Rails.configuration.x.app_name
+  end
+
+  def app_admin_name
+    "#{app_name} Admin"
+  end
+
+  def app_slug
+    Rails.configuration.x.app_slug
+  end
+
+  def app_short_name
+    app_name
+  end
+
+  def legal_notice_url
+    Rails.configuration.x.legal_notice_url
+  end
+
+  def app_brand_prefix
+    app_name.start_with?("Fitxa") ? "Fitxa" : app_name
+  end
+
+  def app_brand_suffix
+    return unless app_name.start_with?("Fitxa")
+
+    app_name.delete_prefix("Fitxa").presence
+  end
+
+  def app_brand_suffix_image_asset
+    Rails.configuration.x.app_brand_suffix_image
+  end
+
+  def app_brand_suffix_image_path
+    configured_image_path(app_brand_suffix_image_asset)
+  end
+
+  def app_icon_png_path
+    configured_image_path(Rails.configuration.x.app_icon_png, fallback: "/icon.png")
+  end
+
+  def app_icon_svg_path
+    configured_image_path(Rails.configuration.x.app_icon_svg, fallback: "/icon.svg")
+  end
+
+  def app_favicon_path
+    configured_image_path(Rails.configuration.x.app_favicon, fallback: "/favicon.ico")
+  end
+
   def nav_item_class(path, exact: nil)
     target = path.to_s
     exact = target == "/" if exact.nil?
@@ -26,7 +76,7 @@ module ApplicationHelper
   end
 
   def browser_title(title = nil, admin: false)
-    suffix = admin ? "FitxaCAE Admin" : "FitxaCAE"
+    suffix = admin ? app_admin_name : app_name
 
     [ decoded_title(title).presence, suffix ].compact.join(" | ")
   end
@@ -146,5 +196,14 @@ module ApplicationHelper
     else
       "text-bg-secondary"
     end
+  end
+
+  def configured_image_path(asset, fallback: nil)
+    return fallback if asset.blank?
+
+    asset = asset.to_s
+    return asset if asset.start_with?("/", "http://", "https://", "//")
+
+    image_path(asset)
   end
 end

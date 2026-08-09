@@ -6,7 +6,7 @@ class ManagerPasswordMailerTest < ActionMailer::TestCase
 
     mail = ManagerPasswordMailer.password_setup(manager)
 
-    assert_equal I18n.t("manager_password_mailer.password_setup.subject"), mail.subject
+    assert_equal I18n.t("manager_password_mailer.password_setup.subject", app_name: Rails.configuration.x.app_name), mail.subject
     assert_equal [ "laia.riera@example.test" ], mail.to
     assert_equal [ "from@example.com" ], mail.from
     assert_equal [ "rrhh@cae.cat" ], mail.reply_to
@@ -28,7 +28,11 @@ class ManagerPasswordMailerTest < ActionMailer::TestCase
 
     mail = ManagerPasswordMailer.password_reset(manager)
 
-    assert_equal I18n.t("manager_password_mailer.password_reset.subject"), mail.subject
+    assert_equal I18n.t(
+      "manager_password_mailer.password_reset.subject",
+      admin_name: "#{Rails.configuration.x.app_name} Admin",
+      app_name: Rails.configuration.x.app_name
+    ), mail.subject
     assert_equal [ "laia.riera@example.test" ], mail.to
     assert_equal [ "from@example.com" ], mail.from
     assert_equal [ "rrhh@cae.cat" ], mail.reply_to

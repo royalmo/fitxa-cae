@@ -10,6 +10,9 @@ env:
     APP_NAME: FitxaXarranca
     APP_HOST: fitxa-xarranca.cae.cat
     APP_SLUG: fitxa-xarranca
+    APP_FAVICON: fitxa_xarranca_favicon.ico
+    APP_ICON_PNG: fitxa_xarranca_icon.png
+    APP_ICON_SVG: fitxa_xarranca_icon.svg
     HUMAN_RESOURCES_EMAIL: rrhh@cae.cat
     LEGAL_NOTICE_URL: https://cae.cat/avisos-legals/
     MAILER_FROM_EMAIL: fitxa@cae.cat

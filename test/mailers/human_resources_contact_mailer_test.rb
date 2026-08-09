@@ -34,4 +34,19 @@ class HumanResourcesContactMailerTest < ActionMailer::TestCase
 
     assert_equal [ "rrhh@cae.cat" ], mail.reply_to
   end
+
+  test "message uses runtime app branding" do
+    employee = create_employee(email: "ada@example.test")
+
+    with_app_brand(name: "FitxaXarranca", slug: "fitxa-xarranca") do
+      mail = HumanResourcesContactMailer.contact_request(
+        employee,
+        subject: "Consulta",
+        body: "Necessito parlar amb RRHH."
+      )
+
+      assert_equal "[FitxaXarranca] Consulta", mail.subject
+      assert_match "S'ha rebut un nou missatge des de FitxaXarranca", mail.body.encoded
+    end
+  end
 end

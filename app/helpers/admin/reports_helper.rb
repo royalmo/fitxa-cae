@@ -8,11 +8,18 @@ module Admin::ReportsHelper
   end
 
   def pdf_brand_logo
-    tag.div(class: "report-logo", aria: { label: t("app.name") }) do
-      safe_join([
-        tag.span(t("app.short_name"), class: "report-logo-fitxa"),
-        tag.img(src: pdf_brand_logo_image_src, alt: "CAE", class: "report-logo-image")
-      ])
+    text_suffix = app_brand_suffix_image_asset.blank? && app_brand_suffix.present?
+
+    tag.div(class: class_names("report-logo", "report-logo-with-text-suffix": text_suffix), aria: { label: app_name }) do
+      brand_parts = [ tag.span(app_brand_prefix, class: "report-logo-fitxa") ]
+
+      if app_brand_suffix_image_asset.present?
+        brand_parts << tag.img(src: pdf_brand_logo_image_src, alt: app_brand_suffix, class: "report-logo-image")
+      elsif app_brand_suffix.present?
+        brand_parts << tag.span(app_brand_suffix, class: "report-logo-text-suffix")
+      end
+
+      safe_join(brand_parts)
     end
   end
 
@@ -24,7 +31,7 @@ module Admin::ReportsHelper
 
   def pdf_brand_logo_image_src
     @pdf_brand_logo_image_src ||= begin
-      image_path = Rails.root.join("app/assets/images/cae_logo_trimmed.png")
+      image_path = Rails.root.join("app/assets/images", app_brand_suffix_image_asset)
       "data:image/png;base64,#{Base64.strict_encode64(image_path.binread)}"
     end
   end

@@ -408,6 +408,10 @@ td small,
   font-size: 3.675rem;
 }
 
+.employee-auth-card .auth-header .brand-text-suffix {
+  font-size: 2.7rem;
+}
+
 .employee-auth-card .auth-header .brand-logo {
   height: 5.4rem;
 }
