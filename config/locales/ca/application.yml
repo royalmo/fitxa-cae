@@ -6,6 +6,8 @@ ca:
       short: "%-d/%-m/%Y"
       numeric: "%d/%m/%Y"
       long: "%-d %B %Y"
+      day_month: "%-d de %B"
+      day_month_numeric: "%d/%m"
       month_year: "%B %Y"
       weekday_day_month: "%A, %-d de %B"
       weekday_day_month_year: "%A, %-d de %B de %Y"

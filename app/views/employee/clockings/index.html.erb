@@ -84,7 +84,15 @@ end %>
             <tbody>
               <% @clocking_days.each do |day| %>
                 <tr>
-                  <td class="clocking-date-column"><%= l(day[:date], format: :weekday_day_month) %></td>
+                  <td class="clocking-date-column">
+                    <span class="clocking-date-full"><%= l(day[:date], format: :weekday_day_month) %></span>
+                    <span class="clocking-date-compact" aria-label="<%= l(day[:date], format: :weekday_day_month) %>">
+                      <%= l(day[:date], format: :day_month).downcase %>
+                    </span>
+                    <span class="clocking-date-narrow" aria-label="<%= l(day[:date], format: :weekday_day_month) %>">
+                      <%= l(day[:date], format: :day_month_numeric) %>
+                    </span>
+                  </td>
                   <td class="clocking-hours-column">
                     <strong class="<%= class_names("clocking-hours", "is-incomplete": day[:swipes_count].odd?) %>">
                       <%= duration_text(day[:worked_seconds]) %>

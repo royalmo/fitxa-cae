@@ -951,6 +951,11 @@ input[type="submit"].is-submitting {
   white-space: nowrap;
 }
 
+.clocking-date-compact,
+.clocking-date-narrow {
+  display: none;
+}
+
 .clocking-hours-column {
   width: 8rem;
   white-space: nowrap;
@@ -3151,7 +3156,6 @@ input[type="submit"].is-submitting {
   }
 
   .employee-hero,
-  .page-intro,
   .split-intro {
     display: grid;
   }
@@ -3168,6 +3172,64 @@ input[type="submit"].is-submitting {
 
   .clockings-month-controls {
     justify-self: start;
+  }
+
+  .clockings-table {
+    overflow-x: hidden;
+  }
+
+  .clockings-table table {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .clockings-table th,
+  .clockings-table td {
+    padding: 0.75rem 0.45rem;
+  }
+
+  .clockings-table th {
+    font-size: 0.68rem;
+  }
+
+  .clocking-date-column {
+    width: 6.35rem;
+  }
+
+  .clocking-date-full {
+    display: none;
+  }
+
+  .clocking-date-compact {
+    display: inline;
+  }
+
+  .clocking-hours-column {
+    width: 6rem;
+  }
+
+  .clocking-swipe-cell {
+    gap: 0.3rem;
+  }
+
+  .clocking-swipe-grid {
+    grid-template-columns: minmax(3.55rem, max-content) minmax(3.55rem, max-content);
+    gap: 0.25rem 0.35rem;
+  }
+
+  .clocking-swipe {
+    grid-template-columns: 0.82rem auto;
+    gap: 0.16rem;
+  }
+
+  .clocking-swipe-icon {
+    width: 0.78rem;
+    height: 0.78rem;
+  }
+
+  .clocking-correction-link {
+    width: 1.55rem;
+    height: 1.55rem;
   }
 
   .corrections-intro {
@@ -3251,6 +3313,29 @@ input[type="submit"].is-submitting {
 
   .nav-item {
     font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 399px) {
+  .clockings-table th,
+  .clockings-table td {
+    padding-inline: 0.35rem;
+  }
+
+  .clocking-date-column {
+    width: 3.75rem;
+  }
+
+  .clocking-date-compact {
+    display: none;
+  }
+
+  .clocking-date-narrow {
+    display: inline;
+  }
+
+  .clocking-hours-column {
+    width: 5.55rem;
   }
 }
 
