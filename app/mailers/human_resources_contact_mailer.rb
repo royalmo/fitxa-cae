@@ -6,7 +6,7 @@ class HumanResourcesContactMailer < ApplicationMailer
 
     mail(
       to: Rails.configuration.x.human_resources_email,
-      reply_to: @employee.email.presence,
+      reply_to: @employee.email.presence || Rails.configuration.x.mailer_reply_to_email,
       subject: t(".subject", subject: @subject)
     )
   end

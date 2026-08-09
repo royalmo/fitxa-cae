@@ -15,11 +15,11 @@ class DevelopmentConsoleMailDeliveryTest < ActiveSupport::TestCase
     assert_equal 1, console_output.string.scan("Development email delivery").size
     assert_includes console_output.string, "From: from@example.com"
     assert_includes console_output.string, "To: ada@example.test"
-    assert_includes console_output.string, "Subject: Codi d'accés a Fitxa CAE"
+    assert_includes console_output.string, "Reply-To: rrhh@cae.cat"
+    assert_includes console_output.string, "Subject: [FitxaCAE] Codi d'accés: 123456"
     assert_includes console_output.string, "123456"
     assert_not_includes console_output.string, "Cc:"
     assert_not_includes console_output.string, "Bcc:"
-    assert_not_includes console_output.string, "Reply-To:"
     assert_not_includes console_output.string, "Content-Type:"
     assert_not_includes console_output.string, "<p>"
   end

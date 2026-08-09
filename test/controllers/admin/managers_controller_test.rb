@@ -277,7 +277,8 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     mail = ActionMailer::Base.deliveries.last
     assert_equal [ "arnau.mas@example.test" ], mail.to
     assert_equal I18n.t("manager_password_mailer.password_setup.subject"), mail.subject
-    assert_match "Defineix la contrasenya", mail.text_part.body.decoded
+    assert_equal [ "rrhh@cae.cat" ], mail.reply_to
+    assert_match "crea la teva contrasenya", mail.text_part.body.decoded
 
     patch admin_manager_path(manager), params: {
       manager: {

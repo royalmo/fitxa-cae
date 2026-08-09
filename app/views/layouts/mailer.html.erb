@@ -1,13 +1,132 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-      /* Email styles need to be inline */
+      body {
+        margin: 0;
+        padding: 0;
+        background: #f5f5f5;
+        color: #141414;
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.5;
+      }
+
+      a {
+        color: #b90510;
+      }
+
+      .mailer-shell {
+        width: 100%;
+        padding: 28px 12px;
+        background: #f5f5f5;
+      }
+
+      .mailer-panel {
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid #e1e1e1;
+      }
+
+      .mailer-header,
+      .mailer-content {
+        padding: 24px;
+      }
+
+      .mailer-header {
+        border-bottom: 4px solid #e30613;
+        text-align: center;
+      }
+
+      .mailer-brand {
+        display: inline-block;
+        color: #e30613;
+        font-size: 22px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .mailer-logo {
+        display: inline-block;
+        width: auto;
+        height: 42px;
+        margin-left: 2px;
+        vertical-align: middle;
+      }
+
+      .mailer-content p {
+        margin: 0 0 16px;
+      }
+
+      .mailer-code-wrap {
+        text-align: center;
+      }
+
+      .mailer-code {
+        display: inline-block;
+        margin: 6px 0 18px;
+        padding: 10px 14px;
+        background: #fff4f5;
+        border: 0;
+        border-radius: 3px;
+        color: #141414;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-align: center;
+      }
+
+      .mailer-button {
+        display: inline-block;
+        padding: 10px 14px;
+        background: #e30613;
+        color: #ffffff !important;
+        text-decoration: none;
+      }
+
+      .mailer-help {
+        color: #555555;
+        font-size: 13px;
+      }
+
+      .mailer-fallback-link {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .mailer-details {
+        margin: 0 0 18px;
+      }
+
+      .mailer-details dt {
+        margin-top: 10px;
+        color: #555555;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .mailer-details dd {
+        margin: 2px 0 0;
+      }
     </style>
   </head>
 
-  <body>
-    <%= yield %>
+  <body style="margin: 0; padding: 0; background: #f5f5f5;">
+    <div class="mailer-shell">
+      <div class="mailer-panel">
+        <div class="mailer-header">
+          <%= link_to mailer_app_url, class: "mailer-brand" do %>
+            <span>Fitxa</span><%= image_tag mailer_logo_url, alt: "CAE", class: "mailer-logo" %>
+          <% end %>
+        </div>
+
+        <div class="mailer-content">
+          <%= yield %>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

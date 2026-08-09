@@ -1,5 +1,6 @@
 class ErrorReportMailer < ApplicationMailer
   self.delivery_job = ActionMailer::MailDeliveryJob
+  layout "plain_mailer"
 
   DEFAULT_RECIPIENTS = "eric@ericroy.net"
   DEFAULT_SENDER = "FitxaCAE Errors <errors@fitxacae.invalid>"

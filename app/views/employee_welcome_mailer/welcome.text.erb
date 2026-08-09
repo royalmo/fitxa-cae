@@ -1,5 +1,11 @@
-<%= t(".greeting", name: @employee_name) %>
+<%= t("mailers.shared.greeting", name: @employee_name) %>
 
-<%= t(".body") %>
+<%= t(".account_created_text", app_name: t("mailers.shared.app_name"), app_url: @app_url) %>
 
-<%= t(".first_login") %>
+<%= t(".first_login_text", app_url: @app_url) %>
+
+<%= t(".contact") %>
+
+<%= t("mailers.shared.signoff") %>
+
+<%= t("mailers.shared.platform_signature") %>

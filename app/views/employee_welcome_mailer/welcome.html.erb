@@ -1,3 +1,20 @@
-<p><%= t(".greeting", name: @employee_name) %></p>
-<p><%= t(".body") %></p>
-<p><%= t(".first_login") %></p>
+<p><%= t("mailers.shared.greeting_prefix") %> <strong><%= @employee_name %></strong>,</p>
+
+<p>
+  <%= t(".account_created_prefix") %>
+  <%= link_to t("mailers.shared.app_name"), @app_url %>:
+  <%= t(".account_created_suffix") %>
+</p>
+
+<p>
+  <%= t(".first_login_prefix") %>
+  <%= link_to @app_url, @app_url %>,
+  <%= t(".first_login_suffix") %>
+</p>
+
+<p><%= t(".contact") %></p>
+
+<p>
+  <%= t("mailers.shared.signoff") %><br>
+  <%= t("mailers.shared.platform_signature") %>
+</p>

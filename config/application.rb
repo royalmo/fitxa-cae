@@ -30,8 +30,9 @@ module FitxaCae
       ActionDispatch::PublicExceptions.new(Rails.public_path).call(env)
     end
     config.x.app_version = "1.0"
-    config.x.human_resources_email = ENV.fetch("HUMAN_RESOURCES_EMAIL", "rrhh@example.com")
+    config.x.human_resources_email = ENV.fetch("HUMAN_RESOURCES_EMAIL", "rrhh@cae.cat")
     config.x.mailer_from_email = ENV.fetch("MAILER_FROM_EMAIL", "from@example.com")
+    config.x.mailer_reply_to_email = ENV.fetch("MAILER_REPLY_TO_EMAIL", config.x.human_resources_email)
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

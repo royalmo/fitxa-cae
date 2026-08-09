@@ -7,6 +7,7 @@ class ErrorReportMailerTest < ActionMailer::TestCase
     assert_equal "[FitxaCAE Test ERROR] StandardError: Cannot send login code", mail.subject
     assert_equal [ "eric@ericroy.net" ], mail.to
     assert_equal [ "errors@fitxacae.invalid" ], mail.from
+    assert_equal [ "rrhh@cae.cat" ], mail.reply_to
     assert_match "Cannot send login code", mail.body.encoded
     assert_match "delivery_method", mail.body.encoded
   end

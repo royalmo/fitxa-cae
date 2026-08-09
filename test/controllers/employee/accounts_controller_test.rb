@@ -181,7 +181,8 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     mail = ActionMailer::Base.deliveries.last
     assert_equal [ Rails.configuration.x.human_resources_email ], mail.to
     assert_equal [ "ada@example.test" ], mail.reply_to
-    assert_equal "FitxaCAE RRHH: Vacances pendents", mail.subject
+    assert_equal "[FitxaCAE] Vacances pendents", mail.subject
+    assert_match "S'ha rebut un nou missatge des de FitxaCAE", mail.text_part.body.decoded
     assert_match "Ada Soler", mail.text_part.body.decoded
     assert_match employee.national_id, mail.text_part.body.decoded
     assert_match "Necessito revisar els dies disponibles.", mail.text_part.body.decoded

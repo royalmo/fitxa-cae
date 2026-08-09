@@ -1,1 +1,12 @@
-<%= t(".body", name: @employee.first_name, code: @code, minutes: @ttl_minutes) %>
+<%= t("mailers.shared.greeting", name: @employee_name) %>
+
+<%= t(".intro_text", app_name: t("mailers.shared.app_name")) %>
+<%= @app_url %>
+
+<%= @code %>
+
+<%= t(".expires", minutes: @ttl_minutes) %>
+
+<%= t("mailers.shared.signoff") %>
+
+<%= t("mailers.shared.platform_signature") %>

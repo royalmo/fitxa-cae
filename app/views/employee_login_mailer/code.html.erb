@@ -1,1 +1,15 @@
-<p><%= t(".body", name: @employee.first_name, code: @code, minutes: @ttl_minutes) %></p>
+<p><%= t("mailers.shared.greeting_prefix") %> <strong><%= @employee_name %></strong>,</p>
+
+<p>
+  <%= t(".intro_prefix") %>
+  <%= link_to t("mailers.shared.app_name"), @app_url %>:
+</p>
+
+<p class="mailer-code-wrap"><span class="mailer-code"><%= @code %></span></p>
+
+<p><%= t(".expires", minutes: @ttl_minutes) %></p>
+
+<p>
+  <%= t("mailers.shared.signoff") %><br>
+  <%= t("mailers.shared.platform_signature") %>
+</p>
