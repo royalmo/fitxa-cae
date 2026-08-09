@@ -122,11 +122,11 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-status-radio-group.btn-group.w-100" do
         assert_select "input[type='radio'][name='manager[active]'][value='true'][checked='checked'] + label.admin-status-radio-option.is-active" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Actives"
+          assert_select "span", text: "Actiu"
         end
         assert_select "input[type='radio'][name='manager[active]'][value='false'] + label.admin-status-radio-option.is-inactive" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Inactives"
+          assert_select "span", text: "Inactiu"
         end
       end
     end
@@ -192,7 +192,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type='radio'][name='manager[active]'][value='true'][checked='checked']"
     assert_select "input[type='radio'][name='manager[active]'][value='true'][disabled]", count: 0
     assert_select "input[type='radio'][name='manager[active]'][value='false'][disabled='disabled'] + label.admin-status-radio-option.is-inactive.disabled[title='#{tooltip}'][aria-disabled='true'][data-controller='bootstrap-tooltip'][data-bs-toggle='tooltip']",
-      text: "Inactives"
+      text: "Inactiu"
   end
 
   test "renders validation error when linked employee already has a manager" do

@@ -130,9 +130,10 @@ module ActiveSupport
       legal_notice_url: Rails.configuration.x.legal_notice_url,
       brand_suffix_image: Rails.configuration.x.app_brand_suffix_image,
       favicon: Rails.configuration.x.app_favicon,
-      icon_192_png: Rails.configuration.x.app_icon_192_png,
       icon_png: Rails.configuration.x.app_icon_png,
       icon_svg: Rails.configuration.x.app_icon_svg,
+      pwa_icon_192_png: Rails.configuration.x.app_pwa_icon_192_png,
+      pwa_icon_png: Rails.configuration.x.app_pwa_icon_png,
       link_button_href: Rails.configuration.x.link_button_href,
       link_button_text: Rails.configuration.x.link_button_text
     )
@@ -141,9 +142,10 @@ module ActiveSupport
       previous_legal_notice_url = Rails.configuration.x.legal_notice_url
       previous_brand_suffix_image = Rails.configuration.x.app_brand_suffix_image
       previous_favicon = Rails.configuration.x.app_favicon
-      previous_icon_192_png = Rails.configuration.x.app_icon_192_png
       previous_icon_png = Rails.configuration.x.app_icon_png
       previous_icon_svg = Rails.configuration.x.app_icon_svg
+      previous_pwa_icon_192_png = Rails.configuration.x.app_pwa_icon_192_png
+      previous_pwa_icon_png = Rails.configuration.x.app_pwa_icon_png
       previous_link_button_href = Rails.configuration.x.link_button_href
       previous_link_button_text = Rails.configuration.x.link_button_text
 
@@ -152,9 +154,10 @@ module ActiveSupport
       Rails.configuration.x.legal_notice_url = legal_notice_url
       Rails.configuration.x.app_brand_suffix_image = brand_suffix_image
       Rails.configuration.x.app_favicon = favicon
-      Rails.configuration.x.app_icon_192_png = icon_192_png
       Rails.configuration.x.app_icon_png = icon_png
       Rails.configuration.x.app_icon_svg = icon_svg
+      Rails.configuration.x.app_pwa_icon_192_png = pwa_icon_192_png
+      Rails.configuration.x.app_pwa_icon_png = pwa_icon_png
       Rails.configuration.x.link_button_href = link_button_href
       Rails.configuration.x.link_button_text = link_button_text
       yield
@@ -164,9 +167,10 @@ module ActiveSupport
       Rails.configuration.x.legal_notice_url = previous_legal_notice_url
       Rails.configuration.x.app_brand_suffix_image = previous_brand_suffix_image
       Rails.configuration.x.app_favicon = previous_favicon
-      Rails.configuration.x.app_icon_192_png = previous_icon_192_png
       Rails.configuration.x.app_icon_png = previous_icon_png
       Rails.configuration.x.app_icon_svg = previous_icon_svg
+      Rails.configuration.x.app_pwa_icon_192_png = previous_pwa_icon_192_png
+      Rails.configuration.x.app_pwa_icon_png = previous_pwa_icon_png
       Rails.configuration.x.link_button_href = previous_link_button_href
       Rails.configuration.x.link_button_text = previous_link_button_text
     end

@@ -37,7 +37,14 @@ export default class extends Controller {
   }
 
   end(event) {
-    this.restoreSubmitter(this.submitterFor(event))
+    const submitter = this.submitterFor(event)
+
+    if (this.shouldPreserveSubmitter(event, submitter)) {
+      this.keepSubmitterDisabled(submitter)
+      return
+    }
+
+    this.restoreSubmitter(submitter)
   }
 
   submitterFor(event) {
@@ -105,6 +112,27 @@ export default class extends Controller {
 
   submittingLabel(submitter) {
     return submitter.dataset.submittingLabel || submitter.form?.dataset.submittingLabel
+  }
+
+  shouldPreserveSubmitter(event, submitter) {
+    return event.detail.success &&
+      (this.redirectedUnsafeSubmission(event) || this.preserveOnSuccess(submitter))
+  }
+
+  redirectedUnsafeSubmission(event) {
+    return event.detail.fetchResponse?.redirected === true &&
+      event.detail.formSubmission?.isSafe === false
+  }
+
+  preserveOnSuccess(submitter) {
+    return submitter?.dataset.submitFeedbackPreserveOnSuccess === "true" ||
+      submitter?.form?.dataset.submitFeedbackPreserveOnSuccess === "true"
+  }
+
+  keepSubmitterDisabled(submitter) {
+    if (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) {
+      submitter.disabled = true
+    }
   }
 
   replaceButtonContent(button, label) {

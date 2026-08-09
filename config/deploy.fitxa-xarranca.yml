@@ -11,9 +11,10 @@ env:
     APP_HOST: fitxa-xarranca.cae.cat
     APP_SLUG: fitxa-xarranca
     APP_FAVICON: fitxa_xarranca_favicon.ico
-    APP_ICON_192_PNG: fitxa_xarranca_icon_192.png
     APP_ICON_PNG: fitxa_xarranca_icon.png
     APP_ICON_SVG: fitxa_xarranca_icon.svg
+    APP_PWA_ICON_192_PNG: fitxa_xarranca_pwa_icon_192.png
+    APP_PWA_ICON_PNG: fitxa_xarranca_pwa_icon_512.png
     LINK_BUTTON_HREF: https://fitxa.cae.cat/login
     LINK_BUTTON_TEXT: FitxaCAE
     HUMAN_RESOURCES_EMAIL: rrhh@cae.cat

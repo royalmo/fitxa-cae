@@ -29,6 +29,8 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_select ".auth-tab-list", text: /Contrasenya/
     assert_select ".auth-tab-list", text: /Rebre codi/
     assert_select "#employee_login_password_tab[checked]"
+    assert_select "#employee_password_remember_me[checked]"
+    assert_select "#employee_code_remember_me[checked]"
     assert_select ".auth-tab-panel-password a.auth-forgot-link[href='#{new_employee_password_reset_path}']", text: "He oblidat la contrasenya"
     assert_select "#employee_delivery_method_email[checked]"
     assert_select "#employee_delivery_method_sms[checked]", 0
@@ -72,9 +74,10 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       legal_notice_url: "https://xarranca.example.test/legal",
       brand_suffix_image: nil,
       favicon: "fitxa_xarranca_favicon.ico",
-      icon_192_png: "fitxa_xarranca_icon_192.png",
       icon_png: "fitxa_xarranca_icon.png",
-      icon_svg: "fitxa_xarranca_icon.svg"
+      icon_svg: "fitxa_xarranca_icon.svg",
+      pwa_icon_192_png: "fitxa_xarranca_pwa_icon_192.png",
+      pwa_icon_png: "fitxa_xarranca_pwa_icon_512.png"
     ) do
       get login_path
 
@@ -84,6 +87,8 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       assert_select "link[rel='icon'][href*='fitxa_xarranca_favicon']"
       assert_select "link[rel='icon'][type='image/svg+xml'][href*='fitxa_xarranca_icon']"
       assert_select "link[rel='icon'][type='image/png'][href*='fitxa_xarranca_icon']"
+      assert_select "link[rel='icon'][href*='pwa_icon']", 0
+      assert_select "link[rel='apple-touch-icon'][href*='pwa_icon']", 0
       assert_select ".employee-auth-card .brand-mark[aria-label='FitxaXarranca']"
       assert_select ".employee-auth-card .brand-mark.brand-mark-text-suffix"
       assert_select ".employee-auth-card .brand-fitxa", text: "Fitxa"
@@ -99,17 +104,19 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       assert_match "FitxaXarranca", response.body
-      assert_match "fitxa_xarranca_icon", response.body
+      assert_match "fitxa_xarranca_pwa_icon", response.body
+      assert_no_match %r{/assets/fitxa_xarranca_icon-[^/]+\.png}, response.body
       assert_no_match "&quot;", response.body
 
       manifest = JSON.parse(response.body)
       assert_equal "FitxaXarranca", manifest.fetch("name")
-      assert_includes manifest.fetch("icons").pluck("src").join(" "), "fitxa_xarranca_icon_192"
+      assert_includes manifest.fetch("icons").pluck("src").join(" "), "fitxa_xarranca_pwa_icon_192"
+      assert_includes manifest.fetch("icons").pluck("src").join(" "), "fitxa_xarranca_pwa_icon_512"
 
       get pwa_service_worker_path(format: :js)
 
       assert_response :success
-      assert_match "fitxa-xarranca-v9", response.body
+      assert_match "fitxa-xarranca-v10", response.body
       assert_match "fitxa_xarranca_favicon", response.body
       assert_no_match "cae_logo", response.body
     end

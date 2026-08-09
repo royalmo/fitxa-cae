@@ -318,6 +318,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_equal "standalone", manifest.fetch("display")
     assert_includes manifest.fetch("icons").pluck("sizes"), "192x192"
     assert_includes manifest.fetch("icons").pluck("sizes"), "512x512"
+    assert_includes manifest.fetch("icons").pluck("src"), "/pwa-icon-192.png"
+    assert_includes manifest.fetch("icons").pluck("src"), "/pwa-icon-512.png"
 
     get pwa_service_worker_path(format: :js)
     assert_response :success
@@ -334,8 +336,9 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "No s'ha pogut carregar | FitxaCAE"
     assert_no_match "&amp;#", response.body
     assert_select "h1", text: "No s'ha pogut carregar"
+    assert_select ".fallback-card > .eyebrow", 0
+    assert_select ".fallback-card > p", text: "Comprova la teva connexió a internet i torna-ho a provar."
     assert_select ".employee-nav", 0
-    assert_no_match "connexió", response.body
     assert_no_match "sincron", response.body
   end
 end

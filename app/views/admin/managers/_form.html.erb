@@ -78,7 +78,7 @@
         <fieldset class="col-12 col-md-6 admin-status-radio-fieldset">
           <legend class="form-label"><%= t("admin.managers.form.status") %></legend>
           <div class="btn-group w-100 admin-status-radio-group" role="group" aria-label="<%= t("admin.managers.form.status") %>">
-            <% [[status_text(:active), true], [status_text(:disabled), false]].each do |(label, value)| %>
+            <% [[t("admin.managers.form.statuses.active"), true], [t("admin.managers.form.statuses.disabled"), false]].each do |(label, value)| %>
               <% option_id = "manager_active_#{status_id_suffix}_#{value}" %>
               <% option_disabled = admin_manager_active_option_disabled?(manager, value) %>
               <% label_options = {

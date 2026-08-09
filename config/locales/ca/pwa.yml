@@ -3,5 +3,5 @@ ca:
     unavailable:
       title: No s'ha pogut carregar
       heading: No s'ha pogut carregar
-      body: Torna-ho a provar d'aquí uns instants.
+      body: Comprova la teva connexió a internet i torna-ho a provar.
       retry: Tornar a provar

@@ -557,6 +557,8 @@ td small,
   text-underline-offset: 0.15em;
 }
 
+html[data-standalone-pwa="true"] .employee-link-prompt,
+html[data-standalone-pwa="true"] .employee-auth-footer .auth-footer-access-separator,
 html[data-standalone-pwa="true"] .employee-auth-footer .auth-footer-access {
   display: none;
 }
@@ -566,6 +568,8 @@ html[data-standalone-pwa="true"] .employee-install-prompt {
 }
 
 @media (display-mode: standalone) {
+  .employee-link-prompt,
+  .employee-auth-footer .auth-footer-access-separator,
   .employee-auth-footer .auth-footer-access,
   html .employee-install-prompt {
     display: none;
@@ -1170,7 +1174,7 @@ input[type="submit"].is-submitting {
 .corrections-status-filter {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.45rem 0.65rem;
   margin: 0;
   padding: 0;
@@ -1180,8 +1184,10 @@ input[type="submit"].is-submitting {
 .corrections-status-options {
   display: inline-flex;
   align-items: center;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   gap: 0.3rem;
+  min-width: 0;
 }
 
 .corrections-status-filter legend,

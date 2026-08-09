@@ -207,11 +207,11 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-status-radio-group.btn-group.w-100" do
         assert_select "input[type='radio'][name='employee[active]'][value='true'][checked='checked'][disabled] + label.admin-status-radio-option.is-active" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Actives"
+          assert_select "span", text: "Activa"
         end
         assert_select "input[type='radio'][name='employee[active]'][value='false'][disabled] + label.admin-status-radio-option.is-inactive" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Inactives"
+          assert_select "span", text: "Inactiva"
         end
       end
     end
@@ -246,11 +246,11 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-status-radio-group.btn-group.w-100" do
         assert_select "input[type='radio'][name='employee[active]'][value='true']:not([disabled]) + label.admin-status-radio-option.is-active" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Actives"
+          assert_select "span", text: "Activa"
         end
         assert_select "input[type='radio'][name='employee[active]'][value='false'][checked='checked']:not([disabled]) + label.admin-status-radio-option.is-inactive" do
           assert_select "svg.admin-status-radio-icon"
-          assert_select "span", text: "Inactives"
+          assert_select "span", text: "Inactiva"
         end
       end
     end

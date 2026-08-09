@@ -17,6 +17,6 @@
 
   ·
   <%= link_to t("shared.auth_footer.legal_notice"), legal_notice_url, target: "_blank", rel: "noopener" %>
-  ·
+  <span class="auth-footer-access-separator">·</span>
   <%= link_to local_assigns.fetch(:access_label), local_assigns.fetch(:access_path), class: "auth-footer-access" %>
 </footer>

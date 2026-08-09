@@ -59,16 +59,20 @@ module ApplicationHelper
     configured_image_path(Rails.configuration.x.app_icon_png, fallback: "/icon.png")
   end
 
-  def app_icon_192_png_path
-    configured_image_path(Rails.configuration.x.app_icon_192_png, fallback: "/icon-192.png")
-  end
-
   def app_icon_svg_path
     configured_image_path(Rails.configuration.x.app_icon_svg, fallback: "/icon.svg")
   end
 
   def app_favicon_path
     configured_image_path(Rails.configuration.x.app_favicon, fallback: "/favicon.ico")
+  end
+
+  def pwa_icon_png_path
+    configured_image_path(Rails.configuration.x.app_pwa_icon_png, fallback: "/pwa-icon-512.png")
+  end
+
+  def pwa_icon_192_png_path
+    configured_image_path(Rails.configuration.x.app_pwa_icon_192_png, fallback: "/pwa-icon-192.png")
   end
 
   def nav_item_class(path, exact: nil)

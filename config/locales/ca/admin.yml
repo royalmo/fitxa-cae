@@ -186,6 +186,9 @@ ca:
         national_id_locked_tooltip: Crea una nova persona si vols canvia el DNI/NIE.
         phone: Telèfon
         status: Estat
+        statuses:
+          active: Activa
+          disabled: Inactiva
         tags: Etiquetes
       new:
         title: Nova persona
@@ -641,6 +644,9 @@ ca:
         employee_search_placeholder: Cerca per nom, DNI, correu o telèfon
         no_employee: Sense persona vinculada
         status: Estat
+        statuses:
+          active: Actiu
+          disabled: Inactiu
       new:
         title: Alta de responsable
         heading: Alta de responsable

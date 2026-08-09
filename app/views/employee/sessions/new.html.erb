@@ -1,6 +1,7 @@
 <% content_for :title, t(".title") %>
 <% active_tab = params[:delivery_method].present? ? "code" : "password" %>
 <% selected_delivery_method = params[:delivery_method].presence_in(LoginCodeDeliveryConfig::DELIVERY_METHODS) || "email" %>
+<% remember_me_checked = request.get? || params[:remember_me].present? %>
 
 <section class="auth-card auth-card-narrow employee-auth-card">
   <header class="auth-header">
@@ -38,7 +39,7 @@
         </div>
 
         <label class="check-row">
-          <%= check_box_tag :remember_me, "1", params[:remember_me].present?, id: "employee_password_remember_me" %>
+          <%= check_box_tag :remember_me, "1", remember_me_checked, id: "employee_password_remember_me" %>
           <span><%= t(".remember_me") %></span>
         </label>
 
@@ -74,7 +75,7 @@
         </fieldset>
 
         <label class="check-row">
-          <%= check_box_tag :remember_me, "1", params[:remember_me].present?, id: "employee_code_remember_me" %>
+          <%= check_box_tag :remember_me, "1", remember_me_checked, id: "employee_code_remember_me" %>
           <span><%= t(".remember_me") %></span>
         </label>
 
