@@ -78,6 +78,17 @@ class Employee::PasswordResetsController < ApplicationController
     end
   end
 
+  def setup
+    employee = Employee.find_by_password_setup_token(params[:token])
+
+    if employee
+      store_pending_employee_password_setup(employee, reason: "first_login", remember: false, installed_pwa: false)
+      redirect_to edit_employee_password_reset_path
+    else
+      redirect_to login_path, alert: t("employee.password_resets.flash.invalid_setup_token")
+    end
+  end
+
   def edit
     flash.now[:notice] = t(".first_login_notice") if pending_employee_password_setup_first_login?
   end

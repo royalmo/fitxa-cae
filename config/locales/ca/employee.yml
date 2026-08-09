@@ -222,6 +222,7 @@ ca:
     password_resets:
       flash:
         code_required: Demana un codi nou per continuar.
+        invalid_setup_token: Aquest enllaç no és vàlid o ha caducat.
         password_setup_required: Verifica el codi per definir la contrasenya.
       new:
         title: Restablir contrasenya

@@ -227,6 +227,43 @@ class Employee::PasswordResetsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to login_path
   end
 
+  test "password setup link opens setup form, sets password, and signs in" do
+    employee = create_employee(email: "ada@example.test")
+
+    get employee_password_setup_path(employee.password_setup_token)
+
+    assert_redirected_to edit_employee_password_reset_path
+
+    follow_redirect!
+    assert_response :success
+    assert_select "title", text: "Nova contrasenya | FitxaCAE"
+    assert_select ".auth-panel > .flash-notice > span",
+      text: I18n.t("employee.password_resets.edit.first_login_notice")
+    assert_select "form.auth-form[action='#{employee_password_reset_path}']"
+    assert_select "form#employee_password_setup_skip_form[action='#{skip_employee_password_setup_path}'][method='post']"
+
+    patch employee_password_reset_path, params: {
+      password: "5678",
+      password_confirmation: "5678"
+    }
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("employee.password_resets.update.success"), flash[:notice]
+    assert employee.reload.authenticate("5678")
+    assert_nil Employee.find_by_password_setup_token(employee.password_setup_token)
+  end
+
+  test "password setup link is rejected after password is configured" do
+    employee = create_employee(email: "ada@example.test")
+    setup_token = employee.password_setup_token
+    employee.update!(password: "5678")
+
+    get employee_password_setup_path(setup_token)
+
+    assert_redirected_to login_path
+    assert_equal I18n.t("employee.password_resets.flash.invalid_setup_token"), flash[:alert]
+  end
+
   test "password setup redirects without a verified code" do
     get edit_employee_password_reset_path
 

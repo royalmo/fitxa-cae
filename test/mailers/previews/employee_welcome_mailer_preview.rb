@@ -8,7 +8,7 @@ class EmployeeWelcomeMailerPreview < ActionMailer::Preview
   private
 
   def preview_employee
-    Employee.first || Employee.create!(
+    Employee.where(password_digest: nil).first || Employee.create!(
       first_name: "Ada",
       last_name: "Soler",
       national_id: "12345678Z",

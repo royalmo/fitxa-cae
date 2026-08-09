@@ -250,6 +250,33 @@ class EmployeeTest < ActiveSupport::TestCase
     assert_not employee.authenticate_login_code("000000")
   end
 
+  test "password setup token is valid only before password is configured" do
+    employee = create_employee
+    setup_token = employee.password_setup_token
+
+    travel Employee::PASSWORD_SETUP_TOKEN_TTL - 1.day
+    assert_equal employee, Employee.find_by_password_setup_token(setup_token)
+
+    employee.update!(password: "5678")
+
+    assert_nil Employee.find_by_password_setup_token(setup_token)
+  end
+
+  test "password setup token expires after one month" do
+    employee = create_employee
+    setup_token = employee.password_setup_token
+
+    travel Employee::PASSWORD_SETUP_TOKEN_TTL + 1.second
+
+    assert_nil Employee.find_by_password_setup_token(setup_token)
+  end
+
+  test "password setup token is not valid for inactive employees" do
+    employee = create_employee(active: false)
+
+    assert_nil Employee.find_by_password_setup_token(employee.password_setup_token)
+  end
+
   test "reports login code rate limit reason" do
     employee = create_employee
     requested_at = Time.zone.local(2026, 8, 8, 10, 0)

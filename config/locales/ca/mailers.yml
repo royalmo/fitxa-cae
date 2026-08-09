@@ -4,7 +4,10 @@ ca:
       app_name: FitxaCAE
       greeting: Hola %{name},
       greeting_prefix: Hola
+      create_password_button: Crea la contrasenya
+      create_password_intro: "Per accedir-hi, crea la teva contrasenya mitjançant aquest enllaç:"
       password_fallback: "Si el botó no funciona, copia i enganxa aquest enllaç al navegador:"
+      password_setup_expires: Aquest enllaç caduca d'aquí a 1 mes.
       signoff: Salutacions,
       platform_signature: La plataforma FitxaCAE
   employee_login_mailer:
@@ -19,9 +22,6 @@ ca:
       account_created_text: "S'ha creat un compte amb aquest correu a %{app_name} (%{app_url}): l'eina que hauràs d'utilitzar per dur control del teu registre horari laboral."
       account_created_prefix: S'ha creat un compte amb aquest correu a
       account_created_suffix: l'eina que hauràs d'utilitzar per dur control del teu registre horari laboral.
-      first_login_text: 'Per accedir-hi, ves a %{app_url}, selecciona "Rebre codi", i introdueix el teu DNI o NIE. Rebràs un codi per entrar la primera vegada. Un cop dins, pots crear una contrasenya per entrar més fàcilment.'
-      first_login_prefix: Per accedir-hi, ves a
-      first_login_suffix: 'selecciona "Rebre codi", i introdueix el teu DNI o NIE. Rebràs un codi per entrar la primera vegada. Un cop dins, pots crear una contrasenya per entrar més fàcilment.'
       contact: Per a qualsevol dubte ens pots contactar responent aquest correu o pels mitjans habituals de Recursos Humans.
   human_resources_contact_mailer:
     contact_request:
@@ -38,9 +38,6 @@ ca:
     password_setup:
       subject: "[FitxaCAE] Compte de responsable creat"
       body: S'ha creat el teu compte de responsable a FitxaCAE.
-      link_intro: "Per accedir-hi, crea la teva contrasenya mitjançant aquest enllaç:"
-      button: Crea la contrasenya
-      expires: Aquest enllaç caduca d'aquí a 1 mes.
     password_reset:
       subject: "[FitxaCAE] Restableix la contrasenya de FitxaCAE Admin"
       body: Hem rebut una sol·licitud per restablir la contrasenya del teu compte de responsable.

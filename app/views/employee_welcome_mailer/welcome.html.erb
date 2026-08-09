@@ -6,11 +6,16 @@
   <%= t(".account_created_suffix") %>
 </p>
 
-<p>
-  <%= t(".first_login_prefix") %>
-  <%= link_to @app_url, @app_url %>,
-  <%= t(".first_login_suffix") %>
+<p><%= t("mailers.shared.create_password_intro") %></p>
+
+<p><%= link_to t("mailers.shared.create_password_button"), @password_url, class: "mailer-button" %></p>
+
+<p class="mailer-help">
+  <%= t("mailers.shared.password_fallback") %><br>
+  <%= link_to @password_url, @password_url, class: "mailer-fallback-link" %>
 </p>
+
+<p><%= t("mailers.shared.password_setup_expires") %></p>
 
 <p><%= t(".contact") %></p>
 

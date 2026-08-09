@@ -10,6 +10,7 @@ class Employee < ApplicationRecord
   LOGIN_CODE_LENGTH = LOGIN_CODE_RANDOM_DIGITS + 1
   LOGIN_CODE_CHECKSUM = "weighted_mod10_sum"
   LOGIN_CODE_CHECKSUM_WEIGHTS = [ 2, 1, 2, 1, 2, 1 ].freeze
+  PASSWORD_SETUP_TOKEN_TTL = 1.month
   EMPLOYMENT_PERIOD_UNDO_WINDOW = 24.hours
   NATIONAL_ID_EDIT_WINDOW = 24.hours
   THEME_PREFERENCES = %w[light dark system].freeze
@@ -20,6 +21,9 @@ class Employee < ApplicationRecord
   after_update :sync_employment_periods_after_active_change, if: :saved_change_to_active?
 
   has_secure_password validations: false
+  generates_token_for :password_setup, expires_in: PASSWORD_SETUP_TOKEN_TTL do
+    password_salt&.last(10)
+  end
 
   has_one :manager, dependent: :nullify
   has_many :employment_periods, dependent: :destroy
@@ -47,6 +51,12 @@ class Employee < ApplicationRecord
 
   def self.find_active_by_national_id(national_id)
     where(active: true).find_by(national_id: normalize_national_id(national_id))
+  end
+
+  def self.find_by_password_setup_token(token)
+    employee = find_by_token_for(:password_setup, token)
+
+    employee if employee&.active? && employee.password_setup_required?
   end
 
   def self.valid_national_id?(national_id)
@@ -85,6 +95,10 @@ class Employee < ApplicationRecord
 
   def password_setup_required?
     !password_login_enabled?
+  end
+
+  def password_setup_token
+    generate_token_for(:password_setup)
   end
 
   def theme_preference
