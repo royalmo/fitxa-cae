@@ -25,6 +25,18 @@ module ApplicationHelper
     Rails.configuration.x.legal_notice_url
   end
 
+  def link_button_href
+    Rails.configuration.x.link_button_href
+  end
+
+  def link_button_text
+    Rails.configuration.x.link_button_text
+  end
+
+  def link_button_enabled?
+    link_button_href.present? && link_button_text.present?
+  end
+
   def app_brand_prefix
     app_name.start_with?("Fitxa") ? "Fitxa" : app_name
   end

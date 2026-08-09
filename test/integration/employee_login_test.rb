@@ -25,6 +25,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_match "localStorage.getItem(storageKey)", response.body
     assert_select ".employee-install-prompt .employee-install-button", text: /Instal·la FitxaCAE/
     assert_select ".employee-install-prompt .employee-install-button .icon"
+    assert_select ".employee-link-prompt", 0
     assert_select ".auth-tab-list", text: /Contrasenya/
     assert_select ".auth-tab-list", text: /Rebre codi/
     assert_select "#employee_login_password_tab[checked]"
@@ -88,6 +89,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       assert_select ".employee-auth-card .brand-text-suffix", text: "Xarranca"
       assert_select ".employee-auth-card .brand-logo", 0
       assert_select ".employee-install-prompt .employee-install-button", text: /Instal·la FitxaXarranca/
+      assert_select ".employee-link-prompt", 0
       assert_select ".employee-auth-footer a[href='https://xarranca.example.test/legal']", text: "Avís legal"
       assert_equal "FitxaCAE v#{Rails.configuration.x.app_version} · Avís legal · Accés admin",
         css_select(".employee-auth-footer").first.text.squish
@@ -104,6 +106,39 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       assert_match "fitxa-xarranca-v8", response.body
       assert_match "fitxa_xarranca_favicon", response.body
       assert_no_match "cae_logo", response.body
+    end
+  end
+
+  test "configured employee auth link renders under install prompt" do
+    with_app_brand(
+      name: "FitxaXarranca",
+      slug: "fitxa-xarranca",
+      link_button_href: "https://fitxa.cae.cat/login",
+      link_button_text: "FitxaCAE"
+    ) do
+      get login_path
+
+      assert_response :success
+      assert_select ".employee-link-prompt", text: "Anar a: FitxaCAE"
+      assert_select ".employee-link-prompt .employee-link-prompt-prefix", text: "Anar a:"
+      assert_select ".employee-link-prompt a.employee-link-prompt-target[href='https://fitxa.cae.cat/login']", text: "FitxaCAE"
+      assert_select ".employee-install-prompt + .employee-link-prompt"
+    end
+  end
+
+  test "employee auth link requires href and text" do
+    with_app_brand(name: "FitxaCAE", slug: "fitxa-cae", link_button_href: "https://fitxa-xarranca.cae.cat", link_button_text: nil) do
+      get login_path
+
+      assert_response :success
+      assert_select ".employee-link-prompt", 0
+    end
+
+    with_app_brand(name: "FitxaCAE", slug: "fitxa-cae", link_button_href: nil, link_button_text: "FitxaXarranca") do
+      get login_path
+
+      assert_response :success
+      assert_select ".employee-link-prompt", 0
     end
   end
 

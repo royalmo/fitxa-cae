@@ -14,6 +14,8 @@ env:
     APP_SLUG: fitxa-cae
     APP_BRAND_SUFFIX_IMAGE: cae_logo_trimmed.png
     APP_REDIRECT_HOSTS: fitxar.cae.cat
+    LINK_BUTTON_HREF: https://fitxa-xarranca.cae.cat/login
+    LINK_BUTTON_TEXT: FitxaXarranca
     HUMAN_RESOURCES_EMAIL: rrhh@cae.cat
     LEGAL_NOTICE_URL: https://cae.cat/avisos-legals/
     MAILER_FROM_EMAIL: cae@cae.cat

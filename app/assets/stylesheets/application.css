@@ -480,8 +480,20 @@ td small,
 
 .employee-install-prompt {
   display: none;
+  align-items: center;
   justify-content: center;
   padding: 0 1.25rem 0.85rem;
+}
+
+.employee-link-prompt {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0 1.25rem 0.35rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.2;
 }
 
 .employee-install-button {
@@ -508,6 +520,23 @@ td small,
   display: block;
   width: 0.95rem;
   height: 0.95rem;
+}
+
+.employee-link-prompt-prefix {
+  color: var(--text);
+  font-weight: 400;
+}
+
+.employee-link-prompt-target {
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.employee-link-prompt-target:hover {
+  color: var(--primary-strong);
 }
 
 .employee-install-button:hover {
@@ -3093,6 +3122,7 @@ input[type="submit"].is-submitting {
       minmax(1rem, 0.5fr)
       auto
       minmax(1rem, 0.5fr)
+      auto
       auto;
   }
 
@@ -3107,8 +3137,13 @@ input[type="submit"].is-submitting {
     padding: 0 1.25rem;
   }
 
-  .employee-auth-footer {
+  .employee-link-prompt {
     grid-row: 6;
+    padding: 0 1.25rem 0.2rem;
+  }
+
+  .employee-auth-footer {
+    grid-row: 7;
   }
 
   .auth-methods {

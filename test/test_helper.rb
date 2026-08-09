@@ -131,7 +131,9 @@ module ActiveSupport
       brand_suffix_image: Rails.configuration.x.app_brand_suffix_image,
       favicon: Rails.configuration.x.app_favicon,
       icon_png: Rails.configuration.x.app_icon_png,
-      icon_svg: Rails.configuration.x.app_icon_svg
+      icon_svg: Rails.configuration.x.app_icon_svg,
+      link_button_href: Rails.configuration.x.link_button_href,
+      link_button_text: Rails.configuration.x.link_button_text
     )
       previous_name = Rails.configuration.x.app_name
       previous_slug = Rails.configuration.x.app_slug
@@ -140,6 +142,8 @@ module ActiveSupport
       previous_favicon = Rails.configuration.x.app_favicon
       previous_icon_png = Rails.configuration.x.app_icon_png
       previous_icon_svg = Rails.configuration.x.app_icon_svg
+      previous_link_button_href = Rails.configuration.x.link_button_href
+      previous_link_button_text = Rails.configuration.x.link_button_text
 
       Rails.configuration.x.app_name = name
       Rails.configuration.x.app_slug = slug
@@ -148,6 +152,8 @@ module ActiveSupport
       Rails.configuration.x.app_favicon = favicon
       Rails.configuration.x.app_icon_png = icon_png
       Rails.configuration.x.app_icon_svg = icon_svg
+      Rails.configuration.x.link_button_href = link_button_href
+      Rails.configuration.x.link_button_text = link_button_text
       yield
     ensure
       Rails.configuration.x.app_name = previous_name
@@ -157,6 +163,8 @@ module ActiveSupport
       Rails.configuration.x.app_favicon = previous_favicon
       Rails.configuration.x.app_icon_png = previous_icon_png
       Rails.configuration.x.app_icon_svg = previous_icon_svg
+      Rails.configuration.x.link_button_href = previous_link_button_href
+      Rails.configuration.x.link_button_text = previous_link_button_text
     end
   end
 end

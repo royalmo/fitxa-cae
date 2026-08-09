@@ -36,6 +36,8 @@ module FitxaCae
     config.x.app_favicon = ENV["APP_FAVICON"].presence
     config.x.app_icon_png = ENV["APP_ICON_PNG"].presence
     config.x.app_icon_svg = ENV["APP_ICON_SVG"].presence
+    config.x.link_button_href = ENV["LINK_BUTTON_HREF"].presence || ENV["link-button-href"].presence
+    config.x.link_button_text = ENV["LINK_BUTTON_TEXT"].presence || ENV["link-button-text"].presence
     config.x.human_resources_email = ENV.fetch("HUMAN_RESOURCES_EMAIL", "rrhh@cae.cat")
     config.x.legal_notice_url = ENV.fetch("LEGAL_NOTICE_URL", "https://cae.cat/avisos-legals/")
     config.x.mailer_from_email = ENV.fetch("MAILER_FROM_EMAIL", "from@example.com")

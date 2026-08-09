@@ -31,6 +31,13 @@
       </button>
     </div>
 
+    <% if link_button_enabled? %>
+      <div class="employee-link-prompt">
+        <span class="employee-link-prompt-prefix"><%= t("employee.sessions.link_button_prefix") %></span>
+        <%= link_to link_button_text, link_button_href, class: "employee-link-prompt-target" %>
+      </div>
+    <% end %>
+
     <%= render "layouts/auth_footer",
       class: "employee-auth-footer",
       access_label: t("shared.auth_footer.admin_access"),
