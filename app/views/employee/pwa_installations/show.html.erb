@@ -1,0 +1,63 @@
+<% content_for :title, t(".title") %>
+<% selected_platform = @pwa_install_platform == "ios" ? "ios" : "android" %>
+
+<section class="auth-card employee-auth-card pwa-install-card">
+  <header class="auth-header">
+    <%= render "layouts/brand_mark", path: login_path %>
+    <h1><%= t(".heading", app_name: app_name) %></h1>
+    <p><%= t(".intro", app_name: app_name) %></p>
+  </header>
+
+  <section class="auth-panel auth-tabbed-panel pwa-install-panel">
+    <%= radio_button_tag :pwa_install_platform, "android", selected_platform == "android", id: "pwa_install_android_tab", class: "auth-tab-radio" %>
+    <%= radio_button_tag :pwa_install_platform, "ios", selected_platform == "ios", id: "pwa_install_ios_tab", class: "auth-tab-radio" %>
+
+    <div class="auth-tab-list" role="tablist" aria-label="<%= t(".tabs_label") %>">
+      <label id="pwa_install_android_label" class="auth-tab auth-tab-android" for="pwa_install_android_tab" role="tab" aria-controls="pwa_install_android_panel">
+        <%= t(".android_tab") %>
+      </label>
+      <label id="pwa_install_ios_label" class="auth-tab auth-tab-ios" for="pwa_install_ios_tab" role="tab" aria-controls="pwa_install_ios_panel">
+        <%= t(".ios_tab") %>
+      </label>
+    </div>
+
+    <div id="pwa_install_android_panel" class="auth-tab-panel auth-tab-panel-android pwa-install-platform" role="tabpanel" aria-labelledby="pwa_install_android_label">
+      <%= render "platform",
+        heading: nil,
+        summary: nil,
+        app_name: app_name,
+        step_image_alt: t(".step_image_alt"),
+        screenshot_steps: true,
+        step_images: %w[
+          pwa_install/android-chrome-page.jpeg
+          pwa_install/android-chrome-options.jpg
+          pwa_install/android-install-modal.jpeg
+          pwa_install/android-home-screen.jpg
+        ],
+        steps: t(".android.steps", app_name: app_name) %>
+    </div>
+
+    <div id="pwa_install_ios_panel" class="auth-tab-panel auth-tab-panel-ios pwa-install-platform" role="tabpanel" aria-labelledby="pwa_install_ios_label">
+      <%= render "platform",
+        heading: nil,
+        summary: nil,
+        app_name: app_name,
+        step_image_alt: t(".step_image_alt"),
+        screenshot_steps: true,
+        step_images: %w[
+          pwa_install/android-chrome-page.jpeg
+          pwa_install/android-chrome-options.jpg
+          pwa_install/android-install-modal.jpeg
+          pwa_install/android-home-screen.jpg
+        ],
+        steps: t(".ios.steps", app_name: app_name) %>
+    </div>
+  </section>
+
+  <div class="auth-panel-actions pwa-install-actions">
+    <%= link_to login_path, class: "auth-back-link" do %>
+      <%= icon "arrow-left", class: "icon" %>
+      <span><%= t(".back") %></span>
+    <% end %>
+  </div>
+</section>

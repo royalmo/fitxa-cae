@@ -1,0 +1,40 @@
+<section class="pwa-install-platform-content">
+  <% screenshot_steps = local_assigns.fetch(:screenshot_steps, false) %>
+
+  <% if heading.present? || summary.present? %>
+    <div class="pwa-install-platform-copy">
+      <h2><%= heading %></h2>
+      <p><%= summary %></p>
+    </div>
+  <% end %>
+
+  <ol class="pwa-install-steps">
+    <% steps.each_with_index do |step, index| %>
+      <% step_title = step.fetch(:title) { step.fetch("title") } %>
+      <% step_caption_html = step.fetch(:caption_html) { step.fetch("caption_html", nil) } %>
+      <% step_body = step.fetch(:body) { step.fetch("body", nil) } unless step_caption_html %>
+      <% step_caption_html = step_caption_html % { app_name: app_name } if step_caption_html&.include?("%{app_name}") %>
+      <% step_body = step_body % { app_name: app_name } if step_body&.include?("%{app_name}") %>
+      <% image = step_images.fetch(index) %>
+      <% image_alt = step_image_alt % { number: index + 1, title: step_title } %>
+
+      <li class="pwa-install-step">
+        <div class="pwa-install-step-body">
+          <span class="pwa-install-step-number"><%= index + 1 %></span>
+          <div class="pwa-install-step-copy">
+            <% if step_caption_html %>
+              <p><%= sanitize(step_caption_html, tags: %w[strong em], attributes: []) %></p>
+            <% else %>
+              <h3><%= step_title %></h3>
+              <p><%= step_body %></p>
+            <% end %>
+          </div>
+        </div>
+
+        <figure class="pwa-install-step-image">
+          <%= image_tag image, alt: image_alt, loading: "lazy", class: ("pwa-install-step-screenshot" if screenshot_steps) %>
+        </figure>
+      </li>
+    <% end %>
+  </ol>
+</section>

@@ -53,6 +53,36 @@ ca:
         invalid: El codi no és correcte o ha caducat.
       destroy:
         signed_out: Sessió tancada.
+    pwa_installations:
+      show:
+        title: Instal·lar l'aplicació
+        heading: Instal·la %{app_name}
+        intro: Afegeix %{app_name} a la pantalla d'inici per obrir-la com una aplicació i trobar-la ràpidament quan hagis de fitxar.
+        tabs_label: Sistema del telèfon
+        android_tab: Android
+        ios_tab: iOS
+        back: Tornar a l'inici de sessió
+        step_image_alt: "Captura del pas %{number}: %{title}"
+        android:
+          steps:
+            - title: Obre %{app_name} amb Google Chrome
+              caption_html: "<strong>Obre %{app_name} amb Google Chrome</strong> i clica al menú de dalt a la dreta."
+            - title: Selecciona l'opció instal·la i crea una drecera
+              caption_html: "Selecciona l'opció <strong>instal·la i crea una drecera</strong> (en anglès <em>install and create shortcut</em>)."
+            - title: Tria instal·la
+              caption_html: "Tria <strong>instal·la</strong> (en anglès <em>install</em>)."
+            - title: L'app apareix a la pantalla d'inici
+              caption_html: "En uns segons, apareixerà l'app de %{app_name} a la <strong>pantalla d'inici</strong>."
+        ios:
+          steps:
+            - title: Obre %{app_name} amb Safari
+              caption_html: "<strong>Obre %{app_name} amb Safari</strong> i toca el botó de compartir."
+            - title: Selecciona Afegeix a la pantalla d'inici
+              caption_html: "Selecciona <strong>Afegeix a la pantalla d'inici</strong>."
+            - title: Tria Afegeix
+              caption_html: "Tria <strong>Afegeix</strong> per confirmar."
+            - title: L'app apareix a la pantalla d'inici
+              caption_html: "En uns segons, apareixerà l'app de %{app_name} a la <strong>pantalla d'inici</strong>."
     nav:
       label: Navegació de personal
       account: Compte

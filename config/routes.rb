@@ -27,6 +27,7 @@ Rails.application.routes.draw do
     match "admin/500" => "errors#internal_server_error", via: :all
   end
 
+  get "install" => "employee/pwa_installations#show", as: :employee_pwa_installation
   get "login" => "employee/sessions#new", as: :login
   post "login" => "employee/sessions#create"
   post "login/code" => "employee/sessions#request_code", as: :request_login_code

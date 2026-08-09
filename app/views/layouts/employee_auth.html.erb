@@ -24,12 +24,14 @@
       <%= yield %>
     </main>
 
-    <div class="employee-install-prompt">
-      <button type="button" class="employee-install-button">
-        <span><%= t("employee.sessions.install_prompt", app_name: app_name) %></span>
-        <%= icon "download", class: "icon" %>
-      </button>
-    </div>
+    <% unless current_page?(employee_pwa_installation_path) %>
+      <div class="employee-install-prompt">
+        <%= link_to employee_pwa_installation_path, class: "employee-install-button" do %>
+          <span><%= t("employee.sessions.install_prompt", app_name: app_name) %></span>
+          <%= icon "download", class: "icon" %>
+        <% end %>
+      </div>
+    <% end %>
 
     <% if link_button_enabled? %>
       <div class="employee-link-prompt">

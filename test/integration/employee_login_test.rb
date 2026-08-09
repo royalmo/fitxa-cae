@@ -23,7 +23,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
     assert_select ".auth-methods", 0
     assert_select "body[data-controller~='employee-theme'][data-controller~='pwa-session'][data-controller~='submit-feedback'][data-employee-theme-preference-value='system'][data-employee-theme-signed-in-value='false']"
     assert_match "localStorage.getItem(storageKey)", response.body
-    assert_select ".employee-install-prompt .employee-install-button", text: /Instal·la FitxaCAE/
+    assert_select ".employee-install-prompt a.employee-install-button[href='#{employee_pwa_installation_path}']", text: /Instal·la FitxaCAE/
     assert_select ".employee-install-prompt .employee-install-button .icon"
     assert_select ".employee-link-prompt", 0
     assert_select ".auth-tab-list", text: /Contrasenya/
@@ -94,7 +94,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       assert_select ".employee-auth-card .brand-fitxa", text: "Fitxa"
       assert_select ".employee-auth-card .brand-text-suffix", text: "Xarranca"
       assert_select ".employee-auth-card .brand-logo", 0
-      assert_select ".employee-install-prompt .employee-install-button", text: /Instal·la FitxaXarranca/
+      assert_select ".employee-install-prompt a.employee-install-button[href='#{employee_pwa_installation_path}']", text: /Instal·la FitxaXarranca/
       assert_select ".employee-link-prompt", 0
       assert_select ".employee-auth-footer a[href='https://xarranca.example.test/legal']", text: "Avís legal"
       assert_equal "FitxaCAE v#{Rails.configuration.x.app_version} · Avís legal · Accés admin",
