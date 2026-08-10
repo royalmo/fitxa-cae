@@ -93,3 +93,23 @@ Manager records are seeded with these emails:
 | Marc Soler | `marc.soler@fitxa-cae.test` | `12345678` |
 | Nuria Costa | `nuria.costa@fitxa-cae.test` | `12345678` |
 | Pau Vidal | `pau.vidal@fitxa-cae.test` | `12345678` |
+
+## Possible improvements
+
+Below is a list of things I find interesting to do but am lazy to do for free
+(even though some are just one prompt lmao):
+
+- Add some history on TagUser: when a user had and lost a tag.
+- Shift+click to certain buttons auto-confirm the confirm modal that should appear.
+- Notify the user at the end of the day if they have odd swipes.
+- Managers can have roles (auditor, admin, ...) and they can be scoped to users
+  with a certain tag.
+- Put a moving average on charts, and maybe use the metric of people that worked that day.
+- Review performance with a miniprofiler
+- Receive a mail for slow requests.
+- Be able to delete (manually-triggered) information older than X years. This is
+  a legal requirement but I still have some years to implement it!
+- Be able to undo recently approved or rejected corrections.
+- Be able to change the app's primary color.
+- Translate to english (and maybe spanish), put a language selector, and make
+  the default language and timezone env-switchable (for future deployments).
