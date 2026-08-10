@@ -21,21 +21,23 @@ class Employee::PwaInstallationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#pwa_install_android_panel .pwa-install-step-image.pwa-install-step-screenshot-frame", 0
     assert_select "#pwa_install_android_panel .pwa-install-step-image img.pwa-install-step-screenshot[src*='pwa_install/android-']", 4
     assert_select "#pwa_install_android_panel .pwa-install-step-image img[src*='.svg']", 0
-    assert_select "#pwa_install_ios_panel .pwa-install-step-image img.pwa-install-step-screenshot[src*='pwa_install/android-']", 4
-    assert_select "#pwa_install_ios_panel .pwa-install-step-image img[src*='pwa_install/ios-']", 0
+    assert_select "#pwa_install_ios_panel .pwa-install-step-image img.pwa-install-step-screenshot[src*='pwa_install/android-']", 0
+    assert_select "#pwa_install_ios_panel .pwa-install-step-image img.pwa-install-step-screenshot[src*='pwa_install/ios-']", 6
     assert_select "#pwa_install_ios_panel .pwa-install-step-image img[src*='.svg']", 0
-    assert_select ".pwa-install-step-image img[alt*='Captura del pas']", 8
-    assert_select ".pwa-install-step", 8
-    assert_select ".pwa-install-step > .pwa-install-step-body + .pwa-install-step-image", 8
+    assert_select ".pwa-install-step-image img[alt*='Captura del pas']", 10
+    assert_select ".pwa-install-step", 10
+    assert_select ".pwa-install-step > .pwa-install-step-body + .pwa-install-step-image", 10
     assert_select "#pwa_install_android_panel .pwa-install-step h3", 0
     assert_select "#pwa_install_ios_panel .pwa-install-step h3", 0
     assert_select "#pwa_install_android_panel .pwa-install-step-copy strong", text: "Obre FitxaCAE amb Google Chrome"
     assert_select "#pwa_install_android_panel .pwa-install-step-copy strong", text: "instal·la i crea una drecera"
     assert_select "#pwa_install_android_panel .pwa-install-step-copy em", text: "install and create shortcut"
     assert_select "#pwa_install_android_panel .pwa-install-step-copy strong", text: "pantalla d'inici"
-    assert_select "#pwa_install_ios_panel .pwa-install-step-copy strong", text: "Obre FitxaCAE amb Safari"
-    assert_select "#pwa_install_ios_panel .pwa-install-step-copy strong", text: "Afegeix a la pantalla d'inici"
-    assert_select "#pwa_install_ios_panel .pwa-install-step-copy strong", text: "Afegeix"
+    assert_select "#pwa_install_ios_panel .pwa-install-step-copy strong", text: "tres punts"
+    assert_select "#pwa_install_ios_panel .pwa-install-step-copy strong", text: "Compartir"
+    assert_select "#pwa_install_ios_panel .pwa-install-step-copy strong", text: "Ver más"
+    assert_select "#pwa_install_ios_panel .pwa-install-step-copy strong", text: "Añadir a pantalla de inicio"
+    assert_select "#pwa_install_ios_panel .pwa-install-step-copy strong", text: "Añadir"
     assert_select ".pwa-install-actions a[href='#{login_path}']", text: /Tornar a l'inici de sessió/
   end
 

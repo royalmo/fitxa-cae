@@ -75,12 +75,16 @@ ca:
               caption_html: "En uns segons, apareixerà l'app de %{app_name} a la <strong>pantalla d'inici</strong>."
         ios:
           steps:
-            - title: Obre %{app_name} amb Safari
-              caption_html: "<strong>Obre %{app_name} amb Safari</strong> i toca el botó de compartir."
-            - title: Selecciona Afegeix a la pantalla d'inici
-              caption_html: "Selecciona <strong>Afegeix a la pantalla d'inici</strong>."
-            - title: Tria Afegeix
-              caption_html: "Tria <strong>Afegeix</strong> per confirmar."
+            - title: Obre el menú del navegador
+              caption_html: "<strong>Obre %{app_name} amb Safari</strong> i toca el botó de <strong>tres punts</strong> de la barra inferior."
+            - title: Comparteix la pàgina
+              caption_html: "Al menú que s'obre, toca <strong>Compartir</strong>."
+            - title: Desplega totes les opcions
+              caption_html: "Quan s'obri el panell, toca <strong>Ver más</strong> per veure totes les opcions."
+            - title: Selecciona l'opció d'afegir-la a l'inici
+              caption_html: "Selecciona <strong>Añadir a pantalla de inicio</strong>."
+            - title: Confirma amb Añadir
+              caption_html: "A la pantalla de confirmació, toca <strong>Añadir</strong>."
             - title: L'app apareix a la pantalla d'inici
               caption_html: "En uns segons, apareixerà l'app de %{app_name} a la <strong>pantalla d'inici</strong>."
     nav:
