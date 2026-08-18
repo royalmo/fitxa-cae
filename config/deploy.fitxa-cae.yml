@@ -25,8 +25,6 @@ env:
     LABSMOBILE_SENDER: FitxaCAE
     SMTP_ADDRESS: mail.cae.cat
     SMTP_PORT: 465
-    SMTP_TLS: true
-    SMTP_AUTHENTICATION: plain
     SMTP_OPENSSL_VERIFY_MODE: none
 volumes:
 - fitxa_cae_storage:/rails/storage

@@ -82,7 +82,9 @@ Rails.application.configure do
       authentication: ENV.fetch("SMTP_AUTHENTICATION", "plain").to_sym,
       enable_starttls_auto: smtp_enable_starttls_auto,
       tls: smtp_tls,
-      openssl_verify_mode: ENV["SMTP_OPENSSL_VERIFY_MODE"].presence
+      openssl_verify_mode: ENV["SMTP_OPENSSL_VERIFY_MODE"].presence,
+      open_timeout: ENV.fetch("SMTP_OPEN_TIMEOUT", 10).to_i,
+      read_timeout: ENV.fetch("SMTP_READ_TIMEOUT", 30).to_i
     }.compact
   end
 
