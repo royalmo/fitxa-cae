@@ -21,7 +21,7 @@ class ErrorReportMailer < ApplicationMailer
   end
 
   def error_sender
-    ENV.fetch("ERROR_NOTIFICATION_SENDER", "#{app_name} Errors <errors@#{Rails.configuration.x.app_slug}.invalid>")
+    ENV.fetch("ERROR_NOTIFICATION_SENDER", Rails.configuration.x.mailer_from_email)
   end
 
   def error_subject

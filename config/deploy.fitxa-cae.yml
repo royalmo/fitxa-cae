@@ -16,15 +16,17 @@ env:
     APP_REDIRECT_HOSTS: fitxar.cae.cat
     LINK_BUTTON_HREF: https://fitxa-xarranca.cae.cat/login
     LINK_BUTTON_TEXT: FitxaXarranca
+
     HUMAN_RESOURCES_EMAIL: rrhh@cae.cat
     LEGAL_NOTICE_URL: https://cae.cat/avisos-legals/
-    MAILER_FROM_EMAIL: cae@cae.cat
+    MAILER_FROM_EMAIL: FitxaCAE <fitxa@cae.cat>
     ERROR_NOTIFICATION_RECIPIENTS: eric@ericroy.net
-    ERROR_NOTIFICATION_SENDER: FitxaCAE <cae@cae.cat>
-    SMTP_ADDRESS: mail.visio.cat
+
+    LABSMOBILE_SENDER: FitxaCAE
+    SMTP_ADDRESS: mail.cae.cat
     SMTP_PORT: 465
     SMTP_TLS: true
-    LABSMOBILE_SENDER: FitxaCAE
-    SMTP_DOMAIN: cae.cat
+    SMTP_AUTHENTICATION: plain
+    SMTP_OPENSSL_VERIFY_MODE: none
 volumes:
 - fitxa_cae_storage:/rails/storage

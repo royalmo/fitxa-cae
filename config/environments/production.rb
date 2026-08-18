@@ -66,7 +66,6 @@ Rails.application.configure do
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: app_host, protocol: app_protocol }
-  config.x.mailer_from_email = ENV.fetch("MAILER_FROM_EMAIL", "no-reply@#{app_host}")
 
   if ENV["SMTP_ADDRESS"].present?
     smtp_port = ENV.fetch("SMTP_PORT", 587).to_i
