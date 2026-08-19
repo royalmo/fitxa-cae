@@ -4,6 +4,8 @@ class Manager < ApplicationRecord
   PASSWORD_RESET_TOKEN_TTL = 1.hour
   PASSWORD_SETUP_TOKEN_TTL = 1.month
 
+  include HumanNameNormalizable
+
   before_validation :normalize_email_attribute
 
   has_secure_password validations: false, reset_token: { expires_in: PASSWORD_RESET_TOKEN_TTL }

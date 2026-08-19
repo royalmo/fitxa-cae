@@ -157,7 +157,7 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Obra;Oficina", csv[0][tags_header]
     assert_equal "2", csv[0][swipes_header]
     assert_equal "8 h 00 min", csv[0][hours_header]
-    assert_equal "Aina Sense hores", csv[1][person_header]
+    assert_equal "Aina Sense Hores", csv[1][person_header]
     assert_equal empty_employee.national_id, csv[1][national_id_header]
     assert_equal "0 h 00 min", csv[1][hours_header]
   end

@@ -68,6 +68,22 @@ class EmployeeTest < ActiveSupport::TestCase
     assert_predicate nie_employee, :valid?
   end
 
+  test "normalizes name casing before validation" do
+    employee = Employee.create!(
+      first_name: "  ÀLEX   maria ",
+      last_name: "gArcía-lÓpez d'anglada",
+      national_id: valid_dni
+    )
+
+    assert_equal "Àlex Maria", employee.first_name
+    assert_equal "García-López D'Anglada", employee.last_name
+
+    employee.update!(first_name: "nÚria", last_name: "DE LA font")
+
+    assert_equal "Núria", employee.first_name
+    assert_equal "De La Font", employee.last_name
+  end
+
   test "rejects invalid spanish national ids" do
     employee = build_employee(national_id: "12345678A")
 

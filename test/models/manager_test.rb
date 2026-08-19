@@ -20,6 +20,22 @@ class ManagerTest < ActiveSupport::TestCase
     assert_model_error manager, :email, :taken
   end
 
+  test "normalizes name casing before validation" do
+    manager = Manager.create!(
+      first_name: "  LAIA   maria ",
+      last_name: "rIERA-pONS d'avinyó",
+      email: "laia.riera@example.test"
+    )
+
+    assert_equal "Laia Maria", manager.first_name
+    assert_equal "Riera-Pons D'Avinyó", manager.last_name
+
+    manager.update!(first_name: "nÚria", last_name: "DE LA font")
+
+    assert_equal "Núria", manager.first_name
+    assert_equal "De La Font", manager.last_name
+  end
+
   test "can be linked to one employee" do
     employee = create_employee
     manager = create_manager(employee: employee)

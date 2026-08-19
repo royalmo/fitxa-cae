@@ -16,6 +16,8 @@ class Employee < ApplicationRecord
   THEME_PREFERENCES = %w[light dark system].freeze
   DEFAULT_THEME_PREFERENCE = "system"
 
+  include HumanNameNormalizable
+
   before_validation :normalize_national_id_attribute
   after_create :create_initial_employment_period, if: :active?
   after_update :sync_employment_periods_after_active_change, if: :saved_change_to_active?
