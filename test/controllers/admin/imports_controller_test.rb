@@ -185,8 +185,7 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
       perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
     end
 
-    assert_enqueued_jobs 1, only: EmployeeWelcomeDeliveryJob
-    assert_equal EmployeeWelcomeDeliveryJob, enqueued_jobs.last.fetch(:job)
+    assert_enqueued_jobs 0, only: EmployeeWelcomeDeliveryJob
 
     first_employee = Employee.find_by!(national_id: first_national_id)
     second_employee = Employee.find_by!(national_id: second_national_id)
@@ -201,7 +200,6 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Importació completada. Persones noves: 2. Persones existents amb etiquetes noves: 1.",
       employee_bulk_action_run.reload.result_message
 
-    perform_enqueued_jobs(only: EmployeeWelcomeDeliveryJob)
     assert_equal [ "ada@example.test", "laia@example.test" ], ActionMailer::Base.deliveries.map { |mail| mail.to.first }.sort
     assert_equal [ I18n.t("employee_welcome_mailer.welcome.subject", app_name: Rails.configuration.x.app_name) ],
       ActionMailer::Base.deliveries.map(&:subject).uniq

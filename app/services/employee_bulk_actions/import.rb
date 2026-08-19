@@ -4,6 +4,9 @@ module EmployeeBulkActions
   class Import < Base
     EXPECTED_HEADER_KEYS = %w[name surname dninie email phone].freeze
     SECOND_SURNAME_HEADER_KEYS = %w[name surname1 surname2 dninie email phone].freeze
+    IMPORT_PROGRESS_TO = 35
+    IMPORT_PROGRESS_TO_WITHOUT_WELCOME_EMAILS = 95
+    WELCOME_EMAIL_PROGRESS_TO = 95
     SUPPORTED_HEADER_KEYS = [
       EXPECTED_HEADER_KEYS,
       %w[nom cognoms dninie correu telefon],
@@ -81,8 +84,7 @@ module EmployeeBulkActions
       raise Errors::InvalidImport.new(:no_importable_people) if simulation.fetch(:actionable_count).zero?
 
       created_employees = apply_import!(simulation, run)
-      run.update!(progress: 94)
-      deliver_employee_welcome_emails(created_employees)
+      deliver_employee_welcome_emails(created_employees, run)
       run.mark_completed!(import_completed_message(simulation.fetch(:importable_records), simulation.fetch(:existing_tag_update_count)))
     end
 
@@ -225,12 +227,13 @@ module EmployeeBulkActions
       created_employees = []
       total_steps = simulation.fetch(:actionable_count)
       done_count = 0
+      progress_to = import_progress_to(simulation)
 
       simulation.fetch(:importable_records).each do |record|
         employee = import_record!(record, simulation.fetch(:tags))
         created_employees << employee
         done_count += 1
-        update_collection_progress(run, done_count, total_steps)
+        update_collection_progress(run, done_count, total_steps, to: progress_to)
       end
 
       existing_employees = Employee.where(national_id: simulation.fetch(:existing_national_ids)).includes(:tags).order(:id).to_a
@@ -239,10 +242,16 @@ module EmployeeBulkActions
           employee.tags << tag unless employee.tags.include?(tag)
         end
         done_count += 1
-        update_collection_progress(run, done_count, total_steps)
+        update_collection_progress(run, done_count, total_steps, to: progress_to)
       end
 
       created_employees
+    end
+
+    def import_progress_to(simulation)
+      importable_records = simulation.fetch(:importable_records)
+
+      importable_records.any? { |record| record.email.present? } ? IMPORT_PROGRESS_TO : IMPORT_PROGRESS_TO_WITHOUT_WELCOME_EMAILS
     end
 
     def import_record!(record, tags)
@@ -258,9 +267,32 @@ module EmployeeBulkActions
       end
     end
 
-    def deliver_employee_welcome_emails(employees)
-      employee_ids = employees.filter_map { |employee| employee.id if employee.email.present? }
-      EmployeeWelcomeDeliveryJob.perform_later(employee_ids) if employee_ids.any?
+    def deliver_employee_welcome_emails(employees, run)
+      employees_with_email = employees.select { |employee| employee.email.present? }
+      return if employees_with_email.empty?
+
+      employees_with_email.each.with_index(1) do |employee, index|
+        update_collection_progress(run, index, employees_with_email.size,
+          from: IMPORT_PROGRESS_TO,
+          to: WELCOME_EMAIL_PROGRESS_TO)
+
+        begin
+          EmployeeWelcomeMailer.welcome(employee).deliver_now
+        rescue StandardError => error
+          report_employee_welcome_delivery_error(error, employee, run)
+        end
+      end
+    end
+
+    def report_employee_welcome_delivery_error(error, employee, run)
+      ErrorNotifier.notify(
+        error,
+        data: {
+          context: "employee_bulk_import_welcome_delivery",
+          employee_bulk_action_run_id: run.id,
+          employee_id: employee.id
+        }
+      )
     end
 
     def import_completed_message(importable_records, existing_tag_update_count)
