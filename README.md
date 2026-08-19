@@ -113,3 +113,4 @@ Below is a list of things I find interesting to do but am lazy to do for free
 - Be able to change the app's primary color.
 - Translate to english (and maybe spanish), put a language selector, and make
   the default language and timezone env-switchable (for future deployments).
+- Enable or disable all users that have one tag.
