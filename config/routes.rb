@@ -107,6 +107,7 @@ Rails.application.routes.draw do
       patch :activation, on: :member
     end
     get "reports/monthly_summary", to: "reports#monthly_summary", as: :reports_monthly_summary
+    get "reports/period_problems", to: "reports#period_problems", as: :reports_period_problems
     resources :reports, only: %i[index]
     resources :report_exports, path: "reports/exports", only: %i[create show] do
       get :download, on: :member

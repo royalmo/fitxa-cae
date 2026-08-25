@@ -12,8 +12,10 @@
     controller: "reports",
     reports_export_url_value: admin_report_exports_path,
     reports_summary_csv_url_value: admin_reports_monthly_summary_path(format: :csv),
+    reports_period_problems_url_value: admin_reports_period_problems_path,
     reports_start_error_label_value: t(".export_start_error"),
-    reports_poll_error_label_value: t(".export_poll_error")
+    reports_poll_error_label_value: t(".export_poll_error"),
+    reports_period_problem_loading_label_value: t(".period_problems.loading")
   } do |form| %>
   <section class="admin-reports-period-panel border rounded shadow-sm mb-3">
     <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
@@ -45,6 +47,9 @@
             } %>
         </div>
       </div>
+    </div>
+    <div class="admin-reports-period-problem-slot" data-reports-target="periodProblem" aria-live="polite">
+      <%= render "period_problem", period_problem: @period_problem %>
     </div>
   </section>
 

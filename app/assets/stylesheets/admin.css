@@ -298,6 +298,59 @@ html[data-pwa="admin"] .turbo-progress-bar {
   width: 100%;
 }
 
+.admin-reports-period-problem-slot {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 2rem;
+  margin-top: 0.75rem;
+}
+
+.admin-reports-period-problem {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
+  color: #b45309;
+  font-style: italic;
+}
+
+.admin-reports-period-problem.is-loading {
+  justify-content: center;
+  color: var(--bs-secondary-color);
+}
+
+.admin-reports-period-problem.is-clear {
+  color: var(--bs-body-color);
+}
+
+.admin-reports-period-problem-copy {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: right;
+}
+
+.admin-reports-period-problem .btn {
+  flex: 0 0 auto;
+}
+
+.admin-reports-period-problem-action {
+  --bs-btn-color: #9a3412;
+  --bs-btn-border-color: #fdba74;
+  --bs-btn-bg: transparent;
+  --bs-btn-hover-color: #7c2d12;
+  --bs-btn-hover-bg: #fff7ed;
+  --bs-btn-hover-border-color: #fb923c;
+  --bs-btn-active-color: #7c2d12;
+  --bs-btn-active-bg: #ffedd5;
+  --bs-btn-active-border-color: #fb923c;
+  --bs-btn-focus-shadow-rgb: 251, 146, 60;
+  font-style: normal;
+}
+
 .admin-reports-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

@@ -10,6 +10,20 @@ class Admin::ReportsController < Admin::BaseController
     @selected_report_scope = selected_report_scope
     @selected_employee = selected_employee
     @selected_tag = selected_tag
+    @period_problem = period_problem_for(@selected_period)
+  end
+
+  def period_problems
+    period_start = Date.new(selected_year || Time.zone.today.year, selected_month || Time.zone.today.month, 1)
+    period_problem = period_problem_for(period_start)
+
+    render json: {
+      html: render_to_string(
+        partial: "admin/reports/period_problem",
+        formats: [ :html ],
+        locals: { period_problem: period_problem }
+      )
+    }
   end
 
   def monthly_summary
@@ -69,5 +83,46 @@ class Admin::ReportsController < Admin::BaseController
 
   def selected_tag
     Tag.active.find_by(id: params[:tag_id]) if params[:tag_id].present?
+  end
+
+  def period_problem_for(period_start)
+    if erroneous_swipes_in_period?(period_start)
+      {
+        kind: "erroneous_swipes",
+        message: t("admin.reports.index.period_problems.erroneous_swipes"),
+        path: admin_swipes_path(
+          search_mode: "category",
+          category: "erroneous_swipes",
+          month: period_start.month,
+          year: period_start.year
+        )
+      }
+    elsif pending_corrections_in_period?(period_start)
+      {
+        kind: "pending_corrections",
+        message: t("admin.reports.index.period_problems.pending_corrections"),
+        path: admin_corrections_path(
+          status: "pending",
+          month: period_start.month,
+          year: period_start.year
+        )
+      }
+    end
+  end
+
+  def erroneous_swipes_in_period?(period_start)
+    swipes = Swipe.kept
+      .where(swipe_at: period_start.beginning_of_day..period_start.end_of_month.end_of_day)
+      .pluck(:employee_id, :swipe_at)
+
+    swipes
+      .group_by { |employee_id, swipe_at| [ employee_id, swipe_at.in_time_zone.to_date ] }
+      .any? { |(_employee_id, date), day_swipes| date.past? && day_swipes.size.odd? }
+  end
+
+  def pending_corrections_in_period?(period_start)
+    SwipeCorrection.pending
+      .where(day: period_start..period_start.end_of_month)
+      .exists?
   end
 end

@@ -16,6 +16,7 @@ export default class extends Controller {
     "personButtonLabel",
     "summaryButton",
     "summaryCsvLink",
+    "periodProblem",
     "modal",
     "progress",
     "progressBar",
@@ -25,12 +26,15 @@ export default class extends Controller {
   static values = {
     exportUrl: String,
     summaryCsvUrl: String,
+    periodProblemsUrl: String,
     startErrorLabel: String,
-    pollErrorLabel: String
+    pollErrorLabel: String,
+    periodProblemLoadingLabel: String
   }
 
   connect() {
     this.downloadedExportIds = new Set()
+    this.periodProblemRequestToken = null
     this.progress = new AsyncProgress(this, {
       startErrorLabel: this.startErrorLabelValue,
       pollErrorLabel: this.pollErrorLabelValue,
@@ -46,7 +50,7 @@ export default class extends Controller {
     this.progress.disconnect()
   }
 
-  update() {
+  update(event) {
     const scope = this.selectedScope
 
     if (this.hasEmployeeFieldTarget) this.employeeFieldTarget.hidden = scope !== "person"
@@ -56,6 +60,7 @@ export default class extends Controller {
     if (this.hasPersonButtonLabelTarget) this.personButtonLabelTarget.textContent = this.personButtonLabel(scope)
     if (this.hasSummaryButtonTarget) this.summaryButtonTarget.disabled = !this.periodReady
     if (this.hasSummaryCsvLinkTarget) this.updateSummaryCsvLink()
+    if (this.periodChanged(event)) this.refreshPeriodProblem()
   }
 
   personReportReady(scope) {
@@ -141,6 +146,54 @@ export default class extends Controller {
     this.summaryCsvLinkTarget.href = `${url.pathname}${url.search}`
     this.summaryCsvLinkTarget.classList.remove("disabled")
     this.summaryCsvLinkTarget.removeAttribute("aria-disabled")
+  }
+
+  periodChanged(event) {
+    return event &&
+      (event.currentTarget === this.monthTarget || event.currentTarget === this.yearTarget)
+  }
+
+  async refreshPeriodProblem() {
+    if (!this.hasPeriodProblemTarget || !this.hasPeriodProblemsUrlValue) return
+
+    if (!this.periodReady) {
+      this.periodProblemTarget.innerHTML = ""
+      return
+    }
+
+    const requestToken = Symbol("periodProblem")
+    this.periodProblemRequestToken = requestToken
+    this.showPeriodProblemLoading()
+
+    try {
+      const url = new URL(this.periodProblemsUrlValue, window.location.origin)
+      url.searchParams.set("month", this.monthTarget.value)
+      url.searchParams.set("year", this.yearTarget.value)
+
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" },
+        credentials: "same-origin"
+      })
+      if (!response.ok) throw new Error(`Unexpected response: ${response.status}`)
+
+      const data = await response.json()
+      if (this.periodProblemRequestToken !== requestToken) return
+
+      this.periodProblemTarget.innerHTML = data.html || ""
+    } catch (_error) {
+      if (this.periodProblemRequestToken === requestToken) {
+        this.periodProblemTarget.innerHTML = ""
+      }
+    }
+  }
+
+  showPeriodProblemLoading() {
+    this.periodProblemTarget.innerHTML = `
+      <div class="admin-reports-period-problem is-loading" role="status">
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span class="visually-hidden">${this.periodProblemLoadingLabelValue}</span>
+      </div>
+    `
   }
 
   basePayload() {

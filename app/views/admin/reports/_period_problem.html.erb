@@ -1,0 +1,13 @@
+<div class="<%= class_names("admin-reports-period-problem", "is-clear": period_problem.blank?) %>" role="status">
+  <span class="admin-reports-period-problem-copy">
+    <span>
+      <%= period_problem ? period_problem[:message] : t("admin.reports.index.period_problems.none") %>
+    </span>
+  </span>
+  <% if period_problem %>
+    <%= link_to period_problem[:path], class: "btn btn-sm admin-reports-period-problem-action d-inline-flex align-items-center gap-1" do %>
+      <%= icon "arrow-right", class: "admin-badge-icon" %>
+      <span><%= t("admin.reports.index.period_problems.view") %></span>
+    <% end %>
+  <% end %>
+</div>

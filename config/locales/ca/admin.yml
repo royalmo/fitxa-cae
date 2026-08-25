@@ -350,6 +350,12 @@ ca:
         month: Mes
         year: Any
         period_connector: de
+        period_problems:
+          erroneous_swipes: Hi ha fitxatges erronis en aquest mes
+          pending_corrections: Hi ha correccions pendents en aquest mes
+          none: No hi ha correccions pendents.
+          loading: Comprovant incidències del període...
+          view: Veure
         person:
           title: Resum per persona
           employee: Persona
