@@ -106,7 +106,8 @@ class Admin::ReportExportsController < Admin::BaseController
   end
 
   def report_export_message(report_export)
-    return report_export.error_message if report_export.failed? || report_export.expired?
+    return t("admin.report_exports.errors.generic") if report_export.failed?
+    return t("admin.report_exports.statuses.expired") if report_export.expired?
 
     t("admin.report_exports.statuses.#{report_export.status}")
   end

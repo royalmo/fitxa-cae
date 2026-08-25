@@ -56,6 +56,24 @@ class Admin::ReportExportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal download_admin_report_export_path(report_export), payload.fetch("download_url")
   end
 
+  test "shows generic failed export status without raw technical errors" do
+    report_export = @manager.report_exports.create!(
+      kind: "monthly_summary_pdf",
+      status: :failed,
+      progress: 35,
+      error_message: "Permission denied",
+      parameters: { month: 8, year: 2026 }
+    )
+
+    get admin_report_export_path(report_export)
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal "failed", payload.fetch("status")
+    assert_equal 35, payload.fetch("progress")
+    assert_equal I18n.t("admin.report_exports.errors.generic"), payload.fetch("message")
+  end
+
   test "downloads completed export artifact" do
     report_export = completed_report_export(filename: "informe.pdf", content_type: "application/pdf", bytes: "%PDF")
 

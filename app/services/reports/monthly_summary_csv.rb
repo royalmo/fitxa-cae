@@ -32,7 +32,8 @@ module Reports
         employee.national_id,
         row.fetch(:tags).map(&:name).join(";"),
         row.fetch(:swipes_count),
-        duration_text(row.fetch(:worked_seconds))
+        duration_text(row.fetch(:worked_seconds)),
+        note_text(row.fetch(:note_key))
       ]
     end
 
@@ -47,6 +48,12 @@ module Reports
       hours, remaining_minutes = minutes.divmod(60)
 
       "#{hours} h #{remaining_minutes.to_s.rjust(2, "0")} min"
+    end
+
+    def note_text(note_key)
+      return nil if note_key.blank?
+
+      I18n.t("admin.reports.csv.monthly_summary.notes.#{note_key}")
     end
   end
 end

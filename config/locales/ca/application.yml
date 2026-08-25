@@ -27,6 +27,7 @@ ca:
       admin_access: Accés admin
       employee_access: Accés de personal
     approve: Aprovar
+    back: Tornar
     cancel: Cancel·lar
     edit: Editar
     filter: Filtrar

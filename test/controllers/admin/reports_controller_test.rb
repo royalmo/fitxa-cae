@@ -129,17 +129,27 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
   test "downloads monthly summary csv" do
     employee = nil
     empty_employee = nil
+    pending_correction_employee = nil
+    odd_swipes_employee = nil
     obra = Tag.create!(name: "Obra", color: "#0f766e", active: true)
     oficina = Tag.create!(name: "Oficina", color: "#2563eb", active: true)
 
     travel_to Time.zone.local(2026, 7, 1, 8, 0) do
       employee = create_employee(first_name: "Clara", last_name: "Pons", national_id: valid_dni(12_345_681))
       empty_employee = create_employee(first_name: "Aina", last_name: "Sense hores", national_id: valid_dni(12_345_682))
+      pending_correction_employee = create_employee(first_name: "Berta", last_name: "Pendent", national_id: valid_dni(12_345_683))
+      odd_swipes_employee = create_employee(first_name: "Jana", last_name: "Fitxatge imparell", national_id: valid_dni(12_345_684))
     end
 
     employee.tags << [ oficina, obra ]
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 9, 0))
     employee.swipes.create!(kind: :exit, swipe_at: Time.zone.local(2026, 7, 2, 17, 0))
+    pending_correction_employee.swipe_corrections.create!(
+      requester: pending_correction_employee,
+      status: :pending,
+      day: Date.new(2026, 7, 4)
+    )
+    odd_swipes_employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 5, 9, 0))
 
     get admin_reports_monthly_summary_path(format: :csv), params: { month: 7, year: 2026 }
 
@@ -150,15 +160,26 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
     csv = CSV.parse(response.body, headers: true)
     headers = I18n.t("admin.reports.csv.monthly_summary.headers")
     assert_equal headers, csv.headers
-    assert_equal 2, csv.size
-    person_header, national_id_header, tags_header, swipes_header, hours_header = headers
-    assert_equal "Clara Pons", csv[0][person_header]
-    assert_equal employee.national_id, csv[0][national_id_header]
-    assert_equal "Obra;Oficina", csv[0][tags_header]
-    assert_equal "2", csv[0][swipes_header]
-    assert_equal "8 h 00 min", csv[0][hours_header]
-    assert_equal "Aina Sense Hores", csv[1][person_header]
-    assert_equal empty_employee.national_id, csv[1][national_id_header]
-    assert_equal "0 h 00 min", csv[1][hours_header]
+    assert_equal 4, csv.size
+    person_header, national_id_header, tags_header, swipes_header, hours_header, notes_header = headers
+    rows_by_person = csv.index_by { |row| row[person_header] }
+
+    clara_row = rows_by_person.fetch("Clara Pons")
+    assert_equal employee.national_id, clara_row[national_id_header]
+    assert_equal "Obra;Oficina", clara_row[tags_header]
+    assert_equal "2", clara_row[swipes_header]
+    assert_equal "8 h 00 min", clara_row[hours_header]
+    assert_nil clara_row[notes_header]
+
+    empty_row = rows_by_person.fetch("Aina Sense Hores")
+    assert_equal empty_employee.national_id, empty_row[national_id_header]
+    assert_equal "0 h 00 min", empty_row[hours_header]
+    assert_equal I18n.t("admin.reports.csv.monthly_summary.notes.no_swipes"), empty_row[notes_header]
+
+    pending_row = rows_by_person.fetch("Berta Pendent")
+    assert_equal I18n.t("admin.reports.csv.monthly_summary.notes.pending_corrections"), pending_row[notes_header]
+
+    odd_swipes_row = rows_by_person.fetch("Jana Fitxatge Imparell")
+    assert_equal I18n.t("admin.reports.csv.monthly_summary.notes.erroneous_swipes"), odd_swipes_row[notes_header]
   end
 end

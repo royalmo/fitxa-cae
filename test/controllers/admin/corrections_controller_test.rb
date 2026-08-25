@@ -527,10 +527,18 @@ class Admin::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-correction-show-meta p", text: "Aprovada per Marta Serra fa menys d'1 minut"
     assert_select ".col-xl-4", 0
     assert_select ".admin-correction-show-section h2", text: "Canvis"
-    assert_select ".admin-correction-change-summary[aria-label='Entrada 08:05 · Invalidar 08:40 · Sortida existent 13:00']"
-    assert_select ".admin-correction-change-item.is-requested.is-entry", text: "08:05"
-    assert_select ".admin-correction-change-item.is-invalidate.is-entry", text: "08:40"
-    assert_select ".admin-correction-change-item.is-existing.is-exit", text: "13:00"
+    assert_select ".admin-correction-comparison[aria-label='Abans: Entrada 08:40 · Sortida 13:00. Després: Entrada 08:05 · Sortida 13:00']"
+    before_row = Capybara.string(css_select(".admin-correction-comparison-row.is-before").first.to_html)
+    assert before_row.has_css?(".admin-correction-comparison-label", text: "Abans:")
+    assert before_row.has_css?(".admin-correction-change-item.is-existing.is-entry", text: "08:40")
+    assert before_row.has_css?(".admin-correction-change-item.is-existing.is-exit", text: "13:00")
+    assert before_row.has_css?(".admin-correction-change-icon[aria-label='Entrada'][title='Entrada']")
+    after_row = Capybara.string(css_select(".admin-correction-comparison-row.is-after").first.to_html)
+    assert after_row.has_css?(".admin-correction-comparison-label", text: "Després:")
+    assert after_row.has_css?(".admin-correction-change-item.is-requested.is-entry", text: "08:05")
+    assert after_row.has_css?(".admin-correction-change-item.is-existing.is-exit", text: "13:00")
+    assert after_row.has_css?(".admin-correction-change-icon[aria-label='Sortida'][title='Sortida']")
+    assert_select ".admin-correction-show-section .admin-correction-change-item.is-invalidate", 0
     assert_select "textarea#admin_correction_requester_comments[disabled].admin-correction-readonly-comment", text: "Em vaig equivocar."
     assert_select "textarea#admin_correction_validator_comments[disabled].admin-correction-readonly-comment", text: "Aprovat per RRHH."
     assert_select "a[href='#{edit_admin_correction_path(correction)}']", 0

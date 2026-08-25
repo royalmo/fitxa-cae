@@ -1,7 +1,7 @@
 <% content_for :title, t(".title") %>
 <% status_label = admin_correction_status_text(@correction.status) %>
 <% answered_at = correction_answered_at(@correction) %>
-<% change_items = admin_correction_change_items(@correction, @day_swipes) %>
+<% change_sets = admin_correction_change_sets(@correction, @day_swipes) %>
 
 <%= tag.div(data: (@correction.pending? ? { controller: "correction-review-comments" } : nil)) do %>
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
@@ -12,7 +12,7 @@
 
   <%= link_to admin_corrections_path, class: "btn btn-outline-secondary border-0 d-inline-flex align-items-center gap-2" do %>
     <%= icon "x" %>
-    <span><%= t(".back_to_list") %></span>
+    <span><%= t("shared.back") %></span>
   <% end %>
 </div>
 
@@ -98,15 +98,27 @@
 
     <div class="admin-correction-show-section">
       <h2 class="h5"><%= t(".changes") %></h2>
-      <% if change_items.any? %>
-        <div class="admin-correction-change-summary admin-correction-show-change-summary" aria-label="<%= change_items.map { |item| admin_correction_change_item_label(item) }.join(" · ") %>">
-          <% change_items.each do |item| %>
-            <span class="<%= class_names("admin-correction-change-item", "is-#{item[:type]}", item[:kind].present? && "is-#{item[:kind]}") %>">
-              <%= icon admin_correction_change_icon_name(item),
-                title: admin_correction_change_icon_title(item),
-                class: "admin-correction-change-icon" %>
-              <span><%= item[:time] %></span>
-            </span>
+      <% if change_sets.values.any?(&:any?) %>
+        <div class="admin-correction-comparison" aria-label="<%= t(".before") %>: <%= admin_correction_change_set_aria_label(change_sets[:before]) %>. <%= t(".after") %>: <%= admin_correction_change_set_aria_label(change_sets[:after]) %>">
+          <% [ [ :before, t(".before") ], [ :after, t(".after") ] ].each do |key, label| %>
+            <% items = change_sets.fetch(key) %>
+            <div class="<%= class_names("admin-correction-comparison-row", "is-#{key}") %>">
+              <span class="admin-correction-comparison-label"><%= label %>:</span>
+              <% if items.any? %>
+                <div class="admin-correction-change-summary admin-correction-show-change-summary" aria-label="<%= admin_correction_change_set_aria_label(items) %>">
+                  <% items.each do |item| %>
+                    <span class="<%= class_names("admin-correction-change-item", "is-#{item[:type]}", item[:kind].present? && "is-#{item[:kind]}") %>">
+                      <%= icon clocking_icon_name(item[:kind]),
+                        title: clocking_kind_text(item[:kind]),
+                        class: "admin-correction-change-icon" %>
+                      <span><%= item[:time] %></span>
+                    </span>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="admin-correction-comparison-empty"><%= t(".no_swipes") %></span>
+              <% end %>
+            </div>
           <% end %>
         </div>
       <% else %>

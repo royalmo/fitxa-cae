@@ -89,6 +89,32 @@ class GenerateReportExportJobTest < ActiveJob::TestCase
     end
   end
 
+  test "generates a monthly summary pdf export without employees" do
+    manager = create_manager
+    report_export = manager.report_exports.create!(
+      kind: "monthly_summary_pdf",
+      parameters: { month: 7, year: 2026 }
+    )
+    purge_stale_artifact(report_export)
+    captured_assigns = nil
+
+    with_pdf_renderer(->(**kwargs) {
+      captured_assigns = kwargs.fetch(:assigns)
+      "%PDF empty summary"
+    }) do
+      GenerateReportExportJob.perform_now(report_export)
+    end
+
+    report_export.reload
+    assert_predicate report_export, :completed?
+    assert_equal 100, report_export.progress
+    assert_equal "fitxa-cae-resum-mensual-2026-07.pdf", report_export.filename
+    assert_equal "application/pdf", report_export.content_type
+    assert_equal "%PDF empty summary", report_export.artifact.download
+    assert_empty captured_assigns.fetch(:report).fetch(:rows)
+    assert_equal 0, captured_assigns.fetch(:report).fetch(:totals).fetch(:people_count)
+  end
+
   test "marks export failed when generation raises" do
     manager = create_manager
     employee = create_employee

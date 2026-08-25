@@ -106,6 +106,28 @@ module Admin::CorrectionsHelper
     "#{admin_correction_change_icon_title(item)} #{item[:time]}"
   end
 
+  def admin_correction_change_sets(correction, day_swipes)
+    invalidated_ids = correction_invalidated_swipe_ids(correction)
+    before_items = admin_correction_before_items(correction, day_swipes, invalidated_ids: invalidated_ids)
+    after_items = before_items.reject { |item| invalidated_ids.include?(item[:swipe_id]) } +
+      admin_requested_correction_change_items(correction)
+
+    {
+      before: before_items.sort_by { |item| admin_correction_change_set_sort_key(item) },
+      after: after_items.sort_by { |item| admin_correction_change_set_sort_key(item) }
+    }
+  end
+
+  def admin_correction_change_set_item_label(item)
+    "#{clocking_kind_text(item[:kind])} #{item[:time]}"
+  end
+
+  def admin_correction_change_set_aria_label(items)
+    return t("admin.corrections.show.no_swipes") if items.empty?
+
+    items.map { |item| admin_correction_change_set_item_label(item) }.join(" · ")
+  end
+
   private
 
   def rounded_time_count(seconds, unit_seconds)
@@ -118,6 +140,20 @@ module Admin::CorrectionsHelper
 
   def correction_invalidated_swipe_ids(correction)
     Array(correction.details&.fetch("invalidated_swipe_ids", nil)).compact_blank.map(&:to_s)
+  end
+
+  def admin_correction_before_items(correction, day_swipes, invalidated_ids:)
+    Array(day_swipes).filter_map do |swipe|
+      next if admin_correction_created_swipe?(correction, swipe)
+      next if swipe.removed? && !invalidated_ids.include?(swipe.id.to_s)
+
+      admin_existing_correction_change_set_item(swipe)
+    end
+  end
+
+  def admin_existing_correction_change_set_item(swipe)
+    item = admin_existing_correction_change_item(swipe, invalidated: false)
+    item.merge(swipe_id: swipe.id.to_s)
   end
 
   def admin_existing_correction_change_item(swipe, invalidated:)
@@ -151,5 +187,13 @@ module Admin::CorrectionsHelper
       "invalidate" => 1,
       "requested" => 2
     }.fetch(item[:type], 3)
+  end
+
+  def admin_correction_change_set_sort_key(item)
+    [
+      item[:minutes],
+      { "entry" => 0, "exit" => 1 }.fetch(item[:kind].to_s, 2),
+      { "existing" => 0, "requested" => 1 }.fetch(item[:type].to_s, 2)
+    ]
   end
 end

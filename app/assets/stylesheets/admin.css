@@ -724,6 +724,34 @@ html[data-pwa="admin"] .turbo-progress-bar {
   align-items: flex-start;
 }
 
+.admin-correction-comparison {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.admin-correction-comparison-row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.25rem;
+  min-width: 0;
+}
+
+.admin-correction-comparison-label {
+  color: var(--bs-secondary-color);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.admin-correction-comparison-empty {
+  color: var(--bs-secondary-color);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
 .admin-correction-review-details dd {
   min-width: 0;
   overflow-wrap: anywhere;

@@ -6,6 +6,7 @@
 </header>
 
 <section class="report-section">
+  <% rows = @report.fetch(:rows) %>
   <p class="report-muted">
     <%= t("admin.reports.pdf.monthly_summary.description") %>
   </p>
@@ -17,35 +18,59 @@
         <th><%= t("admin.reports.pdf.monthly_summary.table.tags") %></th>
         <th class="report-text-end"><%= t("admin.reports.pdf.monthly_summary.table.swipes") %></th>
         <th class="report-text-end"><%= t("admin.reports.pdf.monthly_summary.table.hours") %></th>
+        <th><%= t("admin.reports.pdf.monthly_summary.table.notes") %></th>
       </tr>
     </thead>
     <tbody>
-      <% @report.fetch(:rows).each do |row| %>
-        <% employee = row.fetch(:employee) %>
+      <% if rows.any? %>
+        <% rows.each do |row| %>
+          <% employee = row.fetch(:employee) %>
+          <% note_key = row.fetch(:note_key)&.to_sym %>
+          <tr>
+            <td>
+              <%= employee_display_name(employee) %>
+              <% unless row.fetch(:active) %>
+                <span class="report-muted">(<%= t("admin.reports.pdf.monthly_summary.inactive") %>)</span>
+              <% end %>
+            </td>
+            <td><em class="report-muted"><%= employee.national_id %></em></td>
+            <td>
+              <% if row.fetch(:tags).any? %>
+                <div class="report-tags">
+                  <% row.fetch(:tags).each do |tag| %>
+                    <span class="report-tag"><%= tag.name %></span>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="report-muted">---</span>
+              <% end %>
+            </td>
+            <td class="report-text-end"><%= row.fetch(:swipes_count) %></td>
+            <td class="report-text-end report-nowrap">
+              <%= tag.span duration_text(row.fetch(:worked_seconds)),
+                class: class_names(
+                  "report-duration-zero": row.fetch(:worked_seconds).zero?,
+                  "report-duration-warning": row.fetch(:odd_swipes, false)
+                ) %>
+            </td>
+            <td class="report-nowrap">
+              <% if note_key %>
+                <%= tag.span t("admin.reports.pdf.monthly_summary.notes.#{note_key}"),
+                  class: class_names(
+                    "report-note",
+                    "report-note-danger": note_key == :no_swipes,
+                    "report-note-warning": note_key == :erroneous_swipes,
+                    "report-note-pending": note_key == :pending_corrections
+                  ) %>
+              <% else %>
+                <span class="report-muted">---</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
         <tr>
-          <td>
-            <%= employee_display_name(employee) %>
-            <% unless row.fetch(:active) %>
-              <span class="report-muted">(<%= t("admin.reports.pdf.monthly_summary.inactive") %>)</span>
-            <% end %>
-          </td>
-          <td><em class="report-muted"><%= employee.national_id %></em></td>
-          <td>
-            <% if row.fetch(:tags).any? %>
-              <div class="report-tags">
-                <% row.fetch(:tags).each do |tag| %>
-                  <span class="report-tag"><%= tag.name %></span>
-                <% end %>
-              </div>
-            <% else %>
-              <span class="report-muted">---</span>
-            <% end %>
-          </td>
-          <td class="report-text-end"><%= row.fetch(:swipes_count) %></td>
-          <td class="report-text-end report-nowrap">
-            <%= tag.span duration_text(row.fetch(:worked_seconds)),
-              class: class_names("report-duration-zero": row.fetch(:worked_seconds).zero?) %>
-          </td>
+          <td colspan="6" class="report-muted"><%= t("admin.reports.pdf.monthly_summary.empty") %></td>
         </tr>
       <% end %>
     </tbody>

@@ -1,8 +1,17 @@
 <% content_for :title, t(".title") %>
 
-<div class="d-flex align-items-center gap-2 mb-4">
-  <%= icon "plus", class: "text-primary" %>
-  <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <%= icon "plus", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+
+  <%= link_to admin_managers_path,
+    class: "btn admin-page-close-action",
+    title: t("shared.back"),
+    aria: { label: t("shared.back") } do %>
+    <%= icon "x" %>
+  <% end %>
 </div>
 
 <%= render "form", manager: @manager %>

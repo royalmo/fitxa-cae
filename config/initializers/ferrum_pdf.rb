@@ -1,4 +1,6 @@
 FerrumPdf.configure do |config|
+  config.process_timeout = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
+
   browser_path = [
     ENV["FERRUM_BROWSER_PATH"],
     "/usr/bin/chromium",

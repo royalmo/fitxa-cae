@@ -210,7 +210,6 @@ ca:
           description: No podrà iniciar sessió ni fitxar mentre el compte estigui inactiu.
           confirm: Desactivar
     employee_bulk_actions:
-      back: Tornar
       errors:
         conflicting_tags: No pots afegir i treure la mateixa etiqueta.
         duplicate_national_id: No s'ha pogut simular la llista. El DNI/NIE %{national_id}
@@ -401,12 +400,18 @@ ca:
             Recompte d'hores per cada persona activa o amb fitxatges en aquest mes.
             S'apliquen correccions aprovades, i s'ignoren fitxatges incorrectes o correccions pendents.
           inactive: compte inactiu
+          empty: No hi ha persones per a aquest informe.
           table:
             person: Persona
             national_id: DNI/NIE
             tags: Etiquetes
             swipes: Fitxatges
             hours: Hores
+            notes: Notes
+          notes:
+            no_swipes: Sense fitxatges
+            pending_corrections: Correccions pendents
+            erroneous_swipes: Fitxatges erronis
       csv:
         monthly_summary:
           headers:
@@ -415,7 +420,12 @@ ca:
             - Etiquetes
             - Fitxatges
             - Hores
+            - Notes
           inactive: compte inactiu
+          notes:
+            no_swipes: Sense fitxatges
+            pending_corrections: Correccions pendents
+            erroneous_swipes: Fitxatges erronis
       exports:
         filenames:
           employee_fallback: persona-%{id}
@@ -442,7 +452,7 @@ ca:
         expired: Aquest informe ha caducat.
       unavailable: Aquest informe ja no està disponible.
       errors:
-        generic: No s'ha pogut generar l'informe.
+        generic: Ha succeït un error. Prova-ho més tard i si torna a passar contacta amb suport.
         invalid_kind: Tipus d'informe no vàlid.
         invalid_period: Període no vàlid.
         missing_employee: Selecciona una persona.
@@ -719,14 +729,16 @@ ca:
       show:
         title: Correcció
         heading: Correcció
-        back_to_list: Tornar
         requested_ago: Sol·licitada %{distance}
         created_by: Creada per %{name} %{distance}
         reviewed_by:
           approved: Aprovada per %{name} %{distance}
           rejected: Rebutjada per %{name} %{distance}
         changes: Canvis
+        before: Abans
+        after: Després
         no_changes: Sense canvis.
+        no_swipes: Sense fitxatges.
         comments: Comentaris
         requester_comment: Comentari de la persona
         validator_comment: Comentari de RRHH
@@ -784,7 +796,6 @@ ca:
         heading: Restableix la contrasenya
         email: Correu
         submit: Enviar enllaç
-        back: Tornar
       create:
         sent: Si el correu correspon a un compte de responsable actiu, rebrà un enllaç per restablir
           la contrasenya.
