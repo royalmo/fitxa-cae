@@ -17,9 +17,10 @@ class ManagerPasswordMailerTest < ActionMailer::TestCase
     assert_match "La plataforma FitxaCAE", mail.text_part.body.decoded
 
     html_body = mail.html_part.body.decoded
+    assert_no_match %r{<style\b}, html_body
     assert_match "Crea la contrasenya", html_body
     assert_match "Si el botó no funciona", html_body
-    assert_match "mailer-fallback-link", html_body
+    assert_match "overflow-wrap: anywhere", html_body
     assert_no_match %r{class="mailer-button"[^>]*>https?://}, html_body
   end
 
@@ -43,9 +44,10 @@ class ManagerPasswordMailerTest < ActionMailer::TestCase
     assert_match "La plataforma FitxaCAE", mail.text_part.body.decoded
 
     html_body = mail.html_part.body.decoded
+    assert_no_match %r{<style\b}, html_body
     assert_match "Canviar contrasenya", html_body
     assert_match "Si el botó no funciona", html_body
-    assert_match "mailer-fallback-link", html_body
+    assert_match "overflow-wrap: anywhere", html_body
     assert_no_match %r{class="mailer-button"[^>]*>https?://}, html_body
   end
 

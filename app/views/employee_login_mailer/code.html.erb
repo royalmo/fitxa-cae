@@ -1,15 +1,15 @@
-<p><%= t("mailers.shared.greeting_prefix") %> <strong><%= @employee_name %></strong>,</p>
+<p style="<%= mailer_style(:paragraph) %>"><%= t("mailers.shared.greeting_prefix") %> <strong><%= @employee_name %></strong>,</p>
 
-<p>
+<p style="<%= mailer_style(:paragraph) %>">
   <%= t(".intro_prefix") %>
-  <%= link_to app_name, @app_url %>:
+  <%= link_to app_name, @app_url, style: mailer_style(:link) %>:
 </p>
 
-<p class="mailer-code-wrap"><span class="mailer-code"><%= @code %></span></p>
+<p style="<%= mailer_style(:code_wrap) %>"><span style="<%= mailer_style(:code) %>"><%= @code %></span></p>
 
-<p><%= t(".expires", minutes: @ttl_minutes) %></p>
+<p style="<%= mailer_style(:paragraph) %>"><%= t(".expires", minutes: @ttl_minutes) %></p>
 
-<p>
+<p style="<%= mailer_style(:paragraph) %>">
   <%= t("mailers.shared.signoff") %><br>
   <%= t("mailers.shared.platform_signature", app_name: app_name) %>
 </p>

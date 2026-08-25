@@ -1,22 +1,22 @@
-<p><%= t(".greeting") %></p>
+<p style="<%= mailer_style(:paragraph) %>"><%= t(".greeting") %></p>
 
-<p><%= t(".intro", app_name: app_name) %></p>
+<p style="<%= mailer_style(:paragraph) %>"><%= t(".intro", app_name: app_name) %></p>
 
-<dl class="mailer-details">
-  <dt><%= t(".employee") %></dt>
-  <dd><%= @employee.full_name %></dd>
+<dl style="<%= mailer_style(:details) %>">
+  <dt style="<%= mailer_style(:details_term) %>"><%= t(".employee") %></dt>
+  <dd style="<%= mailer_style(:details_description) %>"><%= @employee.full_name %></dd>
 
-  <dt><%= t(".national_id") %></dt>
-  <dd><%= @employee.national_id %></dd>
+  <dt style="<%= mailer_style(:details_term) %>"><%= t(".national_id") %></dt>
+  <dd style="<%= mailer_style(:details_description) %>"><%= @employee.national_id %></dd>
 
-  <dt><%= t(".email") %></dt>
-  <dd><%= @employee.email.presence || t(".blank") %></dd>
+  <dt style="<%= mailer_style(:details_term) %>"><%= t(".email") %></dt>
+  <dd style="<%= mailer_style(:details_description) %>"><%= @employee.email.presence || t(".blank") %></dd>
 
-  <dt><%= t(".phone") %></dt>
-  <dd><%= @employee.phone.presence || t(".blank") %></dd>
+  <dt style="<%= mailer_style(:details_term) %>"><%= t(".phone") %></dt>
+  <dd style="<%= mailer_style(:details_description) %>"><%= @employee.phone.presence || t(".blank") %></dd>
 
-  <dt><%= t(".subject_label") %></dt>
-  <dd><%= @subject %></dd>
+  <dt style="<%= mailer_style(:details_term) %>"><%= t(".subject_label") %></dt>
+  <dd style="<%= mailer_style(:details_description) %>"><%= @subject %></dd>
 </dl>
 
-<%= simple_format(@body) %>
+<%= simple_format(@body, style: mailer_style(:paragraph)) %>

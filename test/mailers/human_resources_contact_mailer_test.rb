@@ -21,6 +21,8 @@ class HumanResourcesContactMailerTest < ActionMailer::TestCase
     assert_match "Ada Soler", mail.body.encoded
     assert_match employee.national_id, mail.body.encoded
     assert_match "Necessito parlar amb RRHH.", mail.body.encoded
+    assert_no_match %r{<style\b}, mail.html_part.body.decoded
+    assert_match "margin: 0 0 16px", mail.html_part.body.decoded
   end
 
   test "falls back to human resources reply-to when employee email is blank" do

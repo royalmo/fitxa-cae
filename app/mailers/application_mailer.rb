@@ -4,6 +4,7 @@ class ApplicationMailer < ActionMailer::Base
   default from: -> { Rails.configuration.x.mailer_from_email },
     reply_to: -> { Rails.configuration.x.mailer_reply_to_email }
   layout "mailer"
+  helper MailerHelper
 
   helper_method :app_admin_name,
     :app_brand_prefix,

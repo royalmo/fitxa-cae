@@ -3,153 +3,31 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        background: #f5f5f5;
-        color: #141414;
-        font-family: Arial, Helvetica, sans-serif;
-        line-height: 1.5;
-      }
-
-      a {
-        color: #b90510;
-      }
-
-      .mailer-shell {
-        box-sizing: border-box;
-        width: 100%;
-        padding: 28px 12px;
-        background: #f5f5f5;
-      }
-
-      .mailer-panel {
-        box-sizing: border-box;
-        width: 100%;
-        max-width: 640px;
-        margin: 0 auto;
-        background: #ffffff;
-        border: 1px solid #e1e1e1;
-      }
-
-      .mailer-header,
-      .mailer-content {
-        box-sizing: border-box;
-        padding: 24px;
-      }
-
-      .mailer-header {
-        border-bottom: 4px solid #e30613;
-        text-align: center;
-      }
-
-      .mailer-brand {
-        display: inline-flex;
-        align-items: center;
-        gap: 2px;
-        color: #e30613;
-        font-size: 22px;
-        font-weight: 700;
-        line-height: 1;
-        text-decoration: none;
-      }
-
-      .mailer-brand-text-suffix {
-        gap: 0;
-      }
-
-      .mailer-brand-prefix,
-      .mailer-brand-suffix {
-        font-weight: 900;
-        color: #e30613;
-        font-size: 22px;
-      }
-
-      .mailer-logo {
-        display: inline-block;
-        width: auto;
-        height: 30px;
-        margin-left: 2px;
-        vertical-align: middle;
-      }
-
-      .mailer-content p {
-        margin: 0 0 16px;
-      }
-
-      .mailer-code-wrap {
-        text-align: center;
-      }
-
-      .mailer-code {
-        display: inline-block;
-        margin: 6px 0 18px;
-        padding: 10px 14px;
-        background: #fff4f5;
-        border: 0;
-        border-radius: 3px;
-        color: #141414;
-        font-size: 28px;
-        font-weight: 700;
-        letter-spacing: 0;
-        text-align: center;
-      }
-
-      .mailer-button {
-        display: table;
-        margin: 0 auto;
-        padding: 10px 14px;
-        background: #e30613;
-        color: #ffffff !important;
-        text-decoration: none;
-      }
-
-      .mailer-help {
-        color: #555555;
-        font-size: 13px;
-      }
-
-      .mailer-fallback-link {
-        overflow-wrap: anywhere;
-        word-break: break-word;
-      }
-
-      .mailer-details {
-        margin: 0 0 18px;
-      }
-
-      .mailer-details dt {
-        margin-top: 10px;
-        color: #555555;
-        font-size: 13px;
-        font-weight: 700;
-      }
-
-      .mailer-details dd {
-        margin: 2px 0 0;
-      }
-    </style>
   </head>
 
-  <body style="margin: 0; padding: 0; background: #f5f5f5;">
-    <div class="mailer-shell">
-      <div class="mailer-panel">
-        <div class="mailer-header">
+  <body style="<%= mailer_style(:body) %>">
+    <div style="<%= mailer_style(:shell) %>">
+      <div style="<%= mailer_style(:panel) %>">
+        <div style="<%= mailer_style(:header) %>">
           <% logo_url = mailer_logo_url %>
-          <% mailer_brand_classes = [ "mailer-brand" ] %>
-          <% mailer_brand_classes << "mailer-brand-text-suffix" if logo_url.blank? && app_brand_suffix.present? %>
-          <%= link_to mailer_app_url, class: mailer_brand_classes.join(" ") do %>
-            <span class="mailer-brand-prefix"><%= app_brand_prefix %></span>
+          <%= link_to mailer_app_url, style: mailer_style(:brand) do %>
+            <span style="<%= mailer_style(:brand_part) %>"><%= app_brand_prefix %></span>
             <% if logo_url.present? %>
-              <%= image_tag logo_url, alt: app_brand_suffix, class: "mailer-logo" %>
+              <% logo_dimensions = mailer_logo_dimensions %>
+              <% logo_attributes = {
+                alt: app_brand_suffix,
+                height: logo_dimensions.fetch(:height),
+                style: mailer_style(:logo)
+              } %>
+              <% logo_attributes[:width] = logo_dimensions.fetch(:width) if logo_dimensions[:width] %>
+              <%= image_tag logo_url, logo_attributes %>
             <% elsif app_brand_suffix.present? %>
-              <span class="mailer-brand-suffix"><%= app_brand_suffix %></span>
+              <span style="<%= mailer_style(:brand_part) %>"><%= app_brand_suffix %></span>
             <% end %>
           <% end %>
         </div>
 
-        <div class="mailer-content">
+        <div style="<%= mailer_style(:content) %>">
           <%= yield %>
         </div>
       </div>

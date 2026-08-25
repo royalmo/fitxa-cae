@@ -18,9 +18,24 @@ class EmployeeWelcomeMailerTest < ActionMailer::TestCase
     assert_match "La plataforma FitxaCAE", mail.text_part.body.decoded
 
     html_body = mail.html_part.body.decoded
+    assert_no_match %r{<style\b}, html_body
     assert_match "Crea la contrasenya", html_body
     assert_match "Si el botó no funciona", html_body
-    assert_match "mailer-fallback-link", html_body
+    assert_match "overflow-wrap: anywhere", html_body
+  end
+
+  test "html email inlines logo dimensions for local brand image" do
+    employee = create_employee(first_name: "Ada", last_name: "Soler", email: "ada@example.test")
+
+    with_app_brand(name: "FitxaCAE", slug: "fitxa-cae", brand_suffix_image: "cae_logo.png") do
+      mail = EmployeeWelcomeMailer.welcome(employee)
+      html_body = mail.html_part.body.decoded
+
+      assert_no_match %r{<style\b}, html_body
+      assert_match %r{<img[^>]+height="30"[^>]+width="47"[^>]+src="cid:}, html_body
+      assert_match "display: inline-block", html_body
+      assert mail.attachments["cae_logo.png"].inline?
+    end
   end
 
   private

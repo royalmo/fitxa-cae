@@ -13,6 +13,7 @@ class ErrorReportMailerTest < ActionMailer::TestCase
     assert_equal [ "rrhh@cae.cat" ], mail.reply_to
     assert_match "Cannot send login code", mail.body.encoded
     assert_match "delivery_method", mail.body.encoded
+    assert_no_match %r{<style\b}, mail.body.encoded
   ensure
     ENV["ERROR_NOTIFICATION_SENDER"] = original
   end
