@@ -11,6 +11,9 @@ FerrumPdf.configure do |config|
   config.browser_path = browser_path if browser_path
 
   if ENV["FERRUM_CHROME_NO_SANDBOX"] == "1"
-    config.browser_options = { "no-sandbox" => true }
+    config.browser_options = (config.browser_options || {}).merge(
+      "no-sandbox" => nil,
+      "disable-setuid-sandbox" => nil
+    )
   end
 end

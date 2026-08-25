@@ -80,6 +80,10 @@ env:
     # Log everything from Rails.
     # RAILS_LOG_LEVEL: debug
 
+    # Allow slower PDF renders before Ferrum terminates Chrome.
+    FERRUM_BROWSER_PATH: /usr/bin/chromium
+    FERRUM_CHROME_NO_SANDBOX: "1"
+
   secret:
     - SECRET_KEY_BASE
     - SMTP_USERNAME

@@ -422,6 +422,7 @@ td small,
 .employee-auth-card .auth-header .brand-logo {
   width: auto;
   max-width: 45vw;
+  height: var(--auth-brand-logo-height);
   max-height: var(--auth-brand-logo-height);
 }
 
