@@ -29,7 +29,7 @@ module FitxaCae
     rescue StandardError
       ActionDispatch::PublicExceptions.new(Rails.public_path).call(env)
     end
-    config.x.app_version = "1.0"
+    config.x.app_version = "1.1"
     config.x.app_name = ENV.fetch("APP_NAME", "FitxaCAE")
     config.x.app_slug = ENV.fetch("APP_SLUG", "fitxa-cae")
     config.x.app_brand_suffix_image = ENV["APP_BRAND_SUFFIX_IMAGE"].presence

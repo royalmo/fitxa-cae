@@ -367,6 +367,7 @@ td small,
 
 .auth-card {
   width: min(100%, 48rem);
+  min-width: 0;
 }
 
 .auth-card-narrow {
@@ -395,7 +396,11 @@ td small,
 }
 
 .employee-auth-card .auth-header {
+  --auth-brand-text-size: clamp(42px, 15vw, 58.8px);
+  --auth-brand-logo-height: clamp(60px, 22vw, 86.4px);
+
   justify-items: center;
+  min-width: 0;
   text-align: center;
 }
 
@@ -405,15 +410,19 @@ td small,
 }
 
 .employee-auth-card .auth-header .brand-fitxa {
-  font-size: 3.675rem;
+  font-size: var(--auth-brand-text-size);
+  line-height: 1;
 }
 
 .employee-auth-card .auth-header .brand-text-suffix {
-  font-size: 3.675rem;
+  font-size: var(--auth-brand-text-size);
+  line-height: 1;
 }
 
 .employee-auth-card .auth-header .brand-logo {
-  height: 5.4rem;
+  width: auto;
+  max-width: 45vw;
+  max-height: var(--auth-brand-logo-height);
 }
 
 .auth-tabbed-panel {
@@ -638,7 +647,7 @@ html[data-standalone-pwa="true"] .employee-install-prompt {
 
 .pwa-install-card .auth-header .brand-fitxa,
 .pwa-install-card .auth-header .brand-text-suffix {
-  font-size: clamp(2.15rem, 11vw, 3.675rem);
+  font-size: clamp(34.4px, 11vw, 58.8px);
 }
 
 .pwa-install-card .auth-header p {
@@ -945,11 +954,17 @@ html[data-standalone-pwa="true"] .employee-install-prompt {
 
 .page-title {
   gap: 0.65rem;
+  min-width: 0;
 }
 
 .page-title .icon {
   width: 1.9rem;
   height: 1.9rem;
+}
+
+.page-title span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .button,
@@ -3119,7 +3134,7 @@ input[type="submit"].is-submitting {
   left: 1rem;
   z-index: 20;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.35rem;
   max-width: 38rem;
   margin: 0 auto;
@@ -3133,8 +3148,16 @@ input[type="submit"].is-submitting {
 
 .employee-nav .nav-item {
   flex-direction: column;
+  min-width: 0;
   min-height: 3.35rem;
   line-height: 1.1;
+}
+
+.employee-nav .nav-item span {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .employee-nav .icon {
@@ -3303,23 +3326,31 @@ input[type="submit"].is-submitting {
 
   .employee-auth-shell .auth-main {
     grid-row: 2;
+    min-width: 0;
+    width: 100%;
     padding: 0 1.25rem;
     padding-top: env(safe-area-inset-top, 0);
   }
 
   .employee-install-prompt {
     grid-row: 4;
+    min-width: 0;
+    width: 100%;
     display: flex;
     padding: 0 1.25rem;
   }
 
   .employee-link-prompt {
     grid-row: 6;
+    min-width: 0;
+    width: 100%;
     padding: 0 1.25rem 0.2rem;
   }
 
   .employee-auth-footer {
     grid-row: 7;
+    min-width: 0;
+    width: 100%;
   }
 
   .auth-methods {
@@ -3337,12 +3368,37 @@ input[type="submit"].is-submitting {
   }
 
   .today-punch-button {
-    width: 12.4rem;
-    height: 12.4rem;
+    width: min(12.4rem, calc(100vw - 48px));
+    height: min(12.4rem, calc(100vw - 48px));
   }
 
   .clockings-month-controls {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
     justify-self: start;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .clockings-month-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(72px, 0.7fr);
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .clockings-month-form select {
+    width: 100%;
+    min-width: 0;
+    min-height: 36px;
+    padding: 5px 8px;
+    font-size: 14px;
+  }
+
+  .clockings-month-arrow {
+    width: 36px;
+    height: 36px;
   }
 
   .clockings-table {
@@ -3356,15 +3412,15 @@ input[type="submit"].is-submitting {
 
   .clockings-table th,
   .clockings-table td {
-    padding: 0.75rem 0.45rem;
+    padding: 11px 7px;
   }
 
   .clockings-table th {
-    font-size: 0.68rem;
+    font-size: 10.5px;
   }
 
   .clocking-date-column {
-    width: 6.35rem;
+    width: 95px;
   }
 
   .clocking-date-full {
@@ -3376,36 +3432,38 @@ input[type="submit"].is-submitting {
   }
 
   .clocking-hours-column {
-    width: 6rem;
+    width: 90px;
   }
 
   .clocking-swipe-cell {
-    gap: 0.3rem;
+    gap: 5px;
   }
 
   .clocking-swipe-grid {
-    grid-template-columns: minmax(3.55rem, max-content) minmax(3.55rem, max-content);
-    gap: 0.25rem 0.35rem;
+    grid-template-columns: minmax(57px, max-content) minmax(57px, max-content);
+    gap: 4px 6px;
   }
 
   .clocking-swipe {
-    grid-template-columns: 0.82rem auto;
-    gap: 0.16rem;
+    grid-template-columns: 13px auto;
+    gap: 3px;
   }
 
   .clocking-swipe-icon {
-    width: 0.78rem;
-    height: 0.78rem;
+    width: 12.5px;
+    height: 12.5px;
   }
 
   .clocking-correction-link {
-    width: 1.55rem;
-    height: 1.55rem;
+    width: 25px;
+    height: 25px;
   }
 
   .corrections-intro {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+    gap: 0.75rem;
   }
 
   .corrections-intro .page-title {
@@ -3414,7 +3472,9 @@ input[type="submit"].is-submitting {
 
   .correction-new-link {
     flex: 0 0 auto;
-    padding: 0 0.7rem;
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 14px;
     white-space: nowrap;
   }
 
@@ -3477,24 +3537,41 @@ input[type="submit"].is-submitting {
   }
 
   .employee-nav {
-    right: 0.5rem;
-    bottom: 0.5rem;
-    left: 0.5rem;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    gap: 4px;
+    padding: 4px;
   }
 
-  .nav-item {
-    font-size: 0.8rem;
+  .employee-nav .nav-item {
+    gap: 5px;
+    min-height: 54px;
+    padding-inline: 3px;
+    font-size: clamp(11px, 3.25vw, 12.8px);
+  }
+
+  .employee-nav .nav-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: normal;
+    white-space: nowrap;
+  }
+
+  .employee-nav .icon {
+    width: 18px;
+    height: 18px;
   }
 }
 
 @media (max-width: 399px) {
   .clockings-table th,
   .clockings-table td {
-    padding-inline: 0.35rem;
+    padding-inline: 6px;
   }
 
   .clocking-date-column {
-    width: 3.75rem;
+    width: 60px;
   }
 
   .clocking-date-compact {
@@ -3506,7 +3583,7 @@ input[type="submit"].is-submitting {
   }
 
   .clocking-hours-column {
-    width: 5.55rem;
+    width: 89px;
   }
 }
 
@@ -3528,5 +3605,21 @@ input[type="submit"].is-submitting {
   .account-section .account-theme-field {
     grid-template-columns: 1fr;
     gap: 0.35rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .employee-auth-card .auth-header {
+    --auth-brand-text-size: clamp(42px, 14.5vw, 54.4px);
+    --auth-brand-logo-height: clamp(58px, 21vw, 80px);
+  }
+
+  .employee-auth-card .auth-header .brand-fitxa,
+  .employee-auth-card .auth-header .brand-text-suffix {
+    font-size: var(--auth-brand-text-size);
+  }
+
+  .employee-auth-card .auth-header .brand-logo {
+    max-height: var(--auth-brand-logo-height);
   }
 }
