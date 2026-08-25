@@ -1,0 +1,41 @@
+<% pending_correction = day[:correction] %>
+
+<div class="d-inline-flex justify-content-end gap-1">
+  <% if admin_swipes_day_reviewed_corrections?(day) %>
+    <button type="button"
+      class="btn btn-sm btn-outline-secondary admin-row-action"
+      title="<%= t("admin.swipes.index.day_corrections.button", date: l(day[:date], format: :short)) %>"
+      aria-label="<%= t("admin.swipes.index.day_corrections.button", date: l(day[:date], format: :short)) %>"
+      data-bs-toggle="modal"
+      data-bs-target="#<%= admin_swipes_day_corrections_modal_id(employee, day[:date]) %>">
+      <%= icon "history" %>
+    </button>
+  <% end %>
+
+  <% if pending_correction %>
+    <% [ :approve, :reject ].each do |review_action| %>
+      <button type="button"
+        class="<%= admin_swipes_review_button_class(review_action) %>"
+        title="<%= t("admin.swipes.index.review.#{review_action}.button", date: l(day[:date], format: :short)) %>"
+        aria-label="<%= t("admin.swipes.index.review.#{review_action}.button", date: l(day[:date], format: :short)) %>"
+        data-bs-toggle="modal"
+        data-bs-target="#<%= admin_correction_review_modal_id(pending_correction, review_action) %>">
+        <%= icon(review_action == :approve ? "check" : "x") %>
+      </button>
+    <% end %>
+    <%= link_to edit_admin_correction_path(pending_correction),
+      class: "btn btn-sm btn-outline-secondary admin-row-action",
+      title: t("shared.edit"),
+      aria: { label: t("shared.edit") } do %>
+      <%= icon "pencil" %>
+    <% end %>
+  <% else %>
+    <% day_action_label = t("admin.swipes.index.#{day[:swipes].any? ? "edit_day" : "create_day"}", date: l(day[:date], format: :short)) %>
+    <%= link_to admin_correction_day_path(employee, day[:date]),
+      class: "btn btn-sm btn-outline-secondary admin-row-action",
+      title: day_action_label,
+      aria: { label: day_action_label } do %>
+      <%= icon admin_swipes_day_action_icon(day) %>
+    <% end %>
+  <% end %>
+</div>

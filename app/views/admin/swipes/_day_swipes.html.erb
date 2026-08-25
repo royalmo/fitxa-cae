@@ -1,0 +1,16 @@
+<% if day[:swipes].any? %>
+  <div class="d-flex flex-column gap-1">
+    <% clocking_swipe_rows(day[:swipes]).each do |row| %>
+      <div class="d-flex flex-wrap gap-1">
+        <% [ row[:entry], row[:exit] ].compact.each do |swipe| %>
+          <span class="<%= class_names("badge text-bg-light border d-inline-flex align-items-center gap-1", "text-decoration-line-through": clocking_swipe_pending_invalidated?(swipe), "text-primary": clocking_swipe_pending_requested?(swipe)) %>">
+            <%= icon clocking_icon_name(swipe.kind) %>
+            <span><%= l(swipe.swipe_at, format: :hour_minute) %></span>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <span class="text-body-secondary"><%= t("admin.swipes.index.empty_day") %></span>
+<% end %>

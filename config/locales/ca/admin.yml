@@ -462,8 +462,17 @@ ca:
         title: Fitxatges
         heading: Fitxatges
         export: Exportar
+        search_by: 'Buscar per:'
+        search_modes:
+          person: Persona
+          category: Categoria
         employee: Persona
         employee_search_placeholder: Cerca per nom, DNI, correu o telèfon
+        category: Categoria
+        category_placeholder: Selecciona una categoria
+        categories:
+          erroneous_swipes: Fitxatges erronis
+          pending_corrections: Fitxatges amb correcció pendent
         month: Mes
         period_connector: de
         year: Any
@@ -471,6 +480,8 @@ ca:
         hours: Hores
         swipes: Fitxatges
         empty: Selecciona una persona per veure els fitxatges.
+        category_empty: No hi ha fitxatges per a aquesta categoria.
+        category_prompt: Selecciona una categoria per veure els fitxatges.
         empty_day: Sense fitxatges
         create_day: Crear fitxatges el %{date}
         edit_day: Editar fitxatges el %{date}

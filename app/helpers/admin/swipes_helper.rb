@@ -5,8 +5,22 @@ module Admin::SwipesHelper
     end
   end
 
+  def admin_swipes_category_options
+    Admin::SwipesController::CATEGORY_FILTERS.map do |category|
+      [ t("admin.swipes.index.categories.#{category}"), category ]
+    end
+  end
+
   def admin_swipes_day_action_icon(day)
     day[:swipes].any? ? "pencil" : "plus"
+  end
+
+  def admin_swipes_hours_cell_class(day)
+    class_names(
+      "text-nowrap admin-swipes-hours-cell",
+      "is-pending": admin_swipes_day_pending?(day),
+      "is-odd": !admin_swipes_day_pending?(day) && admin_swipes_day_odd?(day)
+    )
   end
 
   def admin_swipes_day_corrections_modal_id(employee, day)
@@ -15,6 +29,14 @@ module Admin::SwipesHelper
 
   def admin_swipes_day_reviewed_corrections?(day)
     Array(day[:corrections]).any? { |correction| correction.approved? || correction.rejected? }
+  end
+
+  def admin_swipes_day_odd?(day)
+    day[:date].past? && day[:swipes_count].to_i.odd?
+  end
+
+  def admin_swipes_day_pending?(day)
+    day[:correction].present?
   end
 
   def admin_swipes_review_modal_id(correction, action)

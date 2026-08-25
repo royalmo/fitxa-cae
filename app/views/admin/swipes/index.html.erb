@@ -1,4 +1,5 @@
 <% content_for :title, t(".title") %>
+<% pagination_path = ->(page) { admin_swipes_path(request.query_parameters.except("page").merge(page: page)) } %>
 
 <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
   <div class="d-flex align-items-center gap-2">
@@ -22,8 +23,29 @@
   <%= form_with url: admin_swipes_path,
     method: :get,
     class: "admin-swipes-controls d-flex flex-column flex-lg-row align-items-stretch gap-2 mb-4",
-    data: { action: "submit->list-loading#showLoading" } do |form| %>
-    <div class="admin-calendar-search flex-grow-1">
+    data: { controller: "swipe-search-mode", action: "submit->list-loading#showLoading" } do |form| %>
+    <fieldset class="admin-swipes-search-mode">
+      <legend class="visually-hidden"><%= t(".search_by") %></legend>
+      <span class="admin-swipes-search-mode-label small text-body-secondary" aria-hidden="true"><%= t(".search_by") %></span>
+      <div class="btn-group" role="group" aria-label="<%= t(".search_by") %>">
+        <% [["person", t(".search_modes.person")], ["category", t(".search_modes.category")]].each do |mode, label| %>
+          <% search_mode_id = "admin_swipes_search_mode_#{mode}" %>
+          <%= form.radio_button :search_mode,
+            mode,
+            id: search_mode_id,
+            checked: @search_mode == mode,
+            class: "btn-check",
+            autocomplete: "off",
+            data: {
+              swipe_search_mode_target: "modeInput",
+              action: "change->swipe-search-mode#modeChanged"
+            } %>
+          <%= form.label :search_mode, label, for: search_mode_id, class: "btn btn-outline-secondary" %>
+        <% end %>
+      </div>
+    </fieldset>
+
+    <div class="admin-calendar-search flex-grow-1" data-swipe-search-mode-target="personPanel" <%= "hidden" if @search_mode != "person" %>>
       <%= form.label :employee_query, t(".employee"), class: "form-label visually-hidden" %>
       <div
         class="admin-employee-search position-relative"
@@ -55,8 +77,20 @@
           class="admin-employee-search-results list-group shadow-sm"
           data-employee-search-target="results"
           role="listbox"
-          hidden></div>
+        hidden></div>
       </div>
+    </div>
+
+    <div class="admin-swipes-category flex-grow-1" data-swipe-search-mode-target="categoryPanel" <%= "hidden" if @search_mode != "category" %>>
+      <%= form.label :category, t(".category"), class: "form-label visually-hidden" %>
+      <%= form.select :category,
+        admin_swipes_category_options,
+        { include_blank: t(".category_placeholder"), selected: @selected_category },
+        class: "form-select",
+        data: {
+          swipe_search_mode_target: "categorySelect",
+          action: "change->swipe-search-mode#categoryChanged"
+        } %>
     </div>
 
     <div class="admin-swipes-period">
@@ -78,8 +112,17 @@
     </div>
   <% end %>
 
+  <% if @search_mode == "category" && @selected_category %>
+    <div class="text-center mb-3">
+      <%= render "admin/shared/result_count",
+        count: @admin_records_count,
+        range_start: @admin_records_range_start,
+        range_end: @admin_records_range_end %>
+    </div>
+  <% end %>
+
   <div data-list-loading-target="results">
-    <% if @selected_employee %>
+    <% if @search_mode == "person" && @selected_employee %>
       <section class="card shadow-sm">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
@@ -93,69 +136,11 @@
             </thead>
             <tbody>
               <% @clocking_days.each do |day| %>
-                <% pending_correction = day[:correction] %>
                 <tr>
                   <td class="text-nowrap"><%= l(day[:date], format: :weekday_day_month) %></td>
-                  <td class="text-nowrap"><%= duration_text(day[:worked_seconds]) %></td>
-                  <td>
-                    <% if day[:swipes].any? %>
-                      <div class="d-flex flex-column gap-1">
-                        <% clocking_swipe_rows(day[:swipes]).each do |row| %>
-                          <div class="d-flex flex-wrap gap-1">
-                            <% [row[:entry], row[:exit]].compact.each do |swipe| %>
-                              <span class="<%= class_names("badge text-bg-light border d-inline-flex align-items-center gap-1", "text-decoration-line-through": clocking_swipe_pending_invalidated?(swipe), "text-primary": clocking_swipe_pending_requested?(swipe)) %>">
-                                <%= icon clocking_icon_name(swipe.kind) %>
-                                <span><%= l(swipe.swipe_at, format: :hour_minute) %></span>
-                              </span>
-                            <% end %>
-                          </div>
-                        <% end %>
-                      </div>
-                    <% else %>
-                      <span class="text-body-secondary"><%= t(".empty_day") %></span>
-                    <% end %>
-                  </td>
-                  <td class="text-end">
-                    <div class="d-inline-flex justify-content-end gap-1">
-                      <% if admin_swipes_day_reviewed_corrections?(day) %>
-                        <button type="button"
-                          class="btn btn-sm btn-outline-secondary admin-row-action"
-                          title="<%= t(".day_corrections.button", date: l(day[:date], format: :short)) %>"
-                          aria-label="<%= t(".day_corrections.button", date: l(day[:date], format: :short)) %>"
-                          data-bs-toggle="modal"
-                          data-bs-target="#<%= admin_swipes_day_corrections_modal_id(@selected_employee, day[:date]) %>">
-                          <%= icon "history" %>
-                        </button>
-                      <% end %>
-
-                      <% if pending_correction %>
-                        <% [ :approve, :reject ].each do |review_action| %>
-                          <button type="button"
-                            class="<%= admin_swipes_review_button_class(review_action) %>"
-                            title="<%= t("admin.swipes.index.review.#{review_action}.button", date: l(day[:date], format: :short)) %>"
-                            aria-label="<%= t("admin.swipes.index.review.#{review_action}.button", date: l(day[:date], format: :short)) %>"
-                            data-bs-toggle="modal"
-                            data-bs-target="#<%= admin_correction_review_modal_id(pending_correction, review_action) %>">
-                            <%= icon(review_action == :approve ? "check" : "x") %>
-                          </button>
-                        <% end %>
-                        <%= link_to edit_admin_correction_path(pending_correction),
-                          class: "btn btn-sm btn-outline-secondary admin-row-action",
-                          title: t("shared.edit"),
-                          aria: { label: t("shared.edit") } do %>
-                          <%= icon "pencil" %>
-                        <% end %>
-                      <% else %>
-                        <% day_action_label = t(day[:swipes].any? ? ".edit_day" : ".create_day", date: l(day[:date], format: :short)) %>
-                        <%= link_to admin_correction_day_path(@selected_employee, day[:date]),
-                          class: "btn btn-sm btn-outline-secondary admin-row-action",
-                          title: day_action_label,
-                          aria: { label: day_action_label } do %>
-                          <%= icon admin_swipes_day_action_icon(day) %>
-                        <% end %>
-                      <% end %>
-                    </div>
-                  </td>
+                  <td class="<%= admin_swipes_hours_cell_class(day) %>"><%= duration_text(day[:worked_seconds]) %></td>
+                  <td><%= render "day_swipes", day: day %></td>
+                  <td class="text-end"><%= render "day_actions", employee: @selected_employee, day: day %></td>
                 </tr>
               <% end %>
             </tbody>
@@ -179,10 +164,74 @@
           <%= render "day_corrections_modal", employee: @selected_employee, day: day %>
         <% end %>
       </section>
+    <% elsif @search_mode == "category" && @selected_category %>
+      <section class="card shadow-sm">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th><%= t(".employee") %></th>
+                <th><%= t(".date") %></th>
+                <th><%= t(".hours") %></th>
+                <th><%= t(".swipes") %></th>
+                <th class="text-end"><%= t("shared.actions") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @category_clocking_days.each do |day| %>
+                <% employee = day[:employee] %>
+                <% employee_name = employee_display_name(employee) %>
+                <tr>
+                  <td class="admin-correction-employee-cell">
+                    <span class="admin-correction-person">
+                      <strong class="admin-correction-person-name" title="<%= employee_name %>"><%= employee_name %></strong>
+                      <em class="admin-correction-person-meta" title="<%= employee.national_id %>"><%= employee.national_id %></em>
+                    </span>
+                  </td>
+                  <td class="text-nowrap"><%= l(day[:date], format: :weekday_day_month) %></td>
+                  <td class="<%= admin_swipes_hours_cell_class(day) %>"><%= duration_text(day[:worked_seconds]) %></td>
+                  <td><%= render "day_swipes", day: day %></td>
+                  <td class="text-end"><%= render "day_actions", employee: employee, day: day %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <% @category_clocking_days.each do |day| %>
+          <% next unless day[:correction] %>
+          <%= render "admin/corrections/review_modal",
+            correction: day[:correction],
+            action: :approve,
+            day_swipes: day[:day_swipes] %>
+          <%= render "admin/corrections/review_modal",
+            correction: day[:correction],
+            action: :reject,
+            day_swipes: day[:day_swipes] %>
+        <% end %>
+
+        <% @category_clocking_days.each do |day| %>
+          <% next unless admin_swipes_day_reviewed_corrections?(day) %>
+          <%= render "day_corrections_modal", employee: day[:employee], day: day %>
+        <% end %>
+
+        <% if @category_clocking_days.empty? %>
+          <div class="card-body text-center text-body-secondary">
+            <%= t(".category_empty") %>
+          </div>
+        <% end %>
+      </section>
+
+      <%= render "admin/shared/pagination",
+        page: @admin_page,
+        total_pages: @admin_total_pages,
+        previous_page: @admin_previous_page,
+        next_page: @admin_next_page,
+        path: pagination_path %>
     <% else %>
       <section class="admin-calendar-empty text-center text-body-secondary" aria-live="polite">
         <%= icon "search" %>
-        <p class="small mb-0"><%= t(".empty") %></p>
+        <p class="small mb-0"><%= t(@search_mode == "category" ? ".category_prompt" : ".empty") %></p>
       </section>
     <% end %>
   </div>
