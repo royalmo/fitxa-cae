@@ -79,4 +79,4 @@ gem "bootstrap", "~> 5.3"
 gem "dartsass-rails", "~> 0.5.1"
 
 gem "ferrum_pdf", "~> 3.1"
-gem "rubyzip", "~> 3.4"
+gem "rubyzip", "~> 3.5"
