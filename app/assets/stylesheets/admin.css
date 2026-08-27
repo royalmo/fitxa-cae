@@ -28,6 +28,9 @@ html[data-pwa="admin"] .turbo-progress-bar {
 }
 
 .admin-auth-card .auth-header {
+  --auth-brand-text-size: clamp(36px, 11vw, 50px);
+  --auth-brand-logo-height: clamp(53px, 16.2vw, 73.5px);
+
   justify-items: center;
   text-align: center;
 }
@@ -38,15 +41,15 @@ html[data-pwa="admin"] .turbo-progress-bar {
 }
 
 .admin-auth-card .auth-header .brand-fitxa {
-  font-size: 3.675rem;
+  font-size: var(--auth-brand-current-text-size);
 }
 
 .admin-auth-card .auth-header .brand-text-suffix {
-  font-size: 3.675rem;
+  font-size: var(--auth-brand-current-text-size);
 }
 
 .admin-auth-card .auth-header .brand-logo {
-  height: 5.4rem;
+  height: var(--auth-brand-current-logo-height);
 }
 
 .admin-auth-card .auth-panel .flash {

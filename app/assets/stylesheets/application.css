@@ -396,12 +396,14 @@ td small,
 }
 
 .employee-auth-card .auth-header {
-  --auth-brand-text-size: clamp(42px, 15vw, 58.8px);
-  --auth-brand-logo-height: clamp(60px, 22vw, 86.4px);
-
   justify-items: center;
   min-width: 0;
   text-align: center;
+}
+
+.auth-card-narrow.employee-auth-card .auth-header {
+  --auth-brand-text-size: clamp(36px, 11vw, 50px);
+  --auth-brand-logo-height: clamp(53px, 16.2vw, 73.5px);
 }
 
 .employee-auth-card .auth-header h1 {
@@ -410,20 +412,20 @@ td small,
 }
 
 .employee-auth-card .auth-header .brand-fitxa {
-  font-size: var(--auth-brand-text-size);
+  font-size: var(--auth-brand-current-text-size);
   line-height: 1;
 }
 
 .employee-auth-card .auth-header .brand-text-suffix {
-  font-size: var(--auth-brand-text-size);
+  font-size: var(--auth-brand-current-text-size);
   line-height: 1;
 }
 
 .employee-auth-card .auth-header .brand-logo {
   width: auto;
   max-width: 45vw;
-  height: var(--auth-brand-logo-height);
-  max-height: var(--auth-brand-logo-height);
+  height: var(--auth-brand-current-logo-height);
+  max-height: var(--auth-brand-current-logo-height);
 }
 
 .auth-tabbed-panel {
@@ -646,9 +648,9 @@ html[data-standalone-pwa="true"] .employee-install-prompt {
   max-width: 100%;
 }
 
-.pwa-install-card .auth-header .brand-fitxa,
-.pwa-install-card .auth-header .brand-text-suffix {
-  font-size: clamp(34.4px, 11vw, 58.8px);
+.pwa-install-card .auth-header {
+  --auth-brand-text-size: clamp(34.4px, 11vw, 58.8px);
+  --auth-brand-logo-height: clamp(60px, 22vw, 86.4px);
 }
 
 .pwa-install-card .auth-header p {
@@ -3610,17 +3612,17 @@ input[type="submit"].is-submitting {
 }
 
 @media (max-width: 360px) {
-  .employee-auth-card .auth-header {
-    --auth-brand-text-size: clamp(42px, 14.5vw, 54.4px);
-    --auth-brand-logo-height: clamp(58px, 21vw, 80px);
+  .auth-card-narrow.employee-auth-card .auth-header {
+    --auth-brand-text-size: clamp(34px, 10.8vw, 39px);
+    --auth-brand-logo-height: clamp(50px, 15.8vw, 57px);
   }
 
   .employee-auth-card .auth-header .brand-fitxa,
   .employee-auth-card .auth-header .brand-text-suffix {
-    font-size: var(--auth-brand-text-size);
+    font-size: var(--auth-brand-current-text-size);
   }
 
   .employee-auth-card .auth-header .brand-logo {
-    max-height: var(--auth-brand-logo-height);
+    max-height: var(--auth-brand-current-logo-height);
   }
 }

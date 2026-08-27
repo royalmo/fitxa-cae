@@ -77,15 +77,21 @@ body {
 }
 
 .auth-header .brand-logo {
-  height: 2.65rem;
+  height: var(--auth-brand-current-logo-height, 2.65rem);
 }
 
-.auth-header .brand-fitxa {
-  font-size: 1.8rem;
+.auth-header .brand-mark {
+  --auth-brand-current-text-size: var(--auth-brand-text-size, 1.8rem);
+  --auth-brand-current-logo-height: var(--auth-brand-logo-height, 2.65rem);
+
+  justify-content: center;
+  max-width: min(90vw, 100%);
+  min-width: 0;
 }
 
+.auth-header .brand-fitxa,
 .auth-header .brand-text-suffix {
-  font-size: 1.8rem;
+  font-size: var(--auth-brand-current-text-size, 1.8rem);
 }
 
 .employee-shell {
