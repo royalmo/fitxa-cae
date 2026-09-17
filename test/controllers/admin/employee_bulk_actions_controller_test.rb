@@ -22,9 +22,25 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
         assert_select ".admin-bulk-action-layout" do
           assert_select ".admin-bulk-action-form-card.card.shadow-sm > .card-body.admin-bulk-action-form" do
             assert_select ".admin-bulk-action-options[role='group'] > .admin-bulk-action-label", text: "Acció"
+            assert_select "input[type='hidden'][name='bulk_action[selection_mode]'][value='national_ids'][data-bulk-national-ids-target='selectionModeInput']"
+            assert_select ".nav.nav-tabs[role='tablist']" do
+              assert_select "button.nav-link.active[role='tab'][data-bulk-national-ids-mode-param='national_ids']",
+                text: "Per DNI"
+              assert_select "button.nav-link[role='tab'][data-bulk-national-ids-mode-param='tags']",
+                text: "Per etiqueta"
+            end
             assert_select "textarea#admin_bulk_national_ids[name='national_ids_text'][data-bulk-national-ids-target='textarea']"
             assert_select "label[for='admin_bulk_national_ids']",
               text: "Llistat de DNI/NIEs, separat per espai, coma, o un per línia."
+            assert_select "[role='tabpanel'][data-bulk-national-ids-mode='tags'][hidden]" do
+              assert_select "legend.form-label", text: "Persones que tinguin totes les etiquetes següents"
+              assert_select "legend.form-label", text: "I que, a la vegada, no tinguin cap de les etiquetes següents"
+              assert_select ".admin-tag-multi-search[data-controller='tag-multi-search']", count: 2
+              assert_select "input.admin-tag-multi-search-input[name='bulk_activation_include_tag_query'][placeholder='Cerca etiquetes que han de tenir']"
+              assert_select "input.admin-tag-multi-search-input[name='bulk_activation_exclude_tag_query'][placeholder='Cerca etiquetes que no poden tenir']"
+              assert_select "input[type='hidden'][name='bulk_action[include_tag_ids][]']"
+              assert_select "input[type='hidden'][name='bulk_action[exclude_tag_ids][]']"
+            end
             assert_select ".form-text", count: 0
             assert_select "input[type='radio'][name='bulk_action[action]'][checked]", count: 0
             assert_select "input[type='radio'][name='bulk_action[action]'][value='activate'][autocomplete='off'] + label",
@@ -127,6 +143,40 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal({
       active_employee.national_id => true,
       inactive_employee.national_id => false
+    }, JSON.parse(response.body))
+  end
+
+  test "simulates activation states for tag selections" do
+    included_tag = Tag.create!(name: "Office", color: "#2563eb", active: true)
+    required_tag = Tag.create!(name: "Morning", color: "#16a34a", active: true)
+    excluded_tag = Tag.create!(name: "External", color: "#dc2626", active: true)
+    active_employee = create_employee(national_id: valid_dni(44_000_021), active: true)
+    inactive_employee = create_employee(national_id: valid_dni(44_000_022), active: false)
+    missing_required_tag_employee = create_employee(national_id: valid_dni(44_000_023), active: false)
+    excluded_employee = create_employee(national_id: valid_dni(44_000_024), active: false)
+
+    active_employee.tags << [ included_tag, required_tag ]
+    inactive_employee.tags << [ included_tag, required_tag ]
+    missing_required_tag_employee.tags << included_tag
+    excluded_employee.tags << [ included_tag, required_tag, excluded_tag ]
+    total_employee_count = Employee.count
+
+    post simulate_bulk_activation_admin_employees_path,
+      params: {
+        bulk_action: {
+          selection_mode: "tags",
+          include_tag_ids: [ included_tag.id, required_tag.id ],
+          exclude_tag_ids: [ excluded_tag.id ]
+        }
+      },
+      as: :json
+
+    assert_response :success
+    assert_equal({
+      "total_count" => total_employee_count,
+      "found_count" => 2,
+      "active_count" => 1,
+      "inactive_count" => 1
     }, JSON.parse(response.body))
   end
 
@@ -301,6 +351,46 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate active_employee.reload, :active?
     assert_predicate inactive_employee.reload, :active?
     assert_predicate inactive_employee.current_employment_period, :open?
+    assert_equal "S'ha activat 1 persona.", employee_bulk_action_run.reload.result_message
+  end
+
+  test "enqueues activation bulk action for tag selections" do
+    included_tag = Tag.create!(name: "Office", color: "#2563eb", active: true)
+    excluded_tag = Tag.create!(name: "External", color: "#dc2626", active: true)
+    inactive_employee = create_employee(national_id: valid_dni(44_000_025), active: false)
+    active_employee = create_employee(national_id: valid_dni(44_000_026), active: true)
+    excluded_employee = create_employee(national_id: valid_dni(44_000_027), active: false)
+    inactive_employee.tags << included_tag
+    active_employee.tags << included_tag
+    excluded_employee.tags << [ included_tag, excluded_tag ]
+
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
+      post run_bulk_activation_admin_employees_path,
+        params: {
+          bulk_action: {
+            action: "activate",
+            selection_mode: "tags",
+            include_tag_ids: [ included_tag.id ],
+            exclude_tag_ids: [ excluded_tag.id ]
+          }
+        },
+        as: :json
+    end
+
+    assert_response :accepted
+    payload = JSON.parse(response.body)
+    employee_bulk_action_run = EmployeeBulkActionRun.find(payload.fetch("id"))
+    assert_equal @manager, employee_bulk_action_run.manager
+    assert_equal "activation", employee_bulk_action_run.kind
+    assert_equal "tags", employee_bulk_action_run.parameters.fetch("selection_mode")
+    assert_equal [ included_tag.id ], employee_bulk_action_run.parameters.fetch("include_tag_ids")
+    assert_equal [ excluded_tag.id ], employee_bulk_action_run.parameters.fetch("exclude_tag_ids")
+
+    perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+
+    assert_predicate inactive_employee.reload, :active?
+    assert_predicate active_employee.reload, :active?
+    assert_not excluded_employee.reload.active?
     assert_equal "S'ha activat 1 persona.", employee_bulk_action_run.reload.result_message
   end
 

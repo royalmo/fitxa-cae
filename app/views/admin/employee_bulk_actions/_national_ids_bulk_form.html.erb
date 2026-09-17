@@ -1,5 +1,8 @@
 <% field_id = "admin_bulk_national_ids" %>
 <% action_group_id = "admin_bulk_action_group" %>
+<% tabs_id = "admin_bulk_activation_selection_tabs" %>
+<% national_ids_panel_id = "admin_bulk_activation_national_ids_panel" %>
+<% tags_panel_id = "admin_bulk_activation_tags_panel" %>
 
 <section
   class="admin-bulk-action"
@@ -11,16 +14,24 @@
   data-bulk-national-ids-run-request-error-label-value="<%= t("admin.employee_bulk_action_runs.errors.start") %>"
   data-bulk-national-ids-run-poll-error-label-value="<%= t("admin.employee_bulk_action_runs.errors.poll") %>"
   data-bulk-national-ids-missing-national-ids-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_national_ids") %>"
+  data-bulk-national-ids-missing-tags-label-value="<%= t("admin.employee_bulk_actions.activation.missing_tags") %>"
   data-bulk-national-ids-missing-action-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_action") %>"
   data-bulk-national-ids-missing-both-label-value="<%= t("admin.employee_bulk_actions.national_ids.missing_both") %>"
+  data-bulk-national-ids-missing-tags-and-action-label-value="<%= t("admin.employee_bulk_actions.activation.missing_tags_and_action") %>"
   data-bulk-national-ids-confirm-activate-value="<%= t("admin.employee_bulk_actions.national_ids.confirm_activate", count: "%{count}") %>"
   data-bulk-national-ids-confirm-deactivate-value="<%= t("admin.employee_bulk_actions.national_ids.confirm_deactivate", count: "%{count}") %>"
   data-bulk-national-ids-run-requires-simulation-label-value="<%= t("admin.employee_bulk_actions.national_ids.run_requires_simulation") %>"
-  data-bulk-national-ids-run-no-affected-label-value="<%= t("admin.employee_bulk_actions.errors.no_affected_employees") %>">
-  <%= form_with url: run_path, method: :post do %>
+  data-bulk-national-ids-run-no-affected-label-value="<%= t("admin.employee_bulk_actions.errors.no_affected_employees") %>"
+  data-bulk-national-ids-found-national-ids-label-value="<%= t("admin.employee_bulk_actions.national_ids.found_ratio") %>"
+  data-bulk-national-ids-found-tags-label-value="<%= t("admin.employee_bulk_actions.activation.tag_selection_found") %>">
+  <%= form_with url: run_path, method: :post, scope: :bulk_action do |form| %>
     <div class="admin-bulk-action-layout">
       <section class="card shadow-sm admin-bulk-action-form-card">
         <div class="card-body admin-bulk-action-form">
+          <%= hidden_field_tag "bulk_action[selection_mode]",
+            "national_ids",
+            data: { bulk_national_ids_target: "selectionModeInput" } %>
+
           <div class="admin-bulk-action-options mb-4" role="group" aria-labelledby="<%= action_group_id %>">
             <span class="form-label admin-bulk-action-label" id="<%= action_group_id %>"><%= t("admin.employee_bulk_actions.national_ids.action_label") %></span>
             <div class="btn-group admin-status-radio-group">
@@ -45,17 +56,91 @@
           </div>
 
           <div class="mb-4">
-            <%= label_tag field_id, t("admin.employee_bulk_actions.national_ids.label"), class: "form-label" %>
-            <%= text_area_tag :national_ids_text,
-              nil,
-              id: field_id,
-              class: "form-control admin-bulk-national-ids-textarea",
-              rows: 8,
-              placeholder: t("admin.employee_bulk_actions.national_ids.placeholder"),
-              data: {
-                bulk_national_ids_target: "textarea",
-                action: "input->bulk-national-ids#input change->bulk-national-ids#input"
-              } %>
+            <ul class="nav nav-tabs admin-bulk-selection-tabs" id="<%= tabs_id %>" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button
+                  type="button"
+                  id="<%= tabs_id %>_national_ids"
+                  class="nav-link active"
+                  role="tab"
+                  aria-controls="<%= national_ids_panel_id %>"
+                  aria-selected="true"
+                  data-bulk-national-ids-target="modeTab"
+                  data-bulk-national-ids-mode-param="national_ids"
+                  data-action="bulk-national-ids#selectMode">
+                  <%= t("admin.employee_bulk_actions.activation.tabs.national_ids") %>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  type="button"
+                  id="<%= tabs_id %>_tags"
+                  class="nav-link"
+                  role="tab"
+                  aria-controls="<%= tags_panel_id %>"
+                  aria-selected="false"
+                  data-bulk-national-ids-target="modeTab"
+                  data-bulk-national-ids-mode-param="tags"
+                  data-action="bulk-national-ids#selectMode">
+                  <%= t("admin.employee_bulk_actions.activation.tabs.tags") %>
+                </button>
+              </li>
+            </ul>
+
+            <div
+              id="<%= national_ids_panel_id %>"
+              class="admin-bulk-selection-panel"
+              role="tabpanel"
+              aria-labelledby="<%= tabs_id %>_national_ids"
+              data-bulk-national-ids-target="modePanel"
+              data-bulk-national-ids-mode="national_ids">
+              <%= label_tag field_id, t("admin.employee_bulk_actions.national_ids.label"), class: "form-label" %>
+              <%= text_area_tag :national_ids_text,
+                nil,
+                id: field_id,
+                class: "form-control admin-bulk-national-ids-textarea",
+                rows: 8,
+                placeholder: t("admin.employee_bulk_actions.national_ids.placeholder"),
+                data: {
+                  bulk_national_ids_target: "textarea",
+                  action: "input->bulk-national-ids#input change->bulk-national-ids#input"
+                } %>
+            </div>
+
+            <div
+              id="<%= tags_panel_id %>"
+              class="admin-bulk-selection-panel"
+              role="tabpanel"
+              aria-labelledby="<%= tabs_id %>_tags"
+              data-bulk-national-ids-target="modePanel"
+              data-bulk-national-ids-mode="tags"
+              hidden>
+              <fieldset class="mb-3">
+                <legend class="form-label"><%= t("admin.employee_bulk_actions.activation.include_tags") %></legend>
+                <div data-bulk-national-ids-target="includeTagSelector" data-action="change->bulk-national-ids#tagsChanged">
+                  <%= render "admin/shared/tag_multi_search",
+                    form: form,
+                    field: :include_tag_ids,
+                    query_field: :bulk_activation_include_tag_query,
+                    selected_tags: [],
+                    placeholder: t("admin.employee_bulk_actions.activation.search_include_placeholder"),
+                    results_id: "admin-bulk-activation-include-tag-results" %>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend class="form-label"><%= t("admin.employee_bulk_actions.activation.exclude_tags") %></legend>
+                <div data-bulk-national-ids-target="excludeTagSelector" data-action="change->bulk-national-ids#tagsChanged">
+                  <%= render "admin/shared/tag_multi_search",
+                    form: form,
+                    field: :exclude_tag_ids,
+                    query_field: :bulk_activation_exclude_tag_query,
+                    selected_tags: [],
+                    placeholder: t("admin.employee_bulk_actions.activation.search_exclude_placeholder"),
+                    results_id: "admin-bulk-activation-exclude-tag-results" %>
+                </div>
+              </fieldset>
+            </div>
           </div>
 
           <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2 pe-5" role="alert" data-bulk-national-ids-target="error" hidden>
@@ -96,7 +181,7 @@
           <h2 class="h5 mb-3"><%= t("admin.employee_bulk_actions.national_ids.simulation_title") %></h2>
           <dl class="admin-bulk-simulation-kpis mb-3">
             <div>
-              <dt><%= t("admin.employee_bulk_actions.national_ids.found_ratio") %></dt>
+              <dt data-bulk-national-ids-target="foundLabel"><%= t("admin.employee_bulk_actions.national_ids.found_ratio") %></dt>
               <dd data-bulk-national-ids-target="foundRatio">0/0</dd>
             </div>
             <div>

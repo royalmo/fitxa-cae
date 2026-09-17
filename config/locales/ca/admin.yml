@@ -245,9 +245,21 @@ ca:
       activation:
         title: Activar i desactivar massivament
         heading: Activar i desactivar massivament
+        tabs:
+          national_ids: Per DNI
+          tags: Per etiqueta
         actions:
           activate: Activar
           deactivate: Desactivar
+        include_tags: Persones que tinguin totes les etiquetes següents
+        exclude_tags: I que, a la vegada, no tinguin cap de les etiquetes següents
+        search_include_placeholder: Cerca etiquetes que han de tenir
+        search_exclude_placeholder: Cerca etiquetes que no poden tenir
+        tag_selection_found: Persones trobades
+        missing_tags: Selecciona com a mínim una etiqueta que hagin de tenir per poder
+          simular.
+        missing_tags_and_action: Selecciona com a mínim una etiqueta que hagin de tenir
+          i una acció per poder simular.
         run: Executar acció massiva
       tags:
         title: Afegir etiquetes

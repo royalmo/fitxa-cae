@@ -4,12 +4,18 @@ import AsyncProgress from "controllers/async_progress"
 export default class extends Controller {
   static targets = [
     "textarea",
+    "selectionModeInput",
+    "modeTab",
+    "modePanel",
+    "includeTagSelector",
+    "excludeTagSelector",
     "simulateButton",
     "simulateTooltip",
     "action",
     "error",
     "errorText",
     "results",
+    "foundLabel",
     "foundRatio",
     "activeRatio",
     "affectedCount",
@@ -32,12 +38,16 @@ export default class extends Controller {
     runRequestErrorLabel: String,
     runPollErrorLabel: String,
     missingNationalIdsLabel: String,
+    missingTagsLabel: String,
     missingActionLabel: String,
     missingBothLabel: String,
+    missingTagsAndActionLabel: String,
     confirmActivate: String,
     confirmDeactivate: String,
     runRequiresSimulationLabel: String,
-    runNoAffectedLabel: String
+    runNoAffectedLabel: String,
+    foundNationalIdsLabel: String,
+    foundTagsLabel: String
   }
 
   connect() {
@@ -74,6 +84,33 @@ export default class extends Controller {
     this.updateSimulateButton()
   }
 
+  tagsChanged() {
+    this.invalidateSimulationIfChanged()
+    this.updateSimulateButton()
+  }
+
+  selectMode(event) {
+    event.preventDefault()
+    const mode = event.params.mode
+    if (!mode || mode === this.selectionMode) return
+
+    this.selectionModeInputTarget.value = mode
+
+    this.modeTabTargets.forEach((tab) => {
+      const active = tab.dataset.bulkNationalIdsModeParam === mode
+      tab.classList.toggle("active", active)
+      tab.setAttribute("aria-selected", active ? "true" : "false")
+    })
+
+    this.modePanelTargets.forEach((panel) => {
+      panel.hidden = panel.dataset.bulkNationalIdsMode !== mode
+    })
+
+    this.invalidateSimulationIfChanged()
+    if (!this.simulation) this.resetSimulationPanel()
+    this.updateSimulateButton()
+  }
+
   dismissError(event) {
     event.preventDefault()
     this.hideError()
@@ -82,8 +119,7 @@ export default class extends Controller {
   async simulate(event) {
     event.preventDefault()
 
-    const ids = this.parsedNationalIds()
-    if (ids.length === 0 || !this.selectedAction) return
+    if (this.simulateDisabledReason) return
 
     this.showLoading()
     this.hideError()
@@ -96,13 +132,12 @@ export default class extends Controller {
           "Content-Type": "application/json",
           "X-CSRF-Token": this.csrfToken()
         },
-        body: JSON.stringify({ national_ids: ids })
+        body: JSON.stringify(this.simulationPayload())
       })
 
       if (!response.ok) throw new Error(await this.responseErrorMessage(response))
 
-      const statuses = await response.json()
-      this.simulation = this.summary(ids, statuses)
+      this.simulation = this.summary(await response.json())
       this.simulatedSignature = this.currentSimulationSignature()
       this.renderSimulation()
     } catch (error) {
@@ -152,7 +187,8 @@ export default class extends Controller {
   renderSimulation() {
     this.resultsTarget.classList.remove("is-disabled")
     this.resultsTarget.setAttribute("aria-disabled", "false")
-    this.foundRatioTarget.textContent = `${this.simulation.foundCount}/${this.simulation.ids.length}`
+    this.foundLabelTarget.textContent = this.selectionMode === "tags" ? this.foundTagsLabelValue : this.foundNationalIdsLabelValue
+    this.foundRatioTarget.textContent = `${this.simulation.foundCount}/${this.simulation.totalCount}`
     this.activeRatioTarget.textContent = `${this.simulation.activeCount}/${this.simulation.foundCount}`
     this.renderAffectedCount()
   }
@@ -175,14 +211,28 @@ export default class extends Controller {
     this.updateSimulateButton()
   }
 
-  summary(ids, statuses) {
-    const statusEntries = ids.map((id) => statuses[id]).filter((value) => typeof value === "boolean")
+  summary(payload) {
+    if (this.selectionMode === "tags") {
+      return {
+        mode: "tags",
+        ids: [],
+        activeCount: payload.active_count,
+        inactiveCount: payload.inactive_count,
+        foundCount: payload.found_count,
+        totalCount: payload.total_count
+      }
+    }
+
+    const ids = this.parsedNationalIds()
+    const statusEntries = ids.map((id) => payload[id]).filter((value) => typeof value === "boolean")
 
     return {
+      mode: "national_ids",
       ids,
       activeCount: statusEntries.filter(Boolean).length,
       inactiveCount: statusEntries.filter((active) => !active).length,
-      foundCount: statusEntries.length
+      foundCount: statusEntries.length,
+      totalCount: ids.length
     }
   }
 
@@ -203,13 +253,15 @@ export default class extends Controller {
   populateHiddenIds() {
     this.hiddenIdsTarget.replaceChildren()
 
-    this.simulation.ids.forEach((id) => {
-      const input = document.createElement("input")
-      input.type = "hidden"
-      input.name = "national_ids[]"
-      input.value = id
-      this.hiddenIdsTarget.append(input)
-    })
+    if (this.selectionMode === "national_ids") {
+      this.simulation.ids.forEach((id) => {
+        const input = document.createElement("input")
+        input.type = "hidden"
+        input.name = "national_ids[]"
+        input.value = id
+        this.hiddenIdsTarget.append(input)
+      })
+    }
   }
 
   parsedNationalIds() {
@@ -222,7 +274,16 @@ export default class extends Controller {
   }
 
   currentSimulationSignature() {
-    return [this.selectedAction, this.textareaTarget.value].join("|")
+    if (this.selectionMode === "tags") {
+      return [
+        this.selectedAction,
+        this.selectionMode,
+        this.selectedTagIds(this.includeTagSelectorTarget).join(","),
+        this.selectedTagIds(this.excludeTagSelectorTarget).join(",")
+      ].join("|")
+    }
+
+    return [this.selectedAction, this.selectionMode, this.textareaTarget.value].join("|")
   }
 
   invalidateSimulationIfChanged() {
@@ -271,10 +332,22 @@ export default class extends Controller {
   }
 
   runPayload() {
+    if (this.selectionMode === "tags") {
+      return {
+        bulk_action: {
+          action: this.selectedAction,
+          selection_mode: "tags",
+          include_tag_ids: this.selectedTagIds(this.includeTagSelectorTarget),
+          exclude_tag_ids: this.selectedTagIds(this.excludeTagSelectorTarget)
+        }
+      }
+    }
+
     return {
-      national_ids: this.simulation?.ids || [],
+      national_ids: this.simulation?.ids || this.parsedNationalIds(),
       bulk_action: {
-        action: this.selectedAction
+        action: this.selectedAction,
+        selection_mode: "national_ids"
       }
     }
   }
@@ -282,7 +355,35 @@ export default class extends Controller {
   resetAfterSuccessfulRun() {
     this.textareaTarget.value = ""
     this.actionTargets.forEach((action) => { action.checked = false })
+    this.clearTagSelector(this.includeTagSelectorTarget)
+    this.clearTagSelector(this.excludeTagSelectorTarget)
     this.clearSimulation()
+  }
+
+  simulationPayload() {
+    if (this.selectionMode === "tags") {
+      return {
+        bulk_action: {
+          selection_mode: "tags",
+          include_tag_ids: this.selectedTagIds(this.includeTagSelectorTarget),
+          exclude_tag_ids: this.selectedTagIds(this.excludeTagSelectorTarget)
+        }
+      }
+    }
+
+    return { national_ids: this.parsedNationalIds() }
+  }
+
+  selectedTagIds(selector) {
+    return Array.from(selector.querySelectorAll("[data-tag-multi-search-selected-input]"))
+      .map((input) => input.value)
+      .filter(Boolean)
+  }
+
+  clearTagSelector(selector) {
+    selector.querySelectorAll("[data-tag-multi-search-id]").forEach((selection) => selection.remove())
+    selector.querySelectorAll(".admin-tag-multi-search-input").forEach((input) => { input.value = "" })
+    selector.dispatchEvent(new Event("change", { bubbles: true }))
   }
 
   replaceCount(template, count) {
@@ -357,6 +458,7 @@ export default class extends Controller {
 
     this.resultsTarget.classList.add("is-disabled")
     this.resultsTarget.setAttribute("aria-disabled", "true")
+    this.foundLabelTarget.textContent = this.selectionMode === "tags" ? this.foundTagsLabelValue : this.foundNationalIdsLabelValue
     this.foundRatioTarget.textContent = "0/0"
     this.activeRatioTarget.textContent = "0/0"
     this.affectedCountTarget.textContent = "0"
@@ -365,8 +467,19 @@ export default class extends Controller {
   }
 
   get simulateDisabledReason() {
-    const missingNationalIds = this.textareaTarget.value.trim().length <= 1
     const missingAction = !this.selectedAction
+
+    if (this.selectionMode === "tags") {
+      const missingTags = !this.hasSelectedTags
+
+      if (missingTags && missingAction) return this.missingTagsAndActionLabelValue
+      if (missingTags) return this.missingTagsLabelValue
+      if (missingAction) return this.missingActionLabelValue
+
+      return ""
+    }
+
+    const missingNationalIds = this.textareaTarget.value.trim().length <= 1
 
     if (missingNationalIds && missingAction) return this.missingBothLabelValue
     if (missingNationalIds) return this.missingNationalIdsLabelValue
@@ -392,5 +505,13 @@ export default class extends Controller {
 
   get selectedAction() {
     return this.actionTargets.find((action) => action.checked)?.value || ""
+  }
+
+  get selectionMode() {
+    return this.selectionModeInputTarget.value || "national_ids"
+  }
+
+  get hasSelectedTags() {
+    return this.selectedTagIds(this.includeTagSelectorTarget).length > 0
   }
 }

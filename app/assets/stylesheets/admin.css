@@ -1048,6 +1048,18 @@ html[data-pwa="admin"] .turbo-progress-bar {
   margin: 0;
 }
 
+.admin-bulk-selection-tabs {
+  margin-bottom: 0;
+}
+
+.admin-bulk-selection-panel {
+  padding: 1rem;
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-top: 0;
+  border-radius: 0 0 var(--bs-border-radius) var(--bs-border-radius);
+  background: var(--bs-body-bg);
+}
+
 .admin-bulk-simulation-results {
   background: var(--bs-body-bg);
 }
