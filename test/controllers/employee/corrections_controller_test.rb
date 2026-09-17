@@ -6,17 +6,19 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     swipe = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 40), metadata: "employee_portal")
     log_in_employee(employee)
 
-    assert_difference "SwipeCorrection.count", 1 do
-      post corrections_path, params: {
-        date: "2026-07-02",
-        note: "Vaig entrar abans.",
-        invalidated_swipe_ids: [ swipe.id ],
-        requested_swipes: [
-          { kind: "entry", time: "08:05" },
-          { kind: "entry", time: "13:00" },
-          { kind: "exit", time: "17:00" }
-        ]
-      }
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      assert_difference "SwipeCorrection.count", 1 do
+        post corrections_path, params: {
+          date: "2026-07-02",
+          note: "Vaig entrar abans.",
+          invalidated_swipe_ids: [ swipe.id ],
+          requested_swipes: [
+            { kind: "entry", time: "08:05" },
+            { kind: "entry", time: "13:00" },
+            { kind: "exit", time: "17:00" }
+          ]
+        }
+      end
     end
 
     assert_redirected_to corrections_path
@@ -127,15 +129,17 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     swipe = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 40), metadata: "employee_portal")
     log_in_employee(employee)
 
-    assert_difference "SwipeCorrection.count", 1 do
-      post corrections_path, params: {
-        date: "2026-07-02",
-        invalidated_swipe_ids: [ swipe.id ],
-        requested_swipes: [
-          { kind: "entry", time: "" },
-          { kind: "exit", time: "" }
-        ]
-      }
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      assert_difference "SwipeCorrection.count", 1 do
+        post corrections_path, params: {
+          date: "2026-07-02",
+          invalidated_swipe_ids: [ swipe.id ],
+          requested_swipes: [
+            { kind: "entry", time: "" },
+            { kind: "exit", time: "" }
+          ]
+        }
+      end
     end
 
     assert_redirected_to corrections_path
@@ -197,14 +201,16 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
 
     log_in_employee(employee)
 
-    assert_no_difference "SwipeCorrection.count" do
-      post corrections_path, params: {
-        date: "2026-07-02",
-        server_updated_at: correction_server_updated_at(employee, pending_correction.day),
-        note: "Versió editada",
-        invalidated_swipe_ids: [ old_swipe.id ],
-        requested_swipes: [ { kind: "exit", time: "17:30" } ]
-      }
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      assert_no_difference "SwipeCorrection.count" do
+        post corrections_path, params: {
+          date: "2026-07-02",
+          server_updated_at: correction_server_updated_at(employee, pending_correction.day),
+          note: "Versió editada",
+          invalidated_swipe_ids: [ old_swipe.id ],
+          requested_swipes: [ { kind: "exit", time: "17:30" } ]
+        }
+      end
     end
 
     assert_redirected_to corrections_path
@@ -230,13 +236,15 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     pending_correction.update!(requester_comments: "Versió remota")
     log_in_employee(employee)
 
-    assert_no_difference "SwipeCorrection.count" do
-      post corrections_path, params: {
-        date: "2026-07-02",
-        server_updated_at: opened_server_updated_at,
-        note: "Versió caducada",
-        requested_swipes: [ { kind: "exit", time: "17:30" } ]
-      }
+    travel_to Time.zone.local(2026, 7, 19, 12, 0) do
+      assert_no_difference "SwipeCorrection.count" do
+        post corrections_path, params: {
+          date: "2026-07-02",
+          server_updated_at: opened_server_updated_at,
+          note: "Versió caducada",
+          requested_swipes: [ { kind: "exit", time: "17:30" } ]
+        }
+      end
     end
 
     assert_redirected_to new_correction_path(day: "2026-07-02")
