@@ -102,42 +102,44 @@
   </section>
 </div>
 
-<hr class="account-divider">
+<% unless hide_hr_contact_form? %>
+  <hr class="account-divider">
 
-<section class="account-hr-contact" id="human_resources_contact">
-  <h2><%= t(".human_resources_contact") %></h2>
+  <section class="account-hr-contact" id="human_resources_contact">
+    <h2><%= t(".human_resources_contact") %></h2>
 
-  <%= render "layouts/flash_messages",
-    class: "employee-page-flash account-hr-flash",
-    only: %i[hr_contact_notice hr_contact_alert] %>
+    <%= render "layouts/flash_messages",
+      class: "employee-page-flash account-hr-flash",
+      only: %i[hr_contact_notice hr_contact_alert] %>
 
-  <%= form_with url: account_human_resources_contact_path,
-    method: :post,
-    class: "stacked-form compact-form account-hr-contact-form",
-    html: { autocomplete: "off" } do |form| %>
-    <div class="field">
-      <%= form.label :subject, t(".human_resources_subject"), class: "sr-only" %>
-      <%= form.text_field :subject,
-        value: @hr_contact_form&.fetch(:subject, nil),
-        placeholder: t(".human_resources_subject"),
-        autocomplete: "off",
-        required: true %>
-    </div>
+    <%= form_with url: account_human_resources_contact_path,
+      method: :post,
+      class: "stacked-form compact-form account-hr-contact-form",
+      html: { autocomplete: "off" } do |form| %>
+      <div class="field">
+        <%= form.label :subject, t(".human_resources_subject"), class: "sr-only" %>
+        <%= form.text_field :subject,
+          value: @hr_contact_form&.fetch(:subject, nil),
+          placeholder: t(".human_resources_subject"),
+          autocomplete: "off",
+          required: true %>
+      </div>
 
-    <div class="field">
-      <%= form.label :message, t(".human_resources_message"), class: "sr-only" %>
-      <%= form.text_area :message,
-        value: @hr_contact_form&.fetch(:message, nil),
-        placeholder: t(".human_resources_message"),
-        rows: 4,
-        autocomplete: "off",
-        required: true %>
-    </div>
+      <div class="field">
+        <%= form.label :message, t(".human_resources_message"), class: "sr-only" %>
+        <%= form.text_area :message,
+          value: @hr_contact_form&.fetch(:message, nil),
+          placeholder: t(".human_resources_message"),
+          rows: 4,
+          autocomplete: "off",
+          required: true %>
+      </div>
 
-    <div class="account-actions">
-      <%= button_tag type: :submit, class: "button account-action-button account-primary-button", data: { submitting_label: t("shared.submitting.sending") } do %>
-        <span><%= t(".human_resources_submit") %></span>
-      <% end %>
-    </div>
-  <% end %>
-</section>
+      <div class="account-actions">
+        <%= button_tag type: :submit, class: "button account-action-button account-primary-button", data: { submitting_label: t("shared.submitting.sending") } do %>
+          <span><%= t(".human_resources_submit") %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+<% end %>

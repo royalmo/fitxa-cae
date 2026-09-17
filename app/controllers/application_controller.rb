@@ -14,10 +14,16 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_employee!, if: :employee_authentication_required?
   before_action :discard_form_metadata_params
 
+  helper_method :hide_hr_contact_form?
+
   private
 
   def discard_form_metadata_params
     FORM_METADATA_PARAM_KEYS.each { |key| params.delete(key) }
+  end
+
+  def hide_hr_contact_form?
+    Rails.configuration.x.hide_hr_contact_form
   end
 
   def employee_authentication_required?

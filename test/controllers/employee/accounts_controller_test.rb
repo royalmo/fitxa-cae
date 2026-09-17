@@ -5,9 +5,15 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
   include ActionMailer::TestHelper
 
   setup do
+    @previous_hide_hr_contact_form = Rails.configuration.x.hide_hr_contact_form
+    Rails.configuration.x.hide_hr_contact_form = false
     ActionMailer::Base.deliveries.clear
     clear_enqueued_jobs
     clear_performed_jobs
+  end
+
+  teardown do
+    Rails.configuration.x.hide_hr_contact_form = @previous_hide_hr_contact_form
   end
 
   test "shows persisted account details" do
@@ -49,6 +55,20 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".account-hr-contact-form input[name='subject'][placeholder='Assumpte'][autocomplete='off']"
     assert_select ".account-hr-contact-form textarea[name='message'][placeholder='Missatge'][autocomplete='off']"
     assert_select ".account-hr-contact-form button[type='submit'][data-submitting-label='Enviant...']", text: "Envia"
+  end
+
+  test "hides human resources contact form when configured" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    with_hidden_hr_contact_form(true) do
+      get account_path
+    end
+
+    assert_response :success
+    assert_select "hr.account-divider", 0
+    assert_select "section.account-hr-contact#human_resources_contact", 0
+    assert_select "form.account-hr-contact-form", 0
   end
 
   test "updates contact details" do
@@ -219,5 +239,33 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".account-hr-flash.flash-alert .flash-icon"
     assert_select ".account-hr-flash > span", text: I18n.t("employee.accounts.contact_human_resources.blank")
     assert_select ".account-hr-contact-form input[name='subject'][value='Nòmina']"
+  end
+
+  test "does not submit human resources contact when form is hidden" do
+    employee = create_employee(password: "1234")
+    log_in_employee(employee)
+
+    with_hidden_hr_contact_form(true) do
+      assert_no_enqueued_emails do
+        assert_no_difference -> { AuditAction.where(kind: "human_resources_contact.submitted").count } do
+          post account_human_resources_contact_path, params: {
+            subject: "Vacances pendents",
+            message: "Necessito revisar els dies disponibles."
+          }
+        end
+      end
+    end
+
+    assert_redirected_to account_path
+  end
+
+  private
+
+  def with_hidden_hr_contact_form(value)
+    previous_value = Rails.configuration.x.hide_hr_contact_form
+    Rails.configuration.x.hide_hr_contact_form = value
+    yield
+  ensure
+    Rails.configuration.x.hide_hr_contact_form = previous_value
   end
 end

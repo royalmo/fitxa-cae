@@ -1,6 +1,8 @@
 class Employee::AccountsController < ApplicationController
   layout "employee"
 
+  before_action :redirect_hidden_human_resources_contact_form, only: :contact_human_resources
+
   def show
     @employee = current_employee
   end
@@ -71,6 +73,10 @@ class Employee::AccountsController < ApplicationController
   end
 
   private
+
+  def redirect_hidden_human_resources_contact_form
+    redirect_to account_path if hide_hr_contact_form?
+  end
 
   def account_contact_params
     params.permit(:email, :phone, :theme_preference)

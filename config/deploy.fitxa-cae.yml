@@ -18,6 +18,7 @@ env:
     LINK_BUTTON_TEXT: FitxaXarranca
 
     HUMAN_RESOURCES_EMAIL: rrhh@cae.cat
+    HIDE_HR_CONTACT_FORM: "true"
     LEGAL_NOTICE_URL: https://cae.cat/avisos-legals/
     MAILER_FROM_EMAIL: FitxaCAE <fitxa@cae.cat>
     ERROR_NOTIFICATION_RECIPIENTS: eric@ericroy.net
