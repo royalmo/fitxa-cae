@@ -2,6 +2,7 @@ class Employee::CorrectionsController < ApplicationController
   CORRECTIONS_PER_PAGE = 10
 
   layout "employee"
+  before_action :require_employee_corrections_allowed!
 
   def index
     @employee = current_employee
@@ -113,6 +114,19 @@ class Employee::CorrectionsController < ApplicationController
   end
 
   private
+
+  def require_employee_corrections_allowed!
+    return if current_employee&.allow_corrections?
+
+    respond_to do |format|
+      format.json do
+        render json: {
+          error: t("errors.pages.show.forbidden.body", app_name: Rails.configuration.x.app_name)
+        }, status: :forbidden
+      end
+      format.any { render_forbidden }
+    end
+  end
 
   def filtered_correction_scope
     scope = @employee.swipe_corrections

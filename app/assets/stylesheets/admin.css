@@ -912,6 +912,32 @@ html[data-pwa="admin"] .turbo-progress-bar {
   gap: 0.35rem;
 }
 
+.admin-employee-tags-content {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.admin-employee-corrections-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  color: var(--bs-danger);
+  background: rgba(var(--bs-danger-rgb), 0.12);
+  border: 1px solid rgba(var(--bs-danger-rgb), 0.22);
+  border-radius: 0.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.admin-employee-corrections-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
 .admin-employee-tags .admin-tag-label {
   max-width: 100%;
 }

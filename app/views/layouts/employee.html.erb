@@ -59,7 +59,11 @@
       <%= yield %>
     </main>
 
-    <nav class="employee-nav" aria-label="<%= t("employee.nav.label") %>">
+    <% correction_nav_allowed = current_employee&.allow_corrections? %>
+    <nav
+      class="employee-nav"
+      style="--employee-nav-item-count: <%= correction_nav_allowed ? 4 : 3 %>;"
+      aria-label="<%= t("employee.nav.label") %>">
       <%= link_to root_path, class: nav_item_class(root_path) do %>
         <%= icon "home" %>
         <span><%= t("employee.nav.today") %></span>
@@ -68,9 +72,11 @@
         <%= icon "history" %>
         <span><%= t("employee.nav.clockings") %></span>
       <% end %>
-      <%= link_to corrections_path, class: nav_item_class(corrections_path) do %>
-        <%= icon "square-pen" %>
-        <span><%= t("employee.nav.corrections") %></span>
+      <% if correction_nav_allowed %>
+        <%= link_to corrections_path, class: nav_item_class(corrections_path) do %>
+          <%= icon "square-pen" %>
+          <span><%= t("employee.nav.corrections") %></span>
+        <% end %>
       <% end %>
       <%= link_to account_path, class: nav_item_class(account_path) do %>
         <%= icon "user" %>

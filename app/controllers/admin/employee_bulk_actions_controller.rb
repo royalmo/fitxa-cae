@@ -27,6 +27,25 @@ class Admin::EmployeeBulkActionsController < Admin::BaseController
     render_bulk_action_error(error)
   end
 
+  def corrections
+  end
+
+  def simulate_corrections
+    render json: EmployeeBulkActions::Corrections.from_simulation_params(params).simulation_payload
+  rescue *BULK_ACTION_ERRORS => error
+    render_bulk_action_error(error)
+  end
+
+  def run_corrections
+    action = EmployeeBulkActions::Corrections.from_params(params)
+    action.validate_enqueue!
+
+    render json: employee_bulk_action_run_payload(enqueue_employee_bulk_action_run("corrections", action.parameters)),
+      status: :accepted
+  rescue *BULK_ACTION_ERRORS => error
+    render_bulk_action_error(error)
+  end
+
   def tags
   end
 

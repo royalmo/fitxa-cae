@@ -105,8 +105,10 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
           assert_select "input.admin-tag-multi-search-input[name='bulk_add_tag_query'][placeholder='Cerca etiquetes per afegir']"
           assert_select "input.admin-tag-multi-search-input[name='bulk_remove_tag_query'][placeholder='Cerca etiquetes per treure']"
           assert_select "textarea#admin_bulk_tag_national_ids[name='national_ids_text'][data-bulk-tags-target='textarea']"
-          assert_select "input[type='checkbox'][name='bulk_tags[include_inactive]'][data-bulk-tags-target='includeInactive']:not([checked])"
-          assert_select "label", text: "Incloure persones inactives"
+          assert_select ".admin-bulk-action-footer.d-flex.flex-column.align-items-start.gap-3 .form-check.form-switch" do
+            assert_select "input[type='checkbox'][role='switch'][name='bulk_tags[include_inactive]'][data-bulk-tags-target='includeInactive']:not([checked]) + label",
+              text: "Incloure persones inactives"
+          end
           assert_select "button[type='button'][disabled][data-bulk-tags-target='simulateButton']", text: "Simular"
         end
         assert_select ".admin-bulk-simulation-results.card.shadow-sm.is-disabled[data-bulk-tags-target='results']" do
@@ -131,12 +133,85 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{admin_employees_path}']", text: "Tornar a persones", count: 0
   end
 
+  test "renders corrections bulk action page" do
+    get bulk_corrections_admin_employees_path
+
+    assert_response :success
+    assert_select "title", text: "Permetre correccions massivament | FitxaCAE Admin"
+    assert_select "h1", text: "Permetre correccions massivament"
+    assert_select ".admin-bulk-action[data-controller='bulk-national-ids'][data-bulk-national-ids-simulate-url-value='#{simulate_bulk_corrections_admin_employees_path}'][data-bulk-national-ids-run-url-value='#{run_bulk_corrections_admin_employees_path}']" do
+      assert_select "form[action='#{run_bulk_corrections_admin_employees_path}'][method='post']" do
+        assert_select "textarea#admin_bulk_corrections_national_ids[name='national_ids_text'][data-bulk-national-ids-target='textarea']"
+        assert_select "input[type='radio'][name='bulk_action[action]'][value='allow'][autocomplete='off'] + label",
+          text: "Permetre"
+        assert_select "input[type='radio'][name='bulk_action[action]'][value='disallow'][autocomplete='off'] + label",
+          text: "No permetre"
+        assert_select "[role='tabpanel'][data-bulk-national-ids-mode='tags'][hidden]" do
+          assert_select "legend.form-label", text: "Persones que tinguin totes les etiquetes següents"
+          assert_select "legend.form-label", text: "I que, a la vegada, no tinguin cap de les etiquetes següents"
+          assert_select "input.admin-tag-multi-search-input[name='bulk_corrections_include_tag_query'][placeholder='Cerca etiquetes que han de tenir']"
+          assert_select "input.admin-tag-multi-search-input[name='bulk_corrections_exclude_tag_query'][placeholder='Cerca etiquetes que no poden tenir']"
+        end
+        assert_select ".admin-bulk-action-footer.d-flex.flex-column.align-items-start.gap-3 .form-check.form-switch" do
+          assert_select "input[type='checkbox'][role='switch'][name='bulk_action[include_inactive]'][data-bulk-national-ids-target='includeInactive']:not([checked]) + label",
+            text: "Incloure persones inactives"
+        end
+        assert_select ".admin-bulk-simulation-kpis dt", text: "DNI/NIEs trobats"
+        assert_select ".admin-bulk-simulation-kpis dt", text: "Persones amb correccions permeses"
+        assert_select "#adminEmployeeBulkCorrectionsConfirmModal.modal.fade" do
+          assert_select ".modal-title", text: "Executar acció massiva"
+        end
+      end
+    end
+  end
+
   test "simulates activation states for national ids" do
     active_employee = create_employee(national_id: valid_dni(44_000_001), active: true)
     inactive_employee = create_employee(national_id: valid_dni(44_000_002), active: false)
 
     post simulate_bulk_activation_admin_employees_path,
       params: { national_ids: [ active_employee.national_id, inactive_employee.national_id, valid_dni(44_000_003) ] },
+      as: :json
+
+    assert_response :success
+    assert_equal({
+      active_employee.national_id => true,
+      inactive_employee.national_id => false
+    }, JSON.parse(response.body))
+  end
+
+  test "simulates correction permission states for national ids" do
+    allowed_employee = create_employee(national_id: valid_dni(44_200_001), allow_corrections: true)
+    disallowed_employee = create_employee(national_id: valid_dni(44_200_002), allow_corrections: false)
+    inactive_employee = create_employee(national_id: valid_dni(44_200_003), active: false, allow_corrections: false)
+
+    post simulate_bulk_corrections_admin_employees_path,
+      params: {
+        national_ids: [
+          allowed_employee.national_id,
+          disallowed_employee.national_id,
+          inactive_employee.national_id,
+          valid_dni(44_200_004)
+        ]
+      },
+      as: :json
+
+    assert_response :success
+    assert_equal({
+      allowed_employee.national_id => true,
+      disallowed_employee.national_id => false
+    }, JSON.parse(response.body))
+  end
+
+  test "simulates correction permission states including inactive national ids when requested" do
+    active_employee = create_employee(national_id: valid_dni(44_200_005), allow_corrections: true)
+    inactive_employee = create_employee(national_id: valid_dni(44_200_006), active: false, allow_corrections: false)
+
+    post simulate_bulk_corrections_admin_employees_path,
+      params: {
+        national_ids: [ active_employee.national_id, inactive_employee.national_id ],
+        bulk_action: { include_inactive: "1" }
+      },
       as: :json
 
     assert_response :success
@@ -177,6 +252,62 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
       "found_count" => 2,
       "active_count" => 1,
       "inactive_count" => 1
+    }, JSON.parse(response.body))
+  end
+
+  test "simulates correction permission states for active tag selections by default" do
+    included_tag = Tag.create!(name: "Correccions", color: "#2563eb", active: true)
+    allowed_employee = create_employee(national_id: valid_dni(44_200_007), allow_corrections: true)
+    disallowed_employee = create_employee(national_id: valid_dni(44_200_008), allow_corrections: false)
+    inactive_employee = create_employee(national_id: valid_dni(44_200_009), active: false, allow_corrections: false)
+    allowed_employee.tags << included_tag
+    disallowed_employee.tags << included_tag
+    inactive_employee.tags << included_tag
+
+    post simulate_bulk_corrections_admin_employees_path,
+      params: {
+        bulk_action: {
+          selection_mode: "tags",
+          include_tag_ids: [ included_tag.id ],
+          include_inactive: "0"
+        }
+      },
+      as: :json
+
+    assert_response :success
+    assert_equal({
+      "total_count" => Employee.active.count,
+      "found_count" => 2,
+      "active_count" => 1,
+      "inactive_count" => 1
+    }, JSON.parse(response.body))
+  end
+
+  test "simulates correction permission states including inactive tag selections when requested" do
+    included_tag = Tag.create!(name: "Correccions extra", color: "#2563eb", active: true)
+    allowed_employee = create_employee(national_id: valid_dni(44_200_010), allow_corrections: true)
+    disallowed_employee = create_employee(national_id: valid_dni(44_200_011), allow_corrections: false)
+    inactive_employee = create_employee(national_id: valid_dni(44_200_012), active: false, allow_corrections: false)
+    allowed_employee.tags << included_tag
+    disallowed_employee.tags << included_tag
+    inactive_employee.tags << included_tag
+
+    post simulate_bulk_corrections_admin_employees_path,
+      params: {
+        bulk_action: {
+          selection_mode: "tags",
+          include_tag_ids: [ included_tag.id ],
+          include_inactive: "1"
+        }
+      },
+      as: :json
+
+    assert_response :success
+    assert_equal({
+      "total_count" => Employee.count,
+      "found_count" => 3,
+      "active_count" => 1,
+      "inactive_count" => 2
     }, JSON.parse(response.body))
   end
 
@@ -392,6 +523,77 @@ class Admin::EmployeeBulkActionsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate active_employee.reload, :active?
     assert_not excluded_employee.reload.active?
     assert_equal "S'ha activat 1 persona.", employee_bulk_action_run.reload.result_message
+  end
+
+  test "enqueues correction permission bulk action for tag selections" do
+    included_tag = Tag.create!(name: "Correccions oficina", color: "#2563eb", active: true)
+    excluded_tag = Tag.create!(name: "Sense correccions", color: "#dc2626", active: true)
+    disallowed_employee = create_employee(national_id: valid_dni(44_200_004), allow_corrections: false)
+    allowed_employee = create_employee(national_id: valid_dni(44_200_005), allow_corrections: true)
+    excluded_employee = create_employee(national_id: valid_dni(44_200_006), allow_corrections: false)
+    inactive_employee = create_employee(national_id: valid_dni(44_200_013), active: false, allow_corrections: false)
+    disallowed_employee.tags << included_tag
+    allowed_employee.tags << included_tag
+    excluded_employee.tags << [ included_tag, excluded_tag ]
+    inactive_employee.tags << included_tag
+
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
+      post run_bulk_corrections_admin_employees_path,
+        params: {
+          bulk_action: {
+            action: "allow",
+            selection_mode: "tags",
+            include_tag_ids: [ included_tag.id ],
+            exclude_tag_ids: [ excluded_tag.id ],
+            include_inactive: "0"
+          }
+        },
+        as: :json
+    end
+
+    assert_response :accepted
+    payload = JSON.parse(response.body)
+    employee_bulk_action_run = EmployeeBulkActionRun.find(payload.fetch("id"))
+    assert_equal @manager, employee_bulk_action_run.manager
+    assert_equal "corrections", employee_bulk_action_run.kind
+    assert_equal "tags", employee_bulk_action_run.parameters.fetch("selection_mode")
+    assert_equal false, employee_bulk_action_run.parameters.fetch("include_inactive")
+
+    perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+
+    assert_predicate disallowed_employee.reload, :allow_corrections?
+    assert_predicate allowed_employee.reload, :allow_corrections?
+    assert_not excluded_employee.reload.allow_corrections?
+    assert_not inactive_employee.reload.allow_corrections?
+    assert_equal "S'han permès les correccions a 1 persona.", employee_bulk_action_run.reload.result_message
+  end
+
+  test "enqueues correction permission bulk action including inactive tag selections when requested" do
+    included_tag = Tag.create!(name: "Correccions inactives", color: "#2563eb", active: true)
+    inactive_employee = create_employee(national_id: valid_dni(44_200_014), active: false, allow_corrections: false)
+    inactive_employee.tags << included_tag
+
+    assert_enqueued_with(job: ProcessEmployeeBulkActionRunJob) do
+      post run_bulk_corrections_admin_employees_path,
+        params: {
+          bulk_action: {
+            action: "allow",
+            selection_mode: "tags",
+            include_tag_ids: [ included_tag.id ],
+            include_inactive: "1"
+          }
+        },
+        as: :json
+    end
+
+    assert_response :accepted
+    employee_bulk_action_run = EmployeeBulkActionRun.find(JSON.parse(response.body).fetch("id"))
+    assert_equal true, employee_bulk_action_run.parameters.fetch("include_inactive")
+
+    perform_enqueued_jobs(only: ProcessEmployeeBulkActionRunJob)
+
+    assert_predicate inactive_employee.reload, :allow_corrections?
+    assert_equal "S'han permès les correccions a 1 persona.", employee_bulk_action_run.reload.result_message
   end
 
   test "enqueues deactivation bulk action" do

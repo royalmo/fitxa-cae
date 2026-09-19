@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   get "unavailable" => "pwa#unavailable", as: :unavailable
 
   match "400" => "errors#bad_request", via: :all
+  match "403" => "errors#forbidden", via: :all
   match "404" => "errors#not_found", via: :all
   match "406" => "errors#not_acceptable", via: :all
   match "422" => "errors#unprocessable_entity", via: :all
@@ -16,11 +17,13 @@ Rails.application.routes.draw do
 
   if Rails.env.development? || Rails.env.test?
     match "errors/400" => "errors#bad_request", via: :all
+    match "errors/403" => "errors#forbidden", via: :all
     match "errors/404" => "errors#not_found", via: :all
     match "errors/406" => "errors#not_acceptable", via: :all
     match "errors/422" => "errors#unprocessable_entity", via: :all
     match "errors/500" => "errors#internal_server_error", via: :all
     match "admin/400" => "errors#bad_request", via: :all
+    match "admin/403" => "errors#forbidden", via: :all
     match "admin/404" => "errors#not_found", via: :all
     match "admin/406" => "errors#not_acceptable", via: :all
     match "admin/422" => "errors#unprocessable_entity", via: :all
@@ -87,6 +90,9 @@ Rails.application.routes.draw do
         get "bulk/activation" => "employee_bulk_actions#activation", as: :bulk_activation
         post "bulk/activation/simulate" => "employee_bulk_actions#simulate_activation", as: :simulate_bulk_activation
         post "bulk/activation/run" => "employee_bulk_actions#run_activation", as: :run_bulk_activation
+        get "bulk/corrections" => "employee_bulk_actions#corrections", as: :bulk_corrections
+        post "bulk/corrections/simulate" => "employee_bulk_actions#simulate_corrections", as: :simulate_bulk_corrections
+        post "bulk/corrections/run" => "employee_bulk_actions#run_corrections", as: :run_bulk_corrections
         get "bulk/tags" => "employee_bulk_actions#tags", as: :bulk_tags
         post "bulk/tags/simulate" => "employee_bulk_actions#simulate_tags", as: :simulate_bulk_tags
         post "bulk/tags/run" => "employee_bulk_actions#run_tags", as: :run_bulk_tags

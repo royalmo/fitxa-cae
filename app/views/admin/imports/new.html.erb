@@ -116,14 +116,26 @@
             </div>
           </div>
 
-          <div class="form-check mb-2">
+          <div class="form-check form-switch mb-2">
             <%= form.check_box :allow_second_surname,
               class: "form-check-input",
+              role: "switch",
               data: {
                 bulk_import_target: "allowSecondSurname",
                 action: "change->bulk-import#secondSurnameChanged"
               } %>
             <%= form.label :allow_second_surname, t(".allow_second_surname"), class: "form-check-label" %>
+          </div>
+
+          <div class="form-check form-switch mb-2">
+            <%= form.check_box :allow_corrections,
+              class: "form-check-input",
+              role: "switch",
+              data: {
+                bulk_import_target: "allowCorrections",
+                action: "change->bulk-import#input"
+              } %>
+            <%= form.label :allow_corrections, t(".allow_corrections"), class: "form-check-label" %>
           </div>
 
           <p class="text-body-secondary small mb-4" data-bulk-import-target="formatText"><%= t(".format") %></p>

@@ -46,6 +46,7 @@ class Employee < ApplicationRecord
   validate :national_id_has_valid_spanish_check_letter
   validate :national_id_change_allowed, if: :will_save_change_to_national_id?
   validates :active, inclusion: { in: [ true, false ] }
+  validates :allow_corrections, inclusion: { in: [ true, false ] }
 
   def self.normalize_national_id(national_id)
     national_id.to_s.strip.upcase.presence

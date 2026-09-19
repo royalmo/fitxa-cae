@@ -5,6 +5,7 @@ class ErrorsController < ApplicationController
 
   ERROR_PAGES = {
     bad_request: [ "400", :bad_request ],
+    forbidden: [ "403", :forbidden ],
     not_found: [ "404", :not_found ],
     not_acceptable: [ "406", :not_acceptable ],
     unprocessable_entity: [ "422", :unprocessable_entity ],
@@ -13,6 +14,10 @@ class ErrorsController < ApplicationController
 
   def bad_request
     render_error(:bad_request)
+  end
+
+  def forbidden
+    render_error(:forbidden)
   end
 
   def not_found

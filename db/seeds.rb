@@ -160,6 +160,7 @@ ActiveRecord::Base.transaction do
     has_phone = index % 4 != 0
     has_email = index % 3 != 0
     has_password = index % 5 != 0
+    allow_corrections = active && index % 3 != 2
     national_id = if index % 9 == 0
       nie(%w[X Y Z][(index / 9) % 3], 1_430_000 + (index * 137))
     else
@@ -173,6 +174,7 @@ ActiveRecord::Base.transaction do
       phone: has_phone ? phone_number(index) : nil,
       email: has_email ? email_address(first_name, last_name, index) : nil,
       active: active,
+      allow_corrections: allow_corrections,
       password: has_password ? "1234" : nil,
       settings: {}
     )
@@ -340,7 +342,7 @@ ActiveRecord::Base.transaction do
       recipient: employee,
       kind: "employee.created",
       extra_info: {
-        changed_fields: %w[first_name last_name national_id email phone active],
+        changed_fields: %w[first_name last_name national_id email phone active allow_corrections],
         tag_ids: employee.tag_ids,
         tags: employee.tags.order(:name).pluck(:name),
         welcome_email_enqueued: employee.email.present?

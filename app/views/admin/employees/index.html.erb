@@ -32,6 +32,12 @@
           <% end %>
         </li>
         <li>
+          <%= link_to bulk_corrections_admin_employees_path, class: "dropdown-item d-flex align-items-center gap-2" do %>
+            <%= icon "square-pen" %>
+            <span><%= t(".bulk_action_corrections") %></span>
+          <% end %>
+        </li>
+        <li>
           <%= link_to bulk_tags_admin_employees_path, class: "dropdown-item d-flex align-items-center gap-2" do %>
             <%= icon "tags" %>
             <span><%= t(".bulk_action_tags") %></span>
@@ -136,15 +142,30 @@
                 </td>
                 <td><%= employee.national_id %></td>
                 <td class="admin-employee-tags-cell">
-                  <% if employee.tags.any? %>
-                    <div class="admin-employee-tags">
-                      <% employee.tags.sort_by(&:name).each do |tag| %>
-                        <%= render "admin/tags/label", tag: tag %>
-                      <% end %>
-                    </div>
-                  <% else %>
-                    <%= admin_employee_empty_value(css_class: "admin-employee-tags-empty") %>
-                  <% end %>
+                  <div class="admin-employee-tags-content">
+                    <% if employee.allow_corrections? %>
+                      <span
+                        class="admin-employee-corrections-indicator"
+                        title="<%= t(".corrections_allowed_tooltip") %>"
+                        aria-label="<%= t(".corrections_allowed_tooltip") %>"
+                        tabindex="0"
+                        data-controller="bootstrap-tooltip"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top">
+                        <%= icon "square-pen", class: "admin-employee-corrections-icon" %>
+                      </span>
+                    <% end %>
+
+                    <% if employee.tags.any? %>
+                      <div class="admin-employee-tags">
+                        <% employee.tags.sort_by(&:name).each do |tag| %>
+                          <%= render "admin/tags/label", tag: tag %>
+                        <% end %>
+                      </div>
+                    <% else %>
+                      <%= admin_employee_empty_value(css_class: "admin-employee-tags-empty") %>
+                    <% end %>
+                  </div>
                 </td>
                 <td class="admin-employee-last-clocking-cell"><%= admin_last_clocking_pill(employee, @last_swipes_by_employee_id) %></td>
                 <td class="text-end">

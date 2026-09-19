@@ -9,6 +9,7 @@ export default class extends Controller {
     "modePanel",
     "includeTagSelector",
     "excludeTagSelector",
+    "includeInactive",
     "simulateButton",
     "simulateTooltip",
     "action",
@@ -44,6 +45,7 @@ export default class extends Controller {
     missingTagsAndActionLabel: String,
     confirmActivate: String,
     confirmDeactivate: String,
+    confirmMessages: Object,
     runRequiresSimulationLabel: String,
     runNoAffectedLabel: String,
     foundNationalIdsLabel: String,
@@ -85,6 +87,11 @@ export default class extends Controller {
   }
 
   tagsChanged() {
+    this.invalidateSimulationIfChanged()
+    this.updateSimulateButton()
+  }
+
+  includeInactiveChanged() {
     this.invalidateSimulationIfChanged()
     this.updateSimulateButton()
   }
@@ -237,15 +244,16 @@ export default class extends Controller {
   }
 
   affectedCount(action) {
-    if (action === "activate") return this.simulation.inactiveCount
-    if (action === "deactivate") return this.simulation.activeCount
+    if (this.trueActions.includes(action)) return this.simulation.inactiveCount
+    if (this.falseActions.includes(action)) return this.simulation.activeCount
 
     return 0
   }
 
   confirmationText() {
     const action = this.selectedAction
-    const template = action === "activate" ? this.confirmActivateValue : this.confirmDeactivateValue
+    const template = this.confirmMessagesValue[action] ||
+      (action === "activate" ? this.confirmActivateValue : this.confirmDeactivateValue)
 
     return this.replaceCount(template, this.affectedCount(action))
   }
@@ -279,11 +287,17 @@ export default class extends Controller {
         this.selectedAction,
         this.selectionMode,
         this.selectedTagIds(this.includeTagSelectorTarget).join(","),
-        this.selectedTagIds(this.excludeTagSelectorTarget).join(",")
+        this.selectedTagIds(this.excludeTagSelectorTarget).join(","),
+        this.includeInactive ? "1" : "0"
       ].join("|")
     }
 
-    return [this.selectedAction, this.selectionMode, this.textareaTarget.value].join("|")
+    return [
+      this.selectedAction,
+      this.selectionMode,
+      this.textareaTarget.value,
+      this.includeInactive ? "1" : "0"
+    ].join("|")
   }
 
   invalidateSimulationIfChanged() {
@@ -338,7 +352,8 @@ export default class extends Controller {
           action: this.selectedAction,
           selection_mode: "tags",
           include_tag_ids: this.selectedTagIds(this.includeTagSelectorTarget),
-          exclude_tag_ids: this.selectedTagIds(this.excludeTagSelectorTarget)
+          exclude_tag_ids: this.selectedTagIds(this.excludeTagSelectorTarget),
+          include_inactive: this.includeInactive
         }
       }
     }
@@ -347,7 +362,8 @@ export default class extends Controller {
       national_ids: this.simulation?.ids || this.parsedNationalIds(),
       bulk_action: {
         action: this.selectedAction,
-        selection_mode: "national_ids"
+        selection_mode: "national_ids",
+        include_inactive: this.includeInactive
       }
     }
   }
@@ -355,6 +371,7 @@ export default class extends Controller {
   resetAfterSuccessfulRun() {
     this.textareaTarget.value = ""
     this.actionTargets.forEach((action) => { action.checked = false })
+    if (this.hasIncludeInactiveTarget) this.includeInactiveTarget.checked = false
     this.clearTagSelector(this.includeTagSelectorTarget)
     this.clearTagSelector(this.excludeTagSelectorTarget)
     this.clearSimulation()
@@ -366,12 +383,18 @@ export default class extends Controller {
         bulk_action: {
           selection_mode: "tags",
           include_tag_ids: this.selectedTagIds(this.includeTagSelectorTarget),
-          exclude_tag_ids: this.selectedTagIds(this.excludeTagSelectorTarget)
+          exclude_tag_ids: this.selectedTagIds(this.excludeTagSelectorTarget),
+          include_inactive: this.includeInactive
         }
       }
     }
 
-    return { national_ids: this.parsedNationalIds() }
+    return {
+      national_ids: this.parsedNationalIds(),
+      bulk_action: {
+        include_inactive: this.includeInactive
+      }
+    }
   }
 
   selectedTagIds(selector) {
@@ -513,5 +536,17 @@ export default class extends Controller {
 
   get hasSelectedTags() {
     return this.selectedTagIds(this.includeTagSelectorTarget).length > 0
+  }
+
+  get includeInactive() {
+    return this.hasIncludeInactiveTarget && this.includeInactiveTarget.checked
+  }
+
+  get trueActions() {
+    return ["activate", "allow"]
+  }
+
+  get falseActions() {
+    return ["deactivate", "disallow"]
   }
 }

@@ -24,7 +24,8 @@ module EmployeeBulkActions
       new(
         source: params[:source].presence || import_params[:source].presence || "paste",
         content: import_content_from(params, import_params),
-        allow_second_surname: boolean(params.key?(:allow_second_surname) ? params[:allow_second_surname] : import_params[:allow_second_surname]),
+        allow_second_surname: checkbox_boolean(params.key?(:allow_second_surname) ? params[:allow_second_surname] : import_params[:allow_second_surname]),
+        allow_corrections: checkbox_boolean(params.key?(:allow_corrections) ? params[:allow_corrections] : import_params[:allow_corrections]),
         tag_ids: tag_ids(params[:tag_ids].presence || import_params[:tag_ids])
       )
     end
@@ -33,7 +34,8 @@ module EmployeeBulkActions
       new(
         source: parameters.fetch("source"),
         content: parameters.fetch("content"),
-        allow_second_surname: boolean(parameters.fetch("allow_second_surname")),
+        allow_second_surname: checkbox_boolean(parameters.fetch("allow_second_surname", false)),
+        allow_corrections: checkbox_boolean(parameters.fetch("allow_corrections", false)),
         tag_ids: tag_ids(parameters.fetch("tag_ids"))
       )
     end
@@ -45,10 +47,15 @@ module EmployeeBulkActions
       import_params[:file]&.read
     end
 
-    def initialize(source:, content:, allow_second_surname:, tag_ids:)
+    def self.checkbox_boolean(raw_value)
+      boolean(raw_value.presence || false)
+    end
+
+    def initialize(source:, content:, allow_second_surname:, allow_corrections:, tag_ids:)
       @source = source
       @content = content
       @allow_second_surname = allow_second_surname
+      @allow_corrections = allow_corrections
       @tag_ids = tag_ids
     end
 
@@ -57,6 +64,7 @@ module EmployeeBulkActions
         source: source,
         content: content.to_s,
         allow_second_surname: allow_second_surname,
+        allow_corrections: allow_corrections,
         tag_ids: tag_ids
       }
     end
@@ -90,7 +98,7 @@ module EmployeeBulkActions
 
     private
 
-    attr_reader :source, :content, :allow_second_surname, :tag_ids
+    attr_reader :source, :content, :allow_second_surname, :allow_corrections, :tag_ids
 
     def simulation_data
       records = import_records
@@ -261,6 +269,7 @@ module EmployeeBulkActions
         national_id: record.national_id,
         email: record.email,
         phone: record.phone,
+        allow_corrections: allow_corrections,
         active: true
       ).tap do |employee|
         employee.tags = tags

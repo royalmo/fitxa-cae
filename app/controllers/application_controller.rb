@@ -26,6 +26,15 @@ class ApplicationController < ActionController::Base
     Rails.configuration.x.hide_hr_contact_form
   end
 
+  def render_forbidden
+    @admin_error_page = request.path == admin_root_path || request.path.start_with?("#{admin_root_path}/")
+    @error_key = :forbidden
+    @error_code = "403"
+    @human_resources_email = Rails.configuration.x.human_resources_email
+
+    render "errors/show", status: :forbidden, layout: (@admin_error_page ? "admin" : "employee")
+  end
+
   def employee_authentication_required?
     controller_path.start_with?("employee/") && controller_name != "sessions"
   end

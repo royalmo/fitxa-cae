@@ -36,8 +36,14 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
           text: "Descarregar plantilla"
         assert_select "label[for='import_pasted_data']", text: "Enganxa aquí les graelles d'excel que vols importar."
         assert_select "label[for='import_pasted_data']", text: /Dades/, count: 0
-        assert_select "input[type='checkbox'][name='import[allow_second_surname]'][value='1'][data-bulk-import-target='allowSecondSurname']"
-        assert_select "label[for='import_allow_second_surname']", text: "Permetre segon cognom"
+        assert_select ".form-check.form-switch" do
+          assert_select "input[type='checkbox'][role='switch'][name='import[allow_second_surname]'][value='1'][data-bulk-import-target='allowSecondSurname'] + label[for='import_allow_second_surname']",
+            text: "El segon cognom està en una columna individual"
+        end
+        assert_select ".form-check.form-switch" do
+          assert_select "input[type='checkbox'][role='switch'][name='import[allow_corrections]'][value='1'][data-bulk-import-target='allowCorrections'] + label[for='import_allow_corrections']",
+            text: "Permetre correccions a les persones noves"
+        end
         assert_select "[data-bulk-import-target='formatText']", text: "Format: Nom, Cognoms, DNI/NIE, correu, telèfon."
         assert_select "button[type='button'][disabled][data-bulk-import-target='simulateButton']", text: "Simular"
         assert_select ".alert.alert-danger.alert-dismissible[role='alert'][data-bulk-import-target='error'][hidden]" do
@@ -163,6 +169,7 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
           import: {
             source: "paste",
             pasted_data: content,
+            allow_corrections: "1",
             tag_ids: [ tag.id ]
           }
         },
@@ -173,6 +180,7 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     payload = JSON.parse(response.body)
     employee_bulk_action_run = EmployeeBulkActionRun.find(payload.fetch("id"))
     assert_equal "import", employee_bulk_action_run.kind
+    assert_equal true, employee_bulk_action_run.parameters.fetch("allow_corrections")
     assert_equal admin_employee_bulk_action_run_path(employee_bulk_action_run), payload.fetch("status_url")
     assert_nil Employee.find_by(national_id: first_national_id)
     audit_action = AuditAction.find_by!(kind: "employee_bulk_action.enqueued")
@@ -194,6 +202,9 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "ada@example.test", first_employee.email
     assert_equal "600 111 222", first_employee.phone
     assert_predicate first_employee, :active?
+    assert_predicate first_employee, :allow_corrections?
+    assert_predicate second_employee, :allow_corrections?
+    assert_not existing_employee.reload.allow_corrections?
     assert_equal [ tag ], first_employee.tags.to_a
     assert_equal [ tag ], second_employee.tags.to_a
     assert_equal [ tag ], existing_employee.reload.tags.to_a

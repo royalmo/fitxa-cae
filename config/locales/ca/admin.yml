@@ -22,6 +22,12 @@ ca:
       employee_bulk_deactivated:
         one: S'ha desactivat 1 persona.
         other: S'han desactivat %{count} persones.
+      employee_bulk_corrections_allowed:
+        one: S'han permès les correccions a 1 persona.
+        other: S'han permès les correccions a %{count} persones.
+      employee_bulk_corrections_disallowed:
+        one: S'han deixat de permetre les correccions a 1 persona.
+        other: S'han deixat de permetre les correccions a %{count} persones.
       employee_bulk_tags_updated:
         one: S'han actualitzat les etiquetes d'1 persona.
         other: S'han actualitzat les etiquetes de %{count} persones.
@@ -160,6 +166,7 @@ ca:
         bulk_actions: Accions massives
         bulk_action_import: Importar persones
         bulk_action_activation: Activar i desactivar
+        bulk_action_corrections: Permetre correccions
         bulk_action_tags: Afegir etiquetes
         new_employee: Nova persona
         search_placeholder: Nom, DNI/NIE o correu
@@ -170,6 +177,7 @@ ca:
         national_id: DNI/NIE
         name: Nom
         last_clocking: Últim fitxatge
+        corrections_allowed_tooltip: Aquesta persona pot sol·licitar correccions al seu horari
         view_calendar: Veure calendari de %{name}
         view_swipes: Veure fitxatges de %{name}
         empty: No hi ha persones amb aquests filtres.
@@ -180,6 +188,7 @@ ca:
         email: Correu
         employment_periods: Períodes d'activació
         current_employment_period: Actualment
+        allow_corrections: Permetre correccions a l'espai personal
         first_name: Nom
         last_name: Cognoms
         national_id: DNI/NIE
@@ -261,6 +270,34 @@ ca:
         missing_tags_and_action: Selecciona com a mínim una etiqueta que hagin de tenir
           i una acció per poder simular.
         run: Executar acció massiva
+      corrections:
+        title: Permetre correccions massivament
+        heading: Permetre correccions massivament
+        tabs:
+          national_ids: Per DNI
+          tags: Per etiqueta
+        actions:
+          allow: Permetre
+          disallow: No permetre
+        include_tags: Persones que tinguin totes les etiquetes següents
+        exclude_tags: I que, a la vegada, no tinguin cap de les etiquetes següents
+        search_include_placeholder: Cerca etiquetes que han de tenir
+        search_exclude_placeholder: Cerca etiquetes que no poden tenir
+        tag_selection_found: Persones trobades
+        allowed_ratio: Persones amb correccions permeses
+        include_inactive: Incloure persones inactives
+        missing_tags: Selecciona com a mínim una etiqueta que hagin de tenir per poder
+          simular.
+        missing_tags_and_action: Selecciona com a mínim una etiqueta que hagin de tenir
+          i una acció per poder simular.
+        missing_action: Selecciona si vols permetre o no permetre correccions per
+          poder simular.
+        missing_both: Enganxa el llistat de DNI/NIEs i selecciona una acció per poder
+          simular.
+        confirm_allow: Es permetran les correccions a %{count} persones. Vols continuar?
+        confirm_disallow: Es deixaran de permetre les correccions a %{count} persones.
+          Vols continuar?
+        run: Executar acció massiva
       tags:
         title: Afegir etiquetes
         heading: Afegir etiquetes
@@ -314,7 +351,8 @@ ca:
           Laia,Riera,Soler,87654321X,laia@example.test,600 333 444
         file: Fitxer
         download_template: Descarregar plantilla
-        allow_second_surname: Permetre segon cognom
+        allow_second_surname: 'El segon cognom està en una columna individual'
+        allow_corrections: Permetre correccions a les persones noves
         format: 'Format: Nom, Cognoms, DNI/NIE, correu, telèfon.'
         second_surname_format: 'Format: Nom, Primer cognom, Segon cognom, DNI/NIE,
           correu, telèfon.'

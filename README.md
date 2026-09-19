@@ -1,6 +1,6 @@
 # Fitxa CAE
 
-Fitxa CAE is a Rails time registration app for operational teams. Employees use the mobile-friendly frontend at `/` to sign in, clock in/out, review clockings, request corrections, and manage account contact details. Managers use the operational frontend under `/admin` to review employees, corrections, and reports.
+Fitxa CAE is a Rails time registration app for operational teams. Employees use the mobile-friendly frontend at `/` to sign in, clock in/out, review clockings, request corrections when enabled, and manage account contact details. Managers use the operational frontend under `/admin` to review employees, corrections, and reports.
 
 ## Production Configuration
 
@@ -74,8 +74,8 @@ Good password-login examples:
 
 | User | DNI/NIE | Password | Notes |
 | --- | --- | --- | --- |
-| Aina Martinez Vidal | `31007919D` | `1234` | Active, has email and phone |
-| Alexia Lopez Soler | `31015838Q` | `1234` | Active, has email and phone |
+| Aina Martinez Vidal | `31007919D` | `1234` | Active, has email and phone, corrections enabled |
+| Alexia Lopez Soler | `31015838Q` | `1234` | Active, has email and phone, corrections disabled |
 
 Useful edge-case employees:
 

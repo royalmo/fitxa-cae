@@ -5,6 +5,7 @@ class EmployeeTest < ActiveSupport::TestCase
     employee = Employee.create!(first_name: "Ada", national_id: valid_dni)
 
     assert_predicate employee, :active?
+    assert_not employee.allow_corrections?
     assert_equal({}, employee.settings)
     assert_equal "system", employee.theme_preference
   end

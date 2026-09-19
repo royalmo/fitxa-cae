@@ -125,6 +125,8 @@ module AuditRecording
     }.merge(summary).merge(
       add_tags: audit_tag_names(summary["add_tag_ids"]),
       remove_tags: audit_tag_names(summary["remove_tag_ids"]),
+      include_tags: audit_tag_names(summary["include_tag_ids"]),
+      exclude_tags: audit_tag_names(summary["exclude_tag_ids"]),
       tags: audit_tag_names(summary["tag_ids"])
     ).then { |details| compact_audit_hash(details) }
   end
@@ -138,8 +140,11 @@ module AuditRecording
       affected_national_id_count: national_ids.size,
       add_tag_ids: Array(parameters[:add_tag_ids]).map(&:to_i),
       remove_tag_ids: Array(parameters[:remove_tag_ids]).map(&:to_i),
+      include_tag_ids: Array(parameters[:include_tag_ids]).map(&:to_i),
+      exclude_tag_ids: Array(parameters[:exclude_tag_ids]).map(&:to_i),
       tag_ids: Array(parameters[:tag_ids]).map(&:to_i),
       include_inactive: parameters[:include_inactive],
+      allow_corrections: parameters[:allow_corrections],
       source: parameters[:source]
     }.then { |details| compact_audit_hash(details) }
   end

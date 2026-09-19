@@ -23,6 +23,15 @@ class ErrorsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href^='mailto:#{Rails.configuration.x.human_resources_email}']", "Contacta amb RRHH"
   end
 
+  test "renders forbidden error with employee layout" do
+    get "/errors/403"
+
+    assert_response :forbidden
+    assert_select ".employee-topbar"
+    assert_select "h1", "No tens accés a aquesta pantalla."
+    assert_select ".error-page-layout > p", text: "Aquesta funcionalitat no està habilitada per al teu compte."
+  end
+
   test "renders signed in employee topbar controls when available" do
     employee = create_employee(first_name: "Ada", password: "1234")
 

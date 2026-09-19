@@ -30,6 +30,10 @@ module Employee::DashboardHelper
     )
   end
 
+  def monthly_activity_text(month_summary)
+    dashboard_duration_text(month_summary[:worked_seconds])
+  end
+
   def weekly_corrections_text(week_summary)
     return t("employee.dashboard.show.week_corrections_empty") if weekly_corrections_empty?(week_summary)
 

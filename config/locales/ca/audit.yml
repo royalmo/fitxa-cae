@@ -4,6 +4,7 @@ ca:
       description: "%{kind}: %{recipient_name}."
     fields:
       active: estat
+      allow_corrections: correccions permeses
       color: color
       email: correu
       employee_id: persona vinculada
@@ -28,11 +29,14 @@ ca:
       tag_zip: etiqueta
     bulk_action_kinds:
       activation: activació
+      corrections: correccions
       import: importació
       tags: etiquetes
     bulk_actions:
       activate: activar
+      allow: permetre
       deactivate: desactivar
+      disallow: no permetre
     audit_actions:
       exported:
         name: Activitat exportada

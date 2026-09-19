@@ -67,9 +67,11 @@
     <header class="today-section-header">
       <div class="today-section-heading-row">
         <h2><%= t(".today_clockings") %></h2>
-        <%= link_to t(".correct_today"),
-          new_correction_path(day: @today.iso8601),
-          class: "today-correction-link" %>
+        <% if @corrections_allowed %>
+          <%= link_to t(".correct_today"),
+            new_correction_path(day: @today.iso8601),
+            class: "today-correction-link" %>
+        <% end %>
       </div>
       <hr class="today-section-rule">
     </header>
@@ -94,29 +96,35 @@
 
   <section class="today-section today-week-section">
     <header class="today-section-header">
-      <h2><%= t(".week_title") %></h2>
+      <h2><%= t(".summary_title") %></h2>
       <hr class="today-section-rule">
     </header>
 
     <dl class="today-week-lines">
       <div>
-        <dt><%= link_to t(".week_activity_label"), dashboard_clockings_path(@today) %></dt>
+        <dt><%= link_to t(".summary_week_label"), dashboard_clockings_path(@today) %></dt>
         <dd><%= link_to weekly_activity_text(@week_summary), dashboard_clockings_path(@today) %></dd>
       </div>
       <div>
-        <dt><%= link_to t(".week_corrections_label"), dashboard_corrections_path(@today) %></dt>
-        <dd>
-          <% if weekly_corrections_empty?(@week_summary) %>
-            <%= link_to dashboard_corrections_path(@today) do %>
-              <em><%= weekly_corrections_text(@week_summary) %></em>
-            <% end %>
-          <% else %>
-            <% weekly_correction_parts(@week_summary).each_with_index do |part, index| %>
-              <%= ", " if index.positive? %><%= link_to part[:text], dashboard_corrections_path(@today, status: part[:status]) %>
-            <% end %>
-          <% end %>
-        </dd>
+        <dt><%= link_to t(".summary_month_label"), dashboard_clockings_path(@today) %></dt>
+        <dd><%= link_to monthly_activity_text(@month_summary), dashboard_clockings_path(@today) %></dd>
       </div>
+      <% if @corrections_allowed %>
+        <div>
+          <dt><%= link_to t(".week_corrections_label"), dashboard_corrections_path(@today) %></dt>
+          <dd>
+            <% if weekly_corrections_empty?(@week_summary) %>
+              <%= link_to dashboard_corrections_path(@today) do %>
+                <em><%= weekly_corrections_text(@week_summary) %></em>
+              <% end %>
+            <% else %>
+              <% weekly_correction_parts(@week_summary).each_with_index do |part, index| %>
+                <%= ", " if index.positive? %><%= link_to part[:text], dashboard_corrections_path(@today, status: part[:status]) %>
+              <% end %>
+            <% end %>
+          </dd>
+        </div>
+      <% end %>
     </dl>
   </section>
 </div>

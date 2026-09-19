@@ -72,7 +72,7 @@ end %>
   <div data-list-loading-target="results">
     <% if @clocking_month_reachable && @clocking_days.any? %>
       <section class="panel flush-panel">
-        <div class="mobile-table clockings-table">
+        <div class="<%= class_names("mobile-table clockings-table", "is-read-only": !@corrections_allowed) %>">
           <table>
             <thead>
               <tr>
@@ -83,6 +83,7 @@ end %>
             </thead>
             <tbody>
               <% @clocking_days.each do |day| %>
+                <% correction_action_allowed = @corrections_allowed && SwipeCorrection.employee_request_day_allowed?(day[:date]) %>
                 <tr>
                   <td class="clocking-date-column">
                     <span class="clocking-date-full"><%= l(day[:date], format: :weekday_day_month) %></span>
@@ -99,7 +100,7 @@ end %>
                     </strong>
                   </td>
                   <td class="clocking-swipes-column">
-                    <div class="clocking-swipe-cell">
+                    <div class="<%= class_names("clocking-swipe-cell", "has-correction-action": correction_action_allowed) %>">
                       <div class="clocking-swipe-grid">
                         <% clocking_swipe_rows(day[:swipes]).each do |swipe_row| %>
                           <div class="clocking-swipe-row">
@@ -117,7 +118,7 @@ end %>
                         <% end %>
                       </div>
 
-                      <% if SwipeCorrection.employee_request_day_allowed?(day[:date]) %>
+                      <% if correction_action_allowed %>
                         <%= link_to new_correction_path(day: day[:date].iso8601),
                           class: class_names("clocking-correction-link", "is-incomplete": day[:swipes_count].odd?),
                           title: t(".request_correction_for_day", date: l(day[:date], format: :long)),
@@ -130,6 +131,16 @@ end %>
                 </tr>
               <% end %>
             </tbody>
+            <tfoot>
+              <tr class="clockings-total-row">
+                <td colspan="3">
+                  <span class="clockings-total-line">
+                    <strong><%= t(".month_total", month: clocking_month_total_label(@month)) %></strong>
+                    <span><%= duration_text(@clocking_month_total_seconds) %></span>
+                  </span>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </section>

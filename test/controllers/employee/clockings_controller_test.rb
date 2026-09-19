@@ -1,6 +1,14 @@
 require "test_helper"
 
 class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
+  def create_employee(**attributes)
+    super(**{ allow_corrections: true }.merge(attributes))
+  end
+
+  def create_employee_without_corrections(**attributes)
+    build_employee(**{ allow_corrections: false }.merge(attributes)).tap(&:save!)
+  end
+
   test "clocking history is backed by swipes" do
     employee = create_employee(password: "1234")
     employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 0), metadata: "employee_portal")
@@ -13,16 +21,47 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal [ "Data", "Hores", "Fitxatges" ], css_select("thead th").map { |header| header.text.squish }
+    assert_select ".clockings-table.is-read-only", 0
     assert_select "thead th", 3
     assert_select ".clocking-swipe", 2
     assert_select ".clocking-swipe .clocking-swipe-icon[aria-label='Entrada']"
     assert_select ".clocking-swipe .clocking-swipe-icon[aria-label='Sortida']"
     assert_select ".clocking-swipe", text: "08:00"
     assert_select ".clocking-swipe", text: "16:30"
+    assert_select ".clocking-swipe-cell.has-correction-action"
     assert_select "a.clocking-correction-link[href='#{new_correction_path(day: "2026-07-02")}']"
     assert_select ".clocking-correction-link .clocking-correction-icon"
     assert_select ".clocking-hours", text: "8 h 30 min"
     assert_select ".clocking-hours.is-incomplete", 0
+    assert_select ".clockings-total-line", text: "Total Juliol 2026: 8 h 30 min"
+  end
+
+  test "hides correction controls and previews when corrections are not allowed" do
+    employee = create_employee_without_corrections(password: "1234")
+    employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 0), metadata: "employee_portal")
+    employee.swipe_corrections.create!(
+      requester: employee,
+      status: :pending,
+      day: Date.new(2026, 7, 2),
+      details: {
+        "invalidated_swipe_ids" => [],
+        "requested_swipes" => [ { "kind" => "exit", "hour" => "17:00:00" } ]
+      }
+    )
+
+    log_in_employee(employee)
+    travel_to Time.zone.local(2026, 7, 2, 18, 0) do
+      get clockings_path
+    end
+
+    assert_response :success
+    assert_select ".clockings-table.is-read-only"
+    assert_select "a.clocking-correction-link", 0
+    assert_select "a[href='#{corrections_path}']", 0
+    assert_select ".employee-nav[style='--employee-nav-item-count: 3;']"
+    assert_select ".clocking-swipe-cell.has-correction-action", 0
+    assert_select ".clocking-swipe.is-pending-requested", 0
+    assert_equal [ "08:00" ], css_select(".clocking-swipe").map { |swipe| swipe.text.squish }
   end
 
   test "clocking history marks hours in primary red when the day has odd swipes" do
@@ -101,6 +140,7 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: /3 de juny/i
     assert_select ".clocking-swipe", text: "08:00"
     assert_select ".clocking-swipe", text: "08:30", count: 0
+    assert_select ".clockings-total-line", text: "Total Juny 2026: 8 h 00 min"
   end
 
   test "clocking history renders all daily swipes in order" do
@@ -141,6 +181,7 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".clockings-month-arrow.is-disabled[aria-disabled='true'][aria-label='Mes anterior']"
     assert_select "a.clockings-month-arrow[href='#{clockings_path(month: 6, year: 2026)}'][aria-label='Mes següent']"
     assert_select "table", 0
+    assert_select ".clockings-total-line", 0
     assert_select ".clockings-empty-state .empty-state-icon"
     assert_select ".clockings-empty-state", text: /No hi ha registres per aquest mes/
     assert_select "a.clockings-current-month-link[href='#{clockings_path(month: 7, year: 2026)}'][data-action='click->list-loading#navigate']", text: "Anar al mes actual"
@@ -154,6 +195,7 @@ class Employee::ClockingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.clockings-month-arrow[href='#{clockings_path(month: 7, year: 2026)}'][aria-label='Mes anterior']"
     assert_select ".clockings-month-arrow.is-disabled[aria-disabled='true'][aria-label='Mes següent']"
     assert_select "table", 0
+    assert_select ".clockings-total-line", 0
     assert_select ".clockings-empty-state", text: /No hi ha registres per aquest mes/
     assert_select "a.clockings-current-month-link[href='#{clockings_path(month: 7, year: 2026)}']", text: "Anar al mes actual"
   end

@@ -13,6 +13,10 @@ ca:
           title: Sol·licitud incorrecta
           heading: No podem obrir aquesta sol·licitud.
           body: La sol·licitud no és vàlida o ha caducat.
+        forbidden:
+          title: Accés no permès
+          heading: No tens accés a aquesta pantalla.
+          body: Aquesta funcionalitat no està habilitada per al teu compte.
         not_found:
           title: Pàgina no trobada
           heading: No hem trobat aquesta pantalla.

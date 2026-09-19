@@ -25,6 +25,22 @@ class ProcessEmployeeBulkActionRunJobTest < ActiveJob::TestCase
     assert_equal "S'ha activat 1 persona.", employee_bulk_action_run.result_message
   end
 
+  test "processes correction permission runs" do
+    manager = create_manager
+    employee = create_employee(national_id: valid_dni(48_100_007), allow_corrections: true)
+    employee_bulk_action_run = manager.employee_bulk_action_runs.create!(
+      kind: "corrections",
+      parameters: { action: "disallow", selection_mode: "national_ids", national_ids: [ employee.national_id ] }
+    )
+
+    ProcessEmployeeBulkActionRunJob.perform_now(employee_bulk_action_run)
+
+    assert_not employee.reload.allow_corrections?
+    assert_predicate employee_bulk_action_run.reload, :completed?
+    assert_equal 100, employee_bulk_action_run.progress
+    assert_equal "S'han deixat de permetre les correccions a 1 persona.", employee_bulk_action_run.result_message
+  end
+
   test "processes import runs and delivers welcome emails" do
     manager = create_manager
     national_id = valid_dni(48_100_002)

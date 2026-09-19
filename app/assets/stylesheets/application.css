@@ -1131,7 +1131,21 @@ input[type="submit"].is-submitting {
   min-width: 34rem;
 }
 
+.clockings-total-row td {
+  border-top: 1px solid var(--line);
+}
+
+.clockings-total-line {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  color: var(--text);
+  font-weight: 800;
+}
+
 .clocking-date-column {
+  overflow: hidden;
+  text-overflow: ellipsis;
   width: 12.5rem;
   white-space: nowrap;
 }
@@ -1139,6 +1153,15 @@ input[type="submit"].is-submitting {
 .clocking-date-compact,
 .clocking-date-narrow {
   display: none;
+}
+
+.clocking-date-full,
+.clocking-date-compact,
+.clocking-date-narrow {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .clocking-hours-column {
@@ -1150,11 +1173,30 @@ input[type="submit"].is-submitting {
   width: auto;
 }
 
+.clockings-table.is-read-only .clocking-date-column {
+  width: auto;
+}
+
+.clockings-table.is-read-only .clocking-swipes-column {
+  width: 13rem;
+}
+
 .clocking-swipe-cell {
   display: flex;
   align-items: flex-start;
   gap: 0.65rem;
   max-width: 100%;
+}
+
+.clocking-swipe-cell:not(.has-correction-action) .clocking-swipe-grid {
+  grid-template-columns: minmax(4.5rem, 1fr) minmax(4.5rem, 1fr);
+  width: 100%;
+}
+
+.clockings-table.is-read-only .clocking-swipe-cell:not(.has-correction-action) .clocking-swipe-grid {
+  grid-template-columns: minmax(4.5rem, max-content) minmax(4.5rem, max-content);
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .clocking-swipe-grid {
@@ -3137,7 +3179,7 @@ input[type="submit"].is-submitting {
   left: 1rem;
   z-index: 20;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--employee-nav-item-count, 4), minmax(0, 1fr));
   gap: 0.35rem;
   max-width: 38rem;
   margin: 0 auto;
@@ -3426,6 +3468,10 @@ input[type="submit"].is-submitting {
     width: 95px;
   }
 
+  .clockings-table.is-read-only .clocking-date-column {
+    width: auto;
+  }
+
   .clocking-date-full {
     display: none;
   }
@@ -3445,6 +3491,18 @@ input[type="submit"].is-submitting {
   .clocking-swipe-grid {
     grid-template-columns: minmax(57px, max-content) minmax(57px, max-content);
     gap: 4px 6px;
+  }
+
+  .clocking-swipe-cell:not(.has-correction-action) .clocking-swipe-grid {
+    grid-template-columns: minmax(57px, 1fr) minmax(57px, 1fr);
+  }
+
+  .clockings-table.is-read-only .clocking-swipes-column {
+    width: 128px;
+  }
+
+  .clockings-table.is-read-only .clocking-swipe-cell:not(.has-correction-action) .clocking-swipe-grid {
+    grid-template-columns: minmax(57px, max-content) minmax(57px, max-content);
   }
 
   .clocking-swipe {
@@ -3575,6 +3633,10 @@ input[type="submit"].is-submitting {
 
   .clocking-date-column {
     width: 60px;
+  }
+
+  .clockings-table.is-read-only .clocking-date-column {
+    width: auto;
   }
 
   .clocking-date-compact {

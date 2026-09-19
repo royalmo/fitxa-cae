@@ -117,8 +117,9 @@ ca:
         clock_in: Entrar
         clock_out: Sortir
         correct_today: Corregir
-        week_title: Resum setmanal
-        week_activity_label: Activitat
+        summary_title: Resum
+        summary_week_label: Aquesta setmana
+        summary_month_label: Aquest mes
         week_corrections_label: Correccions
         week_days:
           one: 1 dia
@@ -140,6 +141,7 @@ ca:
         date: Data
         hours: Hores
         swipes: Fitxatges
+        month_total: "Total %{month}:"
         empty: No hi ha registres per aquest mes
         current_month_empty: Apareixeran aquí els fitxatges d'aquest mes
         current_month: Anar al mes actual

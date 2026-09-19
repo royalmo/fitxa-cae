@@ -1,0 +1,30 @@
+<% content_for :title, t(".title") %>
+
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex align-items-center gap-2 min-w-0">
+    <%= icon "square-pen", class: "text-primary" %>
+    <h1 class="h2 mb-0"><%= t(".heading") %></h1>
+  </div>
+
+  <%= link_to admin_employees_path, class: "btn btn-outline-secondary border-0 d-inline-flex align-items-center gap-2" do %>
+    <%= icon "arrow-left" %>
+    <span><%= t("shared.back") %></span>
+  <% end %>
+</div>
+
+<%= render "national_ids_bulk_form",
+  copy_scope: "corrections",
+  run_path: run_bulk_corrections_admin_employees_path,
+  simulate_path: simulate_bulk_corrections_admin_employees_path,
+  action_options: [
+    { value: "allow", label: t(".actions.allow"), icon: "circle-check", class: "is-active" },
+    { value: "disallow", label: t(".actions.disallow"), icon: "circle-off", class: "is-inactive" }
+  ],
+  confirm_messages: {
+    "allow" => t(".confirm_allow", count: "%{count}"),
+    "disallow" => t(".confirm_disallow", count: "%{count}")
+  },
+  confirm_modal_id: "adminEmployeeBulkCorrectionsConfirmModal",
+  state_ratio_label: t(".allowed_ratio"),
+  include_inactive_option: true,
+  submit_label: t(".run") %>

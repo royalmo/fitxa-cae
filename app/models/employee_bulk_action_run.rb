@@ -1,5 +1,5 @@
 class EmployeeBulkActionRun < ApplicationRecord
-  KINDS = %w[activation tags import].freeze
+  KINDS = %w[activation corrections tags import].freeze
   STATUSES = %w[queued running completed failed].freeze
 
   enum :status, STATUSES.index_with(&:itself), validate: true

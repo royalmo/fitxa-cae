@@ -93,7 +93,7 @@ class Admin::EmployeesController < Admin::BaseController
   end
 
   def employee_params
-    params.require(:employee).permit(:first_name, :last_name, :national_id, :email, :phone, :active)
+    params.require(:employee).permit(:first_name, :last_name, :national_id, :email, :phone, :active, :allow_corrections)
   end
 
   def employee_activation_params
@@ -124,7 +124,7 @@ class Admin::EmployeesController < Admin::BaseController
   end
 
   def employee_created_audit_details(employee, welcome_email_enqueued:)
-    changes = audit_saved_changes(employee, fields: %w[first_name last_name national_id email phone active])
+    changes = audit_saved_changes(employee, fields: %w[first_name last_name national_id email phone active allow_corrections])
     tag_ids = employee.tag_ids
 
     {
@@ -137,7 +137,7 @@ class Admin::EmployeesController < Admin::BaseController
   end
 
   def record_employee_update_audit(employee, previous_tag_ids)
-    changes = audit_saved_changes(employee, fields: %w[first_name last_name national_id email phone active])
+    changes = audit_saved_changes(employee, fields: %w[first_name last_name national_id email phone active allow_corrections])
     active_changed = changes.delete("active")
     next_tag_ids = employee.tag_ids
 

@@ -7,6 +7,7 @@ class Employee::ClockingsController < ApplicationController
 
   def index
     @employee = current_employee
+    @corrections_allowed = @employee.allow_corrections?
     @min_clocking_month = earliest_clocking_month
     @max_clocking_month = Time.zone.today.beginning_of_month
     @month = requested_clocking_month || @max_clocking_month
@@ -16,17 +17,19 @@ class Employee::ClockingsController < ApplicationController
       clocking_day_summaries(
         @employee,
         start_date: @month,
-        end_date: [ @month.end_of_month, Time.zone.today ].min
+        end_date: [ @month.end_of_month, Time.zone.today ].min,
+        include_corrections: @corrections_allowed
       )
     else
       []
     end
+    @clocking_month_total_seconds = @clocking_days.sum { |day| day[:worked_seconds].to_i }
   end
 
   def clock_in
     return if undo_recent_clocking
 
-    if current_clock_state(current_employee)[:clocked_in]
+    if current_clock_state(current_employee, include_corrections: current_employee.allow_corrections?)[:clocked_in]
       redirect_to root_path, alert: t("employee.flash.already_clocked_in")
       return
     end
@@ -43,7 +46,7 @@ class Employee::ClockingsController < ApplicationController
   def clock_out
     return if undo_recent_clocking
 
-    unless current_clock_state(current_employee)[:clocked_in]
+    unless current_clock_state(current_employee, include_corrections: current_employee.allow_corrections?)[:clocked_in]
       redirect_to root_path, alert: t("employee.flash.already_clocked_out")
       return
     end
@@ -60,11 +63,13 @@ class Employee::ClockingsController < ApplicationController
   private
 
   def earliest_clocking_month
-    [
+    months = [
       @employee.created_at,
-      @employee.swipes.minimum(:swipe_at),
-      @employee.swipe_corrections.minimum(:day)
-    ].compact.map(&:to_date).min.beginning_of_month
+      @employee.swipes.minimum(:swipe_at)
+    ]
+    months << @employee.swipe_corrections.minimum(:day) if @corrections_allowed
+
+    months.compact.map(&:to_date).min.beginning_of_month
   end
 
   def undo_recent_clocking
@@ -77,7 +82,12 @@ class Employee::ClockingsController < ApplicationController
   end
 
   def undoable_recent_swipe(now: Time.current)
-    latest_swipe = effective_clocking_swipes(current_employee, date: now.in_time_zone.to_date, through: now).last
+    latest_swipe = effective_clocking_swipes(
+      current_employee,
+      date: now.in_time_zone.to_date,
+      through: now,
+      include_corrections: current_employee.allow_corrections?
+    ).last
     return unless latest_swipe.is_a?(Swipe)
     return if latest_swipe.forged?
     return if now - latest_swipe.swipe_at >= RECENT_CLOCKING_UNDO_WINDOW

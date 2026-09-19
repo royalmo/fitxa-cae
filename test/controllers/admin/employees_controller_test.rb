@@ -17,7 +17,8 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       first_name: "Nora",
       last_name: "Vidal",
       email: "nora@example.test",
-      phone: "+34 600 111 222"
+      phone: "+34 600 111 222",
+      allow_corrections: true
     )
     inactive_employee = create_employee(
       first_name: "Ona",
@@ -59,6 +60,9 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       assert_select "a.dropdown-item[href='#{bulk_activation_admin_employees_path}']", text: "Activar i desactivar" do
         assert_select "svg.icon"
       end
+      assert_select "a.dropdown-item[href='#{bulk_corrections_admin_employees_path}']", text: "Permetre correccions" do
+        assert_select "svg.icon"
+      end
       assert_select "a.dropdown-item[href='#{bulk_tags_admin_employees_path}']", text: "Afegir etiquetes" do
         assert_select "svg.icon"
       end
@@ -89,16 +93,19 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tbody tr.admin-employee-row.is-inactive .admin-employee-name svg.admin-employee-status-icon.is-inactive[aria-label='Inactives'] + strong[title='Ona Costa']",
       text: "Ona Costa"
     assert_select ".admin-employee-contact[title='+34 600 111 222 · nora@example.test']", text: "+34 600 111 222 · nora@example.test"
+    corrections_tooltip = "Aquesta persona pot sol·licitar correccions al seu horari"
+    assert_select ".admin-employee-corrections-indicator[title='#{corrections_tooltip}'][aria-label='#{corrections_tooltip}'][data-controller='bootstrap-tooltip'][data-bs-toggle='tooltip'][data-bs-placement='top'] svg.admin-employee-corrections-icon"
+    assert_select ".admin-employee-corrections-indicator", count: 1
     assert_select ".admin-employee-tags .admin-tag-label[style*='#2563eb']" do
       assert_select "svg.admin-tag-label-icon + span", text: "office"
     end
-    assert_select "tbody tr.admin-employee-row .admin-employee-contact", count: 1
-    assert_select "tbody tr.admin-employee-row .admin-employee-tags-empty", text: "-", count: 1
+    assert_select ".admin-employee-tags-cell .admin-employee-corrections-indicator + .admin-employee-tags .admin-tag-label", text: "office"
+    assert_select "tbody tr.admin-employee-row .admin-employee-tags-empty", text: "-"
     assert_select ".admin-employee-last-clocking.is-exit[title='Sortida 02/07/2026 16:00']",
       text: /02\/07\/2026\s+16:00/ do
       assert_select "svg.admin-employee-last-clocking-icon[aria-label='Sortida'][title='Sortida']"
     end
-    assert_select "tbody tr.admin-employee-row .admin-employee-last-clocking-empty", text: "-", count: 2
+    assert_select "tbody tr.admin-employee-row .admin-employee-last-clocking-empty", text: "-"
     assert_select "tbody tr.admin-employee-row.is-inactive .admin-employee-tags .admin-tag-label[style*='#2563eb']" do
       assert_select "svg.admin-tag-label-icon + span", text: "office"
     end
@@ -223,6 +230,10 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-tag-multi-search-selections > .admin-tag-multi-search-selection", count: 0
       assert_select "template[data-tag-multi-search-target='selectionTemplate']"
     end
+    assert_select "fieldset + .col-12 .form-check.form-switch" do
+      assert_select "input[type='checkbox'][role='switch'][name='employee[allow_corrections]'][value='1']:not([checked]) + label",
+        text: "Permetre correccions a l'espai personal"
+    end
   end
 
   test "renders edit employee form controls" do
@@ -263,6 +274,10 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-tag-multi-search-selection[style*='#16a34a']" do
       assert_select "input[type='hidden'][name='employee[tag_ids][]'][value='#{inactive_tag.id}']"
       assert_select "button.admin-tag-multi-search-remove[aria-label='Eliminar etiqueta archived'] svg.icon"
+    end
+    assert_select "fieldset + .col-12 .form-check.form-switch" do
+      assert_select "input[type='checkbox'][role='switch'][name='employee[allow_corrections]'][value='1']:not([checked]) + label",
+        text: "Permetre correccions a l'espai personal"
     end
   end
 
@@ -328,6 +343,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
             email: "pau@example.test",
             phone: "+34 600 111 222",
             active: "0",
+            allow_corrections: "1",
             tag_ids: [ tag.id ]
           }
         }
@@ -337,6 +353,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_employees_path
     employee = Employee.last
     assert_predicate employee, :active?
+    assert_predicate employee, :allow_corrections?
     assert_predicate employee.current_employment_period, :open?
     assert_equal [ tag ], employee.tags.to_a
     assert_not employee.password_login_enabled?
@@ -394,7 +411,8 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
         last_name: "Mas",
         national_id: employee.national_id,
         active: "0",
-        email: "irene@example.test"
+        email: "irene@example.test",
+        allow_corrections: "1"
       }
     }
 
@@ -403,6 +421,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Irene", employee.first_name
     assert_equal "irene@example.test", employee.email
     assert_not employee.active?
+    assert_predicate employee, :allow_corrections?
     assert_empty employee.tags
   end
 

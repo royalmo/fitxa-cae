@@ -86,6 +86,13 @@
         placeholder: t("admin.shared.tag_search.placeholder"),
         results_id: "admin-employee-tag-results" %>
     </fieldset>
+
+    <div class="col-12">
+      <div class="form-check form-switch">
+        <%= form.check_box :allow_corrections, class: "form-check-input", role: "switch" %>
+        <%= form.label :allow_corrections, t("admin.employees.form.allow_corrections"), class: "form-check-label" %>
+      </div>
+    </div>
   </div>
 
   <div class="d-flex flex-wrap gap-2 mt-4">

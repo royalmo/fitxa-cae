@@ -2,7 +2,8 @@ require "test_helper"
 
 class FrontendPagesTest < ActionDispatch::IntegrationTest
   test "employee pages render" do
-    log_in_employee
+    employee = create_employee(password: "1234", allow_corrections: true)
+    log_in_employee(employee)
 
     get root_path
     assert_response :success
@@ -34,12 +35,15 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     assert_select ".employee-topbar .employee-admin-button", 0
     assert_select ".employee-topbar .icon-button", 0
     assert_select "body.employee-shell > .flash", 0
+    assert_select ".employee-nav[style='--employee-nav-item-count: 4;']"
     assert_select ".employee-nav svg.icon", 4
     assert_select ".today-punch-button svg.icon"
     assert_select ".clock-action-form button.today-punch-button[type='submit'][data-submitting-label]"
     assert_select ".today-section-header h2", text: "Fitxatges d'avui"
     assert_select ".today-correction-link", text: "Corregir"
-    assert_select ".today-section-header h2", text: "Resum setmanal"
+    assert_select ".today-section-header h2", text: "Resum"
+    assert_select ".today-week-lines dt", text: "Aquesta setmana"
+    assert_select ".today-week-lines dt", text: "Aquest mes"
     assert_select ".today-week-lines dt", text: "Correccions"
     assert_select ".today-week-lines dd a[href='#{corrections_path(month: Date.current.month, year: Date.current.year)}'] em", text: "Cap correcció."
     assert_select ".request-row", 0
@@ -258,7 +262,8 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
   end
 
   test "no-op actions redirect to their list screens" do
-    log_in_employee
+    employee = create_employee(password: "1234", allow_corrections: true)
+    log_in_employee(employee)
 
     post clock_out_path
     assert_redirected_to root_path
@@ -286,9 +291,9 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to admin_employees_path
 
-    employee = create_employee(national_id: valid_dni(40_000_002), password: "1234")
-    correction = employee.swipe_corrections.create!(
-      requester: employee,
+    correction_employee = create_employee(national_id: valid_dni(40_000_002), password: "1234")
+    correction = correction_employee.swipe_corrections.create!(
+      requester: correction_employee,
       status: :pending,
       day: Date.current,
       details: {
@@ -299,7 +304,7 @@ class FrontendPagesTest < ActionDispatch::IntegrationTest
     )
 
     post approve_admin_correction_path(correction),
-      params: { server_updated_at: correction_server_updated_at(employee, correction.day) }
+      params: { server_updated_at: correction_server_updated_at(correction_employee, correction.day) }
     assert_redirected_to admin_corrections_path
   end
 

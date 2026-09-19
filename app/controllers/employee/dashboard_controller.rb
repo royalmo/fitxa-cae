@@ -5,19 +5,30 @@ class Employee::DashboardController < ApplicationController
 
   def show
     @employee = current_employee
+    @corrections_allowed = @employee.allow_corrections?
     now = Time.current
     @today = now.in_time_zone.to_date
-    @clock_state = current_clock_state(@employee, at: now)
+    @clock_state = current_clock_state(@employee, at: now, include_corrections: @corrections_allowed)
     @today_swipes = @employee.swipes.kept.for_day(@today).chronological.to_a
     @today_worked_seconds = @clock_state[:worked_seconds]
-    @today_summary = clocking_day_summaries(@employee, start_date: @today, end_date: @today).first || empty_today_summary
-    @week_summary = week_clocking_summary(@employee, date: @today)
+    @today_summary = clocking_day_summaries(
+      @employee,
+      start_date: @today,
+      end_date: @today,
+      include_corrections: @corrections_allowed
+    ).first || empty_today_summary
+    @week_summary = week_clocking_summary(@employee, date: @today, include_corrections: @corrections_allowed)
+    @month_summary = month_clocking_summary(@employee, date: @today, include_corrections: @corrections_allowed)
     @dashboard_refresh_signature = dashboard_refresh_signature(@clock_state, today: @today)
   end
 
   def state
     now = Time.current
-    clock_state = current_clock_state(current_employee, at: now)
+    clock_state = current_clock_state(
+      current_employee,
+      at: now,
+      include_corrections: current_employee.allow_corrections?
+    )
 
     expires_now
 

@@ -21,8 +21,13 @@ module EmployeeClockingSummaries
 
   private
 
-  def current_clock_state(employee, at: Time.current)
-    effective_swipes = effective_clocking_swipes(employee, date: at.in_time_zone.to_date, through: at)
+  def current_clock_state(employee, at: Time.current, include_corrections: true)
+    effective_swipes = effective_clocking_swipes(
+      employee,
+      date: at.in_time_zone.to_date,
+      through: at,
+      include_corrections: include_corrections
+    )
     latest_swipe = effective_swipes.last
     open_entry = latest_swipe if latest_swipe&.entry?
 
@@ -33,11 +38,31 @@ module EmployeeClockingSummaries
     }
   end
 
-  def week_clocking_summary(employee, date: Time.zone.today)
-    start_date = date.beginning_of_week(:monday)
-    end_date = date.end_of_week(:monday)
+  def week_clocking_summary(employee, date: Time.zone.today, include_corrections: true)
+    period_clocking_summary(
+      employee,
+      start_date: date.beginning_of_week(:monday),
+      end_date: date.end_of_week(:monday),
+      include_corrections: include_corrections
+    )
+  end
+
+  def month_clocking_summary(employee, date: Time.zone.today, include_corrections: true)
+    period_clocking_summary(
+      employee,
+      start_date: date.beginning_of_month,
+      end_date: [ date.end_of_month, Time.zone.today ].min,
+      include_corrections: include_corrections
+    )
+  end
+
+  def period_clocking_summary(employee, start_date:, end_date:, include_corrections: true)
     swipes = employee.swipes.kept.where(swipe_at: start_date.beginning_of_day..end_date.end_of_day).chronological.to_a
-    correction_counts = employee.swipe_corrections.where(day: start_date..end_date).group(:status).count
+    correction_counts = if include_corrections
+      employee.swipe_corrections.where(day: start_date..end_date).group(:status).count
+    else
+      {}
+    end
 
     {
       worked_seconds: swipes.group_by { |swipe| swipe.swipe_at.to_date }.values.sum { |day_swipes| Swipe.paired_work_seconds(day_swipes) },
@@ -47,9 +72,9 @@ module EmployeeClockingSummaries
     }
   end
 
-  def clocking_day_summaries(employee, start_date:, end_date:)
+  def clocking_day_summaries(employee, start_date:, end_date:, include_corrections: true)
     swipes = employee.swipes.kept.where(swipe_at: start_date.beginning_of_day..end_date.end_of_day).chronological.to_a
-    corrections = employee.swipe_corrections.where(day: start_date..end_date).to_a
+    corrections = include_corrections ? employee.swipe_corrections.where(day: start_date..end_date).to_a : []
     swipes_by_date = swipes.group_by { |swipe| swipe.swipe_at.to_date }
     corrections_by_date = corrections.group_by(&:day)
     pending_correction_dates = corrections.select { |correction| pending_clocking_correction?(correction) }.map(&:day)
@@ -98,10 +123,10 @@ module EmployeeClockingSummaries
       .sort_by { |swipe| [ swipe.swipe_at, pending_requested_swipe?(swipe) ? 1 : 0 ] }
   end
 
-  def effective_clocking_swipes(employee, date:, through: nil)
+  def effective_clocking_swipes(employee, date:, through: nil, include_corrections: true)
     swipes = employee.swipes.kept.for_day(date)
     swipes = swipes.where(swipe_at: ..through) if through
-    corrections = employee.swipe_corrections.where(day: date).to_a
+    corrections = include_corrections ? employee.swipe_corrections.where(day: date).to_a : []
     display_swipes = clocking_display_swipes(swipes.chronological.to_a, corrections)
 
     effective_clocking_display_swipes(display_swipes, through: through)

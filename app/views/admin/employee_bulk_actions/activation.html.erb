@@ -19,5 +19,9 @@
     { value: "activate", label: t(".actions.activate"), icon: "circle-check", class: "is-active" },
     { value: "deactivate", label: t(".actions.deactivate"), icon: "circle-off", class: "is-inactive" }
   ],
+  confirm_messages: {
+    "activate" => t("admin.employee_bulk_actions.national_ids.confirm_activate", count: "%{count}"),
+    "deactivate" => t("admin.employee_bulk_actions.national_ids.confirm_deactivate", count: "%{count}")
+  },
   confirm_modal_id: "adminEmployeeBulkActivationConfirmModal",
   submit_label: t(".run") %>

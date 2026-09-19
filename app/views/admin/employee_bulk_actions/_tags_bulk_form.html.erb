@@ -72,10 +72,11 @@
               data-action="bulk-tags#dismissError"></button>
           </div>
 
-          <div class="admin-bulk-action-footer d-flex flex-column align-items-start gap-2">
-            <div class="form-check">
+          <div class="admin-bulk-action-footer d-flex flex-column align-items-start gap-3">
+            <div class="form-check form-switch">
               <%= form.check_box :include_inactive,
                 class: "form-check-input",
+                role: "switch",
                 data: {
                   bulk_tags_target: "includeInactive",
                   action: "change->bulk-tags#includeInactiveChanged"

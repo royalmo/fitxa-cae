@@ -16,6 +16,8 @@ module EmployeeBulkActions
       case employee_bulk_action_run.kind
       when "activation"
         Activation.from_parameters(employee_bulk_action_run.parameters)
+      when "corrections"
+        Corrections.from_parameters(employee_bulk_action_run.parameters)
       when "tags"
         Tags.from_parameters(employee_bulk_action_run.parameters)
       when "import"

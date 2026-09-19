@@ -1,6 +1,14 @@
 require "test_helper"
 
 class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
+  def create_employee(**attributes)
+    super(**{ allow_corrections: true }.merge(attributes))
+  end
+
+  def create_employee_without_corrections(**attributes)
+    build_employee(**{ allow_corrections: false }.merge(attributes)).tap(&:save!)
+  end
+
   test "creates a pending swipe correction for the signed in employee" do
     employee = create_employee(password: "1234")
     swipe = employee.swipes.create!(kind: :entry, swipe_at: Time.zone.local(2026, 7, 2, 8, 40), metadata: "employee_portal")
@@ -31,6 +39,28 @@ class Employee::CorrectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "08:05:00", correction.details["requested_swipes"].first["hour"]
     assert_equal [ "entry", "entry", "exit" ], correction.details["requested_swipes"].map { |requested_swipe| requested_swipe["kind"] }
     assert_equal "Vaig entrar abans.", correction.requester_comments
+  end
+
+  test "returns forbidden when corrections are not allowed for the signed in employee" do
+    employee = create_employee_without_corrections(password: "1234")
+    log_in_employee(employee)
+
+    get corrections_path
+
+    assert_response :forbidden
+    assert_select "h1", text: "No tens accés a aquesta pantalla."
+    assert_select "a[href='#{corrections_path}']", count: 0
+  end
+
+  test "returns forbidden json when correction day data is requested without permission" do
+    employee = create_employee_without_corrections(password: "1234")
+    log_in_employee(employee)
+
+    get day_corrections_path, params: { date: "2026-07-02" }, as: :json
+
+    assert_response :forbidden
+    assert_equal "Aquesta funcionalitat no està habilitada per al teu compte.",
+      response.parsed_body.fetch("error")
   end
 
   test "new correction form starts empty without a day param" do

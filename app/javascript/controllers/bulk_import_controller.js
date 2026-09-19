@@ -7,6 +7,7 @@ export default class extends Controller {
     "pastedData",
     "fileInput",
     "allowSecondSurname",
+    "allowCorrections",
     "tagSelector",
     "templateLink",
     "formatText",
@@ -120,6 +121,7 @@ export default class extends Controller {
           source: this.source,
           content: await this.importContent(),
           allow_second_surname: this.allowSecondSurname,
+          allow_corrections: this.allowCorrections,
           tag_ids: this.selectedTagIds()
         })
       })
@@ -225,6 +227,7 @@ export default class extends Controller {
     return [
       this.source,
       this.allowSecondSurname,
+      this.allowCorrections,
       this.source === "file" ? this.fileSignature : this.pastedDataTarget.value,
       this.selectedTagIds().join(",")
     ].join("|")
@@ -313,6 +316,7 @@ export default class extends Controller {
       source: this.source,
       content: await this.importContent(),
       allow_second_surname: this.allowSecondSurname,
+      allow_corrections: this.allowCorrections,
       tag_ids: this.selectedTagIds()
     }
   }
@@ -447,6 +451,10 @@ export default class extends Controller {
 
   get allowSecondSurname() {
     return this.hasAllowSecondSurnameTarget && this.allowSecondSurnameTarget.checked
+  }
+
+  get allowCorrections() {
+    return this.hasAllowCorrectionsTarget && this.allowCorrectionsTarget.checked
   }
 
   get templateContent() {
