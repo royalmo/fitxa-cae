@@ -78,5 +78,5 @@ gem "bootstrap", "~> 5.3"
 # Builds the admin Bootstrap Sass entrypoint into Propshaft-served CSS.
 gem "dartsass-rails", "~> 0.5.1"
 
-gem "ferrum_pdf", "~> 3.1"
+gem "ferrum_pdf", "~> 3.2"
 gem "rubyzip", "~> 3.4"
