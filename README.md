@@ -24,6 +24,174 @@ bin/kamal console -d fitxa-cae
 bin/kamal shell -d fitxa-cae
 ```
 
+### Backups
+
+Production backups have two layers:
+
+- Production-local snapshots in `/home/deploy/fitxa-backups`.
+- Home-server Borg backups on `mnr.ericroy.net` in `/mnt/bak1t1/fitxa-cae.compila.cat/borg/fitxa-production`.
+
+Snapshots include the primary SQLite database, local Active Storage files, and
+the runtime secret values needed to recreate `.kamal/secrets.*`. They
+intentionally exclude Solid Queue, Solid Cache, and Solid Cable databases.
+
+Retention:
+
+```text
+Every 6h: latest 8 snapshots
+Daily: 7
+Weekly: 4
+Monthly: 12
+Yearly: 10
+```
+
+Production-local snapshots are created by:
+
+```sh
+/home/deploy/fitxa-backups/bin/production_snapshot create
+```
+
+The scheduled job runs from `mnr.ericroy.net` root cron every 6 hours. It calls
+the production snapshot script over a restricted SSH key, leaves a retained copy
+on the production server, then stores the same snapshot in the home Borg
+repository. The production `deploy` user does not currently have an independent
+timer because user-systemd lingering is disabled on the production host.
+
+List production-local snapshots:
+
+```sh
+ssh deploy@fitxa-cae.compila.cat '/home/deploy/fitxa-backups/bin/production_snapshot list'
+```
+
+List home Borg archives:
+
+```sh
+ssh mnr.ericroy.net 'sudo BORG_PASSCOMMAND="cat /root/.config/fitxa-cae-backups/borg-passphrase" borg list /mnt/bak1t1/fitxa-cae.compila.cat/borg/fitxa-production'
+```
+
+#### Restore The Current Production Host
+
+Use this when the server is healthy but production data needs to roll back to a
+recent snapshot.
+
+SSH into the production host and choose a snapshot:
+
+```sh
+ssh deploy@fitxa-cae.compila.cat
+snapshot="$(ls -1t /home/deploy/fitxa-backups/archives/sixhour/*.tar.gz | head -n 1)"
+restore_dir="$(mktemp -d /home/deploy/fitxa-restore.XXXXXX)"
+tar -xzf "$snapshot" -C "$restore_dir"
+```
+
+Stop both running app containers:
+
+```sh
+cae_container="$(docker ps --format '{{.Names}}' | grep -E '^fitxa_cae-web-fitxa-cae-' | head -n 1)"
+xarranca_container="$(docker ps --format '{{.Names}}' | grep -E '^fitxa_xarranca-web-fitxa-xarranca-' | head -n 1)"
+cae_image="$(docker inspect "$cae_container" --format '{{.Config.Image}}')"
+xarranca_image="$(docker inspect "$xarranca_container" --format '{{.Config.Image}}')"
+docker stop "$cae_container" "$xarranca_container"
+```
+
+Restore both storage volumes from the extracted snapshot:
+
+```sh
+docker run --rm \
+  -v fitxa_cae_storage:/rails/storage \
+  -v "$restore_dir/apps/fitxa-cae:/restore:ro" \
+  "$cae_image" \
+  sh -lc 'find /rails/storage -mindepth 1 ! -name "production*.sqlite3*" -exec rm -rf {} + &&
+          cp /restore/databases/production.sqlite3 /rails/storage/production.sqlite3 &&
+          cp -a /restore/storage/. /rails/storage/'
+
+docker run --rm \
+  -v fitxa_xarranca_storage:/rails/storage \
+  -v "$restore_dir/apps/fitxa-xarranca:/restore:ro" \
+  "$xarranca_image" \
+  sh -lc 'find /rails/storage -mindepth 1 ! -name "production*.sqlite3*" -exec rm -rf {} + &&
+          cp /restore/databases/production.sqlite3 /rails/storage/production.sqlite3 &&
+          cp -a /restore/storage/. /rails/storage/'
+```
+
+Start the containers again:
+
+```sh
+docker start "$cae_container" "$xarranca_container"
+```
+
+For older snapshots, prefer restoring to a staging server first. A much older
+database may not match the currently deployed code.
+
+#### Restore From The Home Borg Backup
+
+Use this when the production server or its local snapshots are gone.
+
+On `mnr.ericroy.net`, extract the archive:
+
+```sh
+ssh mnr.ericroy.net
+repo=/mnt/bak1t1/fitxa-cae.compila.cat/borg/fitxa-production
+export BORG_PASSCOMMAND='cat /root/.config/fitxa-cae-backups/borg-passphrase'
+sudo -E borg list "$repo"
+archive=fitxa-production-YYYYmmddTHHMMSSZ
+restore_dir=/tmp/fitxa-restore
+sudo rm -rf "$restore_dir"
+sudo mkdir -p "$restore_dir"
+cd "$restore_dir"
+sudo -E borg extract "$repo::$archive"
+sudo chown -R "$USER:$USER" "$restore_dir"
+```
+
+Copy `/tmp/fitxa-restore` to the machine where you will run Kamal and to the
+replacement host. The commands below assume it is available at that same path.
+
+From a fresh clone of this repository, recreate the missing Kamal secrets:
+
+```sh
+mkdir -p .kamal
+cp /tmp/fitxa-restore/apps/fitxa-cae/env/kamal_secrets.env .kamal/secrets.fitxa-cae
+cp /tmp/fitxa-restore/apps/fitxa-xarranca/env/kamal_secrets.env .kamal/secrets.fitxa-xarranca
+chmod 600 .kamal/secrets.fitxa-cae .kamal/secrets.fitxa-xarranca
+```
+
+Deploy to the replacement host:
+
+```sh
+bin/kamal setup -d fitxa-cae
+bin/kamal setup -d fitxa-xarranca
+```
+
+Copy the restored data into the new Docker volumes. Run this on the replacement
+host after `kamal setup` has created the volumes:
+
+```sh
+restore_dir=/tmp/fitxa-restore
+cae_image="$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep 'fitxa_cae' | head -n 1)"
+
+docker run --rm \
+  -v fitxa_cae_storage:/rails/storage \
+  -v "$restore_dir/apps/fitxa-cae:/restore:ro" \
+  "$cae_image" \
+  sh -lc 'find /rails/storage -mindepth 1 ! -name "production*.sqlite3*" -exec rm -rf {} + &&
+          cp /restore/databases/production.sqlite3 /rails/storage/production.sqlite3 &&
+          cp -a /restore/storage/. /rails/storage/'
+
+docker run --rm \
+  -v fitxa_xarranca_storage:/rails/storage \
+  -v "$restore_dir/apps/fitxa-xarranca:/restore:ro" \
+  "$cae_image" \
+  sh -lc 'find /rails/storage -mindepth 1 ! -name "production*.sqlite3*" -exec rm -rf {} + &&
+          cp /restore/databases/production.sqlite3 /rails/storage/production.sqlite3 &&
+          cp -a /restore/storage/. /rails/storage/'
+```
+
+Then redeploy both destinations:
+
+```sh
+bin/kamal deploy -d fitxa-cae
+bin/kamal deploy -d fitxa-xarranca
+```
+
 ### Deploy to a new server
 
 1. Create `.kamal/secrets.prod-environment`, copying an example and adapting and filling credentials.

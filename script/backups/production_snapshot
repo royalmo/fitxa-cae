@@ -1,0 +1,323 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 077
+
+BACKUP_ROOT="${FITXA_BACKUP_ROOT:-$HOME/fitxa-backups}"
+ARCHIVE_ROOT="$BACKUP_ROOT/archives"
+TMP_ROOT="$BACKUP_ROOT/tmp"
+LOCK_FILE="$BACKUP_ROOT/.snapshot.lock"
+LATEST_FILE="$BACKUP_ROOT/latest_snapshot"
+
+APP_SPECS=(
+  "fitxa_cae:fitxa-cae:fitxa-cae"
+  "fitxa_xarranca:fitxa-xarranca:fitxa-xarranca"
+)
+
+SECRET_KEYS=(
+  SECRET_KEY_BASE
+  SMTP_USERNAME
+  SMTP_PASSWORD
+  LABSMOBILE_USERNAME
+  LABSMOBILE_API_TOKEN
+)
+
+log() {
+  printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >&2
+}
+
+usage() {
+  cat >&2 <<'TEXT'
+Usage:
+  production_snapshot create
+  production_snapshot create --stream
+  production_snapshot stream-latest
+  production_snapshot list
+
+Creates production-local backup snapshots for FitxaCAE and FitxaXarranca.
+Snapshots include primary SQLite databases, local Active Storage files, and
+runtime secrets needed to recreate .kamal/secrets.*.
+
+Solid Queue, Solid Cache, and Solid Cable databases are intentionally excluded.
+TEXT
+}
+
+ensure_directories() {
+  mkdir -p \
+    "$TMP_ROOT" \
+    "$ARCHIVE_ROOT/sixhour" \
+    "$ARCHIVE_ROOT/daily" \
+    "$ARCHIVE_ROOT/weekly" \
+    "$ARCHIVE_ROOT/monthly" \
+    "$ARCHIVE_ROOT/yearly"
+}
+
+find_container() {
+  local service="$1"
+  local docker_slug="$2"
+
+  docker ps --format '{{.Names}}' |
+    grep -E "^${service}-web-${docker_slug}-" |
+    head -n 1
+}
+
+write_checksum() {
+  local file="$1"
+  local dir
+  local base
+
+  dir="$(dirname "$file")"
+  base="$(basename "$file")"
+
+  (
+    cd "$dir"
+    sha256sum "$base" > "${base}.sha256"
+  )
+}
+
+link_archive() {
+  local source="$1"
+  local target="$2"
+
+  mkdir -p "$(dirname "$target")"
+  ln -f "$source" "$target"
+  write_checksum "$target"
+}
+
+prune_dir() {
+  local dir="$1"
+  local keep="$2"
+  local count=0
+  local file
+
+  shopt -s nullglob
+  while IFS= read -r file; do
+    count=$((count + 1))
+    if (( count > keep )); then
+      rm -f "$file" "${file}.sha256"
+    fi
+  done < <(ls -1t "$dir"/*.tar.gz 2>/dev/null || true)
+  shopt -u nullglob
+}
+
+prune_archives() {
+  prune_dir "$ARCHIVE_ROOT/sixhour" 8
+  prune_dir "$ARCHIVE_ROOT/daily" 7
+  prune_dir "$ARCHIVE_ROOT/weekly" 4
+  prune_dir "$ARCHIVE_ROOT/monthly" 12
+  prune_dir "$ARCHIVE_ROOT/yearly" 10
+}
+
+dump_primary_database() {
+  local container="$1"
+  local service="$2"
+  local timestamp="$3"
+  local output="$4"
+  local container_tmp="/tmp/fitxa-backup-${service}-${timestamp}.sqlite3"
+
+  docker exec "$container" sh -lc "rm -f '$container_tmp'"
+  docker exec "$container" sqlite3 /rails/storage/production.sqlite3 ".backup '$container_tmp'"
+
+  local integrity
+  integrity="$(docker exec "$container" sqlite3 "$container_tmp" "PRAGMA integrity_check;")"
+  if [[ "$integrity" != "ok" ]]; then
+    docker exec "$container" rm -f "$container_tmp" >/dev/null 2>&1 || true
+    log "SQLite integrity check failed for $service: $integrity"
+    return 1
+  fi
+
+  docker cp "${container}:${container_tmp}" "$output"
+  docker exec "$container" rm -f "$container_tmp"
+}
+
+write_database_stats() {
+  local container="$1"
+  local output="$2"
+
+  docker exec -i "$container" sqlite3 /rails/storage/production.sqlite3 <<'SQL' > "$output"
+select 'employees', count(*) from employees
+union all select 'swipes', count(*) from swipes
+union all select 'swipe_corrections', count(*) from swipe_corrections
+union all select 'audit_actions', count(*) from audit_actions
+union all select 'report_exports', count(*) from report_exports
+union all select 'active_storage_blobs', count(*) from active_storage_blobs;
+select 'active_storage_bytes', coalesce(sum(byte_size), 0) from active_storage_blobs;
+SQL
+}
+
+copy_storage_files() {
+  local container="$1"
+  local output_dir="$2"
+
+  mkdir -p "$output_dir"
+  docker exec "$container" sh -lc "cd /rails/storage && tar --exclude='./production*.sqlite3*' -cf - ." |
+    tar -xf - -C "$output_dir"
+}
+
+write_runtime_secrets() {
+  local container="$1"
+  local output_dir="$2"
+
+  mkdir -p "$output_dir"
+
+  docker exec "$container" ruby -rjson -e '
+    keys = ARGV
+    data = keys.each_with_object({}) do |key, result|
+      result[key] = ENV[key] unless ENV[key].nil?
+    end
+    puts JSON.pretty_generate(data)
+  ' "${SECRET_KEYS[@]}" > "$output_dir/kamal_secrets.json"
+
+  docker exec "$container" ruby -e '
+    ARGV.each do |key|
+      value = ENV[key]
+      next if value.nil?
+      if value.include?("\n") || value.include?("\r")
+        warn "Skipping #{key}: contains a newline"
+        next
+      end
+      puts "#{key}=#{value}"
+    end
+  ' "${SECRET_KEYS[@]}" > "$output_dir/kamal_secrets.env"
+}
+
+collect_app() {
+  local service="$1"
+  local docker_slug="$2"
+  local destination="$3"
+  local timestamp="$4"
+  local stage="$5"
+  local container
+
+  container="$(find_container "$service" "$docker_slug")"
+  if [[ -z "$container" ]]; then
+    log "No running container found for $service"
+    return 1
+  fi
+
+  log "Collecting $service from $container"
+
+  local app_dir="$stage/apps/$destination"
+  mkdir -p "$app_dir/databases" "$app_dir/storage" "$app_dir/env" "$app_dir/metadata"
+
+  dump_primary_database "$container" "$service" "$timestamp" "$app_dir/databases/production.sqlite3"
+  copy_storage_files "$container" "$app_dir/storage"
+  write_runtime_secrets "$container" "$app_dir/env"
+  write_database_stats "$container" "$app_dir/metadata/database_counts.txt"
+
+  docker inspect "$container" --format '{{json .Config.Image}}' > "$app_dir/metadata/image.json"
+  docker exec "$container" sh -lc 'find /rails/storage -maxdepth 3 -type f ! -name "production*.sqlite3*" -printf "%s %p\n" | sort -nr | head -n 100' \
+    > "$app_dir/metadata/storage_manifest.txt"
+}
+
+create_snapshot() {
+  local stream="${1:-false}"
+  local timestamp
+  local stage
+  local archive_tmp
+  local archive
+  local base
+
+  timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  stage="$(mktemp -d "$TMP_ROOT/snapshot.${timestamp}.XXXXXX")"
+  archive_tmp="$(mktemp "$TMP_ROOT/archive.${timestamp}.XXXXXX.tar.gz")"
+  base="fitxa-production-${timestamp}.tar.gz"
+  archive="$ARCHIVE_ROOT/sixhour/$base"
+
+  mkdir -p "$stage/apps" "$stage/metadata"
+
+  {
+    printf 'timestamp_utc=%s\n' "$timestamp"
+    printf 'hostname=%s\n' "$(hostname)"
+    printf 'backup_root=%s\n' "$BACKUP_ROOT"
+    printf 'script=%s\n' "$0"
+  } > "$stage/metadata/snapshot.txt"
+
+  docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}' > "$stage/metadata/docker_ps.txt"
+
+  local spec
+  for spec in "${APP_SPECS[@]}"; do
+    IFS=: read -r service docker_slug destination <<< "$spec"
+    collect_app "$service" "$docker_slug" "$destination" "$timestamp" "$stage"
+  done
+
+  tar -C "$stage" -czf "$archive_tmp" .
+  mv "$archive_tmp" "$archive"
+  write_checksum "$archive"
+
+  link_archive "$archive" "$ARCHIVE_ROOT/daily/fitxa-production-daily-$(date -u +%F).tar.gz"
+  link_archive "$archive" "$ARCHIVE_ROOT/weekly/fitxa-production-weekly-$(date -u +%G-W%V).tar.gz"
+  link_archive "$archive" "$ARCHIVE_ROOT/monthly/fitxa-production-monthly-$(date -u +%Y-%m).tar.gz"
+  link_archive "$archive" "$ARCHIVE_ROOT/yearly/fitxa-production-yearly-$(date -u +%Y).tar.gz"
+
+  printf '%s\n' "$archive" > "$LATEST_FILE"
+  prune_archives
+
+  log "Created $archive"
+  rm -rf "$stage"
+  rm -f "$archive_tmp"
+
+  if [[ "$stream" == "true" ]]; then
+    cat "$archive"
+  else
+    printf '%s\n' "$archive"
+  fi
+}
+
+stream_latest() {
+  if [[ ! -f "$LATEST_FILE" ]]; then
+    log "No latest snapshot file exists yet"
+    return 1
+  fi
+
+  local archive
+  archive="$(cat "$LATEST_FILE")"
+  if [[ ! -f "$archive" ]]; then
+    log "Latest snapshot is missing: $archive"
+    return 1
+  fi
+
+  cat "$archive"
+}
+
+list_snapshots() {
+  find "$ARCHIVE_ROOT" -maxdepth 2 -type f -name '*.tar.gz' -printf '%TY-%Tm-%Td %TH:%TM %s %p\n' |
+    sort -r
+}
+
+main() {
+  local command="${1:-}"
+  local stream="false"
+
+  ensure_directories
+
+  case "$command" in
+    create)
+      if [[ "${2:-}" == "--stream" ]]; then
+        stream="true"
+      elif [[ -n "${2:-}" ]]; then
+        usage
+        return 2
+      fi
+
+      exec 9>"$LOCK_FILE"
+      if ! flock -n 9; then
+        log "Another snapshot is already running"
+        return 1
+      fi
+      create_snapshot "$stream"
+      ;;
+    stream-latest)
+      stream_latest
+      ;;
+    list)
+      list_snapshots
+      ;;
+    *)
+      usage
+      return 2
+      ;;
+  esac
+}
+
+main "$@"

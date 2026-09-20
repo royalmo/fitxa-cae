@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 077
+
+BACKUP_ROOT="${FITXA_HOME_BACKUP_ROOT:-/mnt/bak1t1/fitxa-cae.compila.cat}"
+BORG_REPO="${FITXA_BORG_REPO:-$BACKUP_ROOT/borg/fitxa-production}"
+BORG_PASSPHRASE_FILE="${FITXA_BORG_PASSPHRASE_FILE:-/root/.config/fitxa-cae-backups/borg-passphrase}"
+SSH_KEY="${FITXA_PRODUCTION_BACKUP_SSH_KEY:-/root/.ssh/fitxa_cae_backup_ed25519}"
+PRODUCTION_HOST="${FITXA_PRODUCTION_HOST:-deploy@fitxa-cae.compila.cat}"
+PRODUCTION_COMMAND="${FITXA_PRODUCTION_COMMAND:-/home/deploy/fitxa-backups/bin/production_snapshot create --stream}"
+TMP_ROOT="$BACKUP_ROOT/tmp"
+LOG_DIR="$BACKUP_ROOT/logs"
+
+log() {
+  printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"
+}
+
+require_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    log "Missing required command: $1" >&2
+    return 1
+  fi
+}
+
+prepare() {
+  require_command borg
+  require_command ssh
+  require_command tar
+
+  mkdir -p "$TMP_ROOT" "$LOG_DIR" "$(dirname "$BORG_REPO")"
+
+  if [[ ! -r "$BORG_PASSPHRASE_FILE" ]]; then
+    log "Missing Borg passphrase file: $BORG_PASSPHRASE_FILE" >&2
+    return 1
+  fi
+
+  if [[ ! -r "$SSH_KEY" ]]; then
+    log "Missing production SSH key: $SSH_KEY" >&2
+    return 1
+  fi
+
+  export BORG_PASSCOMMAND="cat $BORG_PASSPHRASE_FILE"
+  export BORG_RELOCATED_REPO_ACCESS_IS_OK=yes
+
+  if [[ ! -f "$BORG_REPO/config" ]]; then
+    log "Initializing Borg repository at $BORG_REPO"
+    borg init --encryption=repokey-blake2 "$BORG_REPO"
+  fi
+}
+
+snapshot_timestamp() {
+  local stage="$1"
+  local timestamp
+
+  timestamp="$(sed -n 's/^timestamp_utc=//p' "$stage/metadata/snapshot.txt" | head -n 1)"
+  if [[ -z "$timestamp" ]]; then
+    date -u +%Y%m%dT%H%M%SZ
+  else
+    printf '%s\n' "$timestamp"
+  fi
+}
+
+pull_latest_snapshot() {
+  local output="$1"
+
+  log "Pulling latest production snapshot"
+  ssh \
+    -i "$SSH_KEY" \
+    -o BatchMode=yes \
+    -o StrictHostKeyChecking=accept-new \
+    "$PRODUCTION_HOST" \
+    "$PRODUCTION_COMMAND" > "$output"
+}
+
+create_borg_archive() {
+  local stage="$1"
+  local timestamp="$2"
+  local archive_name="fitxa-production-$timestamp"
+
+  if borg list "$BORG_REPO::$archive_name" >/dev/null 2>&1; then
+    log "Borg archive already exists: $archive_name"
+    return 0
+  fi
+
+  log "Creating Borg archive: $archive_name"
+  (
+    cd "$stage"
+    borg create \
+      --stats \
+      --compression lz4 \
+      "$BORG_REPO::$archive_name" \
+      .
+  )
+}
+
+prune_borg_archives() {
+  log "Pruning Borg repository"
+  borg prune \
+    --list \
+    --glob-archives 'fitxa-production-*' \
+    --keep-within 2d \
+    --keep-daily 7 \
+    --keep-weekly 4 \
+    --keep-monthly 12 \
+    --keep-yearly 10 \
+    "$BORG_REPO"
+
+  borg compact "$BORG_REPO"
+}
+
+check_borg_repository() {
+  log "Checking Borg repository"
+  borg check --repository-only "$BORG_REPO"
+}
+
+main() {
+  prepare
+
+  local stage
+  local snapshot
+  local timestamp
+
+  stage="$(mktemp -d "$TMP_ROOT/stage.XXXXXX")"
+  snapshot="$(mktemp "$TMP_ROOT/snapshot.XXXXXX.tar.gz")"
+
+  pull_latest_snapshot "$snapshot"
+  tar -xzf "$snapshot" -C "$stage"
+
+  timestamp="$(snapshot_timestamp "$stage")"
+  create_borg_archive "$stage" "$timestamp"
+  prune_borg_archives
+  check_borg_repository
+
+  rm -rf "$stage"
+  rm -f "$snapshot"
+
+  log "Backup complete"
+}
+
+main "$@"
