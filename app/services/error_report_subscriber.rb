@@ -3,6 +3,8 @@ class ErrorReportSubscriber
   MAX_CONTEXT_VALUE_LENGTH = 500
 
   def report(error, handled:, severity:, context:, source:)
+    return false if error_report_delivery_failure?(context, source)
+
     ErrorReportMailer.report(
       report_payload(error, handled:, severity:, context:, source:)
     ).deliver_later
@@ -14,6 +16,19 @@ class ErrorReportSubscriber
   end
 
   private
+
+  def error_report_delivery_failure?(context, source)
+    return false unless source.to_s.include?("solid_queue")
+
+    job = context.to_h[:job] || context.to_h["job"]
+    return false unless job
+
+    if job.respond_to?(:arguments)
+      job.arguments.first.to_s == "ErrorReportMailer"
+    else
+      job.to_s.include?("ActionMailer::MailDeliveryJob") && job.to_s.include?("ErrorReportMailer")
+    end
+  end
 
   def report_payload(error, handled:, severity:, context:, source:)
     {

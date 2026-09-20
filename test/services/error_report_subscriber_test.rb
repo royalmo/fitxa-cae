@@ -15,6 +15,36 @@ class ErrorReportSubscriberTest < ActiveSupport::TestCase
     end
   end
 
+  test "does not queue recursive reports for error report delivery failures" do
+    mail_delivery_job = Struct.new(:arguments).new([ "ErrorReportMailer", "report", "deliver_now", {} ])
+
+    assert_no_enqueued_emails do
+      result = ErrorReportSubscriber.new.report(
+        Net::ReadTimeout.new("Net::ReadTimeout with #<TCPSocket:(closed)>"),
+        handled: false,
+        severity: :error,
+        context: { job: mail_delivery_job },
+        source: "application.solid_queue"
+      )
+
+      assert_equal false, result
+    end
+  end
+
+  test "still queues reports for other solid queue failures" do
+    failed_job = Struct.new(:arguments).new([ "GenerateReportExportJob" ])
+
+    assert_enqueued_emails 1 do
+      ErrorReportSubscriber.new.report(
+        StandardError.new("Chromium unavailable"),
+        handled: false,
+        severity: :error,
+        context: { job: failed_job },
+        source: "application.solid_queue"
+      )
+    end
+  end
+
   test "filters sensitive context values" do
     singleton = class << ErrorReportMailer
       self
