@@ -85,7 +85,7 @@ class Admin::EmployeesController < Admin::BaseController
       )
     end
 
-    employees.distinct
+    employees.distinct.order(id: :desc)
   end
 
   def selected_tag

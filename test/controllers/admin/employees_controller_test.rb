@@ -197,14 +197,15 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".admin-result-count", text: "Mostrant 1-20 de #{expected_count}"
     assert_select "a.admin-page-link[href='#{admin_employees_path(page: 2)}'][data-action='click->list-loading#navigate']", text: /Següent/
-    assert_match "Persona P00", response.body
-    assert_no_match "Persona P24", response.body
+    assert_match "Persona P24", response.body
+    assert_no_match "Persona P00", response.body
 
     get admin_employees_path, params: { page: 2 }
 
     assert_response :success
     assert_select ".admin-result-count", text: "Mostrant 21-#{expected_count} de #{expected_count}"
-    assert_match "Persona P24", response.body
+    assert_match "Persona P00", response.body
+    assert_no_match "Persona P24", response.body
   end
 
   test "renders new employee form controls" do
