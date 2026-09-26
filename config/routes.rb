@@ -83,8 +83,10 @@ Rails.application.routes.draw do
     get "tag-search" => "tag_search#index", as: :tag_search
     get "audit-author-search" => "audit_author_search#index", as: :audit_author_search
     get "audit-kind-search" => "audit_kind_search#index", as: :audit_kind_search
+    resources :employee_welcome_email_resends, only: :show
     resources :employees, only: %i[index new create edit update] do
       patch :activation, on: :member
+      post :resend_welcome_email, on: :member
 
       collection do
         get "bulk/activation" => "employee_bulk_actions#activation", as: :bulk_activation

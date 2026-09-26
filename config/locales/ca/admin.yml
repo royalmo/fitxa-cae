@@ -205,6 +205,23 @@ ca:
       edit:
         title: Editar persona
         heading: Editar persona
+      welcome_email:
+        button: Tornar a enviar correu de benvinguda
+        confirm_title: Tornar a enviar correu de benvinguda
+        confirm_body_html: "S'enviarà un nou correu de benvinguda al correu desat: %{email}. Vols continuar?"
+        confirm: Sí, enviar
+        progress_title: Enviament del correu de benvinguda
+        progress_description: El procés s'actualitzarà automàticament fins que acabi.
+        progress_label: Enviament del correu de benvinguda
+        close: Tancar
+        sending: Enviant el correu de benvinguda...
+        success: Correu de benvinguda enviat.
+        failure: No s'ha pogut enviar el correu de benvinguda.
+        request_error: No s'ha pogut enviar el correu de benvinguda.
+        no_email: Aquesta persona no té cap correu definit.
+        inactive: Activa la persona abans d'enviar el correu de benvinguda.
+        password_configured: Aquesta persona ja té una contrasenya configurada.
+        unavailable: El correu de benvinguda no està disponible per a aquesta persona.
       activation:
         activate:
           button: Activar persona %{name}
@@ -218,6 +235,12 @@ ca:
           body: Vols desactivar %{name}?
           description: No podrà iniciar sessió ni fitxar mentre el compte estigui inactiu.
           confirm: Desactivar
+    employee_welcome_email_resends:
+      statuses:
+        queued: Enviament pendent...
+        running: Enviant el correu de benvinguda...
+      errors:
+        generic: No s'ha pogut enviar el correu de benvinguda.
     employee_bulk_actions:
       errors:
         conflicting_tags: No pots afegir i treure la mateixa etiqueta.

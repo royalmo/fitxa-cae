@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_223850) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_26_082719) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -81,6 +81,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_223850) do
     t.index ["kind"], name: "index_employee_bulk_action_runs_on_kind"
     t.index ["manager_id"], name: "index_employee_bulk_action_runs_on_manager_id"
     t.index ["status"], name: "index_employee_bulk_action_runs_on_status"
+  end
+
+  create_table "employee_welcome_email_resends", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.integer "employee_id", null: false
+    t.text "error_message"
+    t.datetime "failed_at"
+    t.integer "manager_id", null: false
+    t.integer "progress", default: 0, null: false
+    t.text "result_message"
+    t.string "status", default: "queued", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_employee_welcome_email_resends_on_employee_id"
+    t.index ["manager_id"], name: "index_employee_welcome_email_resends_on_manager_id"
+    t.index ["status"], name: "index_employee_welcome_email_resends_on_status"
   end
 
   create_table "employees", force: :cascade do |t|
@@ -193,6 +210,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_223850) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "employee_bulk_action_runs", "managers"
+  add_foreign_key "employee_welcome_email_resends", "employees"
+  add_foreign_key "employee_welcome_email_resends", "managers"
   add_foreign_key "employment_periods", "employees"
   add_foreign_key "managers", "employees"
   add_foreign_key "report_exports", "managers"

@@ -69,6 +69,23 @@ class Admin::EmployeesController < Admin::BaseController
     end
   end
 
+  def resend_welcome_email
+    @employee = Employee.find(params[:id])
+
+    unless @employee.welcome_email_resendable?
+      render json: welcome_email_resend_blocked_payload(@employee), status: :unprocessable_entity
+      return
+    end
+
+    employee_welcome_email_resend = current_manager.employee_welcome_email_resends.create!(
+      employee: @employee,
+      email: @employee.email
+    )
+    ResendEmployeeWelcomeEmailJob.perform_later(employee_welcome_email_resend)
+
+    render json: employee_welcome_email_resend_payload(employee_welcome_email_resend), status: :accepted
+  end
+
   private
 
   def filtered_employees
@@ -113,6 +130,27 @@ class Admin::EmployeesController < Admin::BaseController
 
     EmployeeWelcomeMailer.welcome(employee).deliver_later
     true
+  end
+
+  def welcome_email_resend_blocked_payload(employee)
+    message = t("admin.employees.welcome_email.#{employee.welcome_email_resend_blocked_reason_key}")
+
+    {
+      status: "failed",
+      progress: 100,
+      message: message,
+      error: message
+    }
+  end
+
+  def employee_welcome_email_resend_payload(employee_welcome_email_resend)
+    {
+      id: employee_welcome_email_resend.id,
+      status: employee_welcome_email_resend.status,
+      progress: employee_welcome_email_resend.progress,
+      message: employee_welcome_email_resend.status_message,
+      status_url: admin_employee_welcome_email_resend_path(employee_welcome_email_resend)
+    }
   end
 
   def last_swipes_by_employee_id(employee_ids)

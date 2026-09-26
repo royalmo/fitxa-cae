@@ -26,6 +26,7 @@ class Manager < ApplicationRecord
   has_many :received_audit_actions, as: :recipient, class_name: "AuditAction"
   has_many :report_exports, dependent: :destroy
   has_many :employee_bulk_action_runs, dependent: :destroy
+  has_many :employee_welcome_email_resends, dependent: :destroy
 
   validates :active, inclusion: { in: [ true, false ] }
   validates :email, presence: true, uniqueness: { case_sensitive: false }

@@ -287,9 +287,53 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[type='hidden'][name='employee[tag_ids][]'][value='#{inactive_tag.id}']"
       assert_select "button.admin-tag-multi-search-remove[aria-label='Eliminar etiqueta archived'] svg.icon"
     end
-    assert_select "fieldset + .col-12 .form-check.form-switch" do
-      assert_select "input[type='checkbox'][role='switch'][name='employee[allow_corrections]'][value='1']:not([checked]) + label",
-        text: "Permetre correccions a l'espai personal"
+    assert_select "fieldset + .col-12 .admin-employee-form-preferences.d-md-flex.align-items-md-center.justify-content-md-between.gap-2" do
+      assert_select ".form-check.form-switch" do
+        assert_select "input[type='checkbox'][role='switch'][name='employee[allow_corrections]'][value='1']:not([checked]) + label",
+          text: "Permetre correccions a l'espai personal"
+      end
+      assert_select "span.d-inline-block.mt-2.mt-md-0.ms-md-auto[data-controller='bootstrap-tooltip'][data-bs-toggle='tooltip'][data-bs-placement='top'][tabindex='0'][title='Aquesta persona no té cap correu definit.']" do
+        assert_select "button[type='button'].btn.btn-link.p-0[data-action='employee-welcome-resend#openConfirm'][disabled][style='pointer-events: none;']",
+          text: "Tornar a enviar correu de benvinguda"
+      end
+    end
+  end
+
+  test "renders welcome email resend controls for active employees without passwords" do
+    employee = create_employee(
+      first_name: "Iria",
+      last_name: "Mas",
+      national_id: valid_dni(41_000_015),
+      email: "iria@example.test",
+      active: true
+    )
+
+    get edit_admin_employee_path(employee)
+
+    assert_response :success
+    assert_select "form[data-controller='employee-welcome-resend'][data-employee-welcome-resend-url-value='#{resend_welcome_email_admin_employee_path(employee)}']" do
+      assert_select ".alert[data-employee-welcome-resend-target='alert']", count: 0
+      assert_select ".admin-employee-form-preferences.d-md-flex" do
+        assert_select ".form-check.form-switch", text: "Permetre correccions a l'espai personal"
+        assert_select "span.d-inline-block.mt-2.mt-md-0.ms-md-auto:not([data-controller])" do
+          assert_select "button[type='button'].btn.btn-link.p-0[data-action='employee-welcome-resend#openConfirm']:not([disabled])",
+            text: "Tornar a enviar correu de benvinguda"
+        end
+      end
+      assert_select "#employee_welcome_email_resend_modal_#{employee.id}.modal.fade[data-employee-welcome-resend-target='confirmModal']" do
+        assert_select "h2", text: "Tornar a enviar correu de benvinguda"
+        assert_select ".modal-body", text: /iria@example\.test/
+        assert_select "button[data-action='employee-welcome-resend#send']", text: "Sí, enviar"
+      end
+      assert_select "#employee_welcome_email_resend_progress_modal_#{employee.id}.modal.fade[data-employee-welcome-resend-target='runModal']" do
+        assert_select "h2", text: "Enviament del correu de benvinguda"
+        assert_select ".modal-body", text: /El procés s'actualitzarà automàticament fins que acabi/
+        assert_select ".progress[role='progressbar'][data-employee-welcome-resend-target='runProgress']"
+        assert_select ".progress-bar.progress-bar-striped.progress-bar-animated[data-employee-welcome-resend-target='runProgressBar']",
+          text: "0%"
+        assert_select "[data-employee-welcome-resend-target='runStatusMessage'][aria-live='polite']"
+        assert_select ".modal-footer button[data-bs-dismiss='modal']", text: "Tancar"
+      end
     end
   end
 
@@ -394,6 +438,76 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to admin_employees_path
+  end
+
+  test "queues welcome email resend to an active employee without a password" do
+    employee = create_employee(
+      first_name: "Pau",
+      last_name: "Costa",
+      national_id: valid_dni(41_000_016),
+      email: "pau@example.test",
+      active: true
+    )
+
+    assert_difference -> { EmployeeWelcomeEmailResend.count }, 1 do
+      assert_enqueued_jobs 1, only: ResendEmployeeWelcomeEmailJob do
+        assert_no_difference -> { ActionMailer::Base.deliveries.size } do
+          post resend_welcome_email_admin_employee_path(employee), as: :json
+        end
+      end
+    end
+
+    assert_response :accepted
+    employee_welcome_email_resend = EmployeeWelcomeEmailResend.order(:id).last
+    payload = JSON.parse(response.body)
+    assert_equal employee_welcome_email_resend.id, payload.fetch("id")
+    assert_equal "queued", payload.fetch("status")
+    assert_equal 0, payload.fetch("progress")
+    assert_equal "Enviament pendent...", payload.fetch("message")
+    assert_equal admin_employee_welcome_email_resend_path(employee_welcome_email_resend), payload.fetch("status_url")
+    assert_equal employee, employee_welcome_email_resend.employee
+    assert_equal Manager.last, employee_welcome_email_resend.manager
+    assert_equal "pau@example.test", employee_welcome_email_resend.email
+  end
+
+  test "does not resend welcome email when employee has no email" do
+    employee = create_employee(first_name: "Pau", last_name: "Costa", national_id: valid_dni(41_000_017))
+
+    assert_no_difference -> { EmployeeWelcomeEmailResend.count } do
+      assert_no_enqueued_jobs only: ResendEmployeeWelcomeEmailJob do
+        post resend_welcome_email_admin_employee_path(employee), as: :json
+      end
+    end
+
+    assert_response :unprocessable_entity
+    payload = JSON.parse(response.body)
+    assert_equal "failed", payload.fetch("status")
+    assert_equal 100, payload.fetch("progress")
+    assert_equal "Aquesta persona no té cap correu definit.", payload.fetch("message")
+    assert_equal "Aquesta persona no té cap correu definit.", payload.fetch("error")
+  end
+
+  test "does not resend welcome email when employee already has a password" do
+    employee = create_employee(
+      first_name: "Pau",
+      last_name: "Costa",
+      national_id: valid_dni(41_000_018),
+      email: "pau@example.test",
+      password: "1234"
+    )
+
+    assert_no_difference -> { EmployeeWelcomeEmailResend.count } do
+      assert_no_enqueued_jobs only: ResendEmployeeWelcomeEmailJob do
+        post resend_welcome_email_admin_employee_path(employee), as: :json
+      end
+    end
+
+    assert_response :unprocessable_entity
+    payload = JSON.parse(response.body)
+    assert_equal "failed", payload.fetch("status")
+    assert_equal 100, payload.fetch("progress")
+    assert_equal "Aquesta persona ja té una contrasenya configurada.", payload.fetch("message")
+    assert_equal "Aquesta persona ja té una contrasenya configurada.", payload.fetch("error")
   end
 
   test "renders validation errors when employee data is invalid" do

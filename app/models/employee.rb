@@ -34,6 +34,7 @@ class Employee < ApplicationRecord
   has_many :requested_swipe_corrections, as: :requester, class_name: "SwipeCorrection"
   has_many :authored_audit_actions, as: :author, class_name: "AuditAction"
   has_many :received_audit_actions, as: :recipient, class_name: "AuditAction"
+  has_many :employee_welcome_email_resends, dependent: :destroy
   has_and_belongs_to_many :tags
 
   scope :active, -> { where(active: true) }
@@ -98,6 +99,18 @@ class Employee < ApplicationRecord
 
   def password_setup_required?
     !password_login_enabled?
+  end
+
+  def welcome_email_resendable?
+    active? && email.present? && password_setup_required?
+  end
+
+  def welcome_email_resend_blocked_reason_key
+    return :no_email if email.blank?
+    return :inactive unless active?
+    return :password_configured unless password_setup_required?
+
+    :unavailable
   end
 
   def password_setup_token

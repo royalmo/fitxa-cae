@@ -12,8 +12,21 @@
 <% status_id_suffix = employee.persisted? ? employee.id : "new" %>
 <% national_id_locked = employee.national_id_locked? %>
 <% national_id_locked_tooltip = t("admin.employees.form.national_id_locked_tooltip") %>
+<% welcome_email_resend_available = employee.persisted? && employee.welcome_email_resendable? %>
+<% welcome_email_resend_disabled_reason =
+  t("admin.employees.welcome_email.#{employee.welcome_email_resend_blocked_reason_key}") if employee.persisted? && !welcome_email_resend_available %>
+<% welcome_email_resend_modal_id = "employee_welcome_email_resend_modal_#{employee.id}" if employee.persisted? %>
+<% welcome_email_resend_action_classes = "d-inline-block mt-2 mt-md-0 ms-md-auto" %>
+<% welcome_email_resend_button_classes = "btn btn-link d-inline-flex align-items-center gap-1 p-0 text-start" %>
+<% welcome_email_resend_data = if employee.persisted?
+  {
+    controller: "employee-welcome-resend",
+    employee_welcome_resend_url_value: resend_welcome_email_admin_employee_path(employee),
+    employee_welcome_resend_request_error_label_value: t("admin.employees.welcome_email.request_error")
+  }
+end %>
 
-<%= form_with model: [:admin, employee] do |form| %>
+<%= form_with model: [:admin, employee], data: welcome_email_resend_data do |form| %>
   <div class="row g-3">
     <div class="col-12 col-md-6">
       <%= form.label :first_name, t("admin.employees.form.first_name"), class: "form-label" %>
@@ -88,9 +101,37 @@
     </fieldset>
 
     <div class="col-12">
-      <div class="form-check form-switch">
-        <%= form.check_box :allow_corrections, class: "form-check-input", role: "switch" %>
-        <%= form.label :allow_corrections, t("admin.employees.form.allow_corrections"), class: "form-check-label" %>
+      <div class="admin-employee-form-preferences d-md-flex align-items-md-center justify-content-md-between gap-2">
+        <div class="form-check form-switch">
+          <%= form.check_box :allow_corrections, class: "form-check-input", role: "switch" %>
+          <%= form.label :allow_corrections, t("admin.employees.form.allow_corrections"), class: "form-check-label" %>
+        </div>
+        <% if employee.persisted? %>
+          <% welcome_email_resend_button = capture do %>
+            <%= button_tag type: :button,
+              class: welcome_email_resend_button_classes,
+              disabled: !welcome_email_resend_available,
+              style: ("pointer-events: none;" unless welcome_email_resend_available),
+              data: { action: "employee-welcome-resend#openConfirm" } do %>
+              <%= icon "mail" %>
+              <span><%= t("admin.employees.welcome_email.button") %></span>
+            <% end %>
+          <% end %>
+          <% if welcome_email_resend_available %>
+            <span class="<%= welcome_email_resend_action_classes %>">
+              <%= welcome_email_resend_button %>
+            </span>
+          <% else %>
+            <span class="<%= welcome_email_resend_action_classes %>"
+              title="<%= welcome_email_resend_disabled_reason %>"
+              tabindex="0"
+              data-controller="bootstrap-tooltip"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top">
+              <%= welcome_email_resend_button %>
+            </span>
+          <% end %>
+        <% end %>
       </div>
     </div>
   </div>
@@ -105,6 +146,51 @@
       <span><%= t(employee.persisted? ? "shared.save" : "admin.employees.form.create") %></span>
     <% end %>
   </div>
+
+  <% if employee.persisted? %>
+    <div class="modal fade"
+      id="<%= welcome_email_resend_modal_id %>"
+      tabindex="-1"
+      aria-labelledby="<%= welcome_email_resend_modal_id %>_label"
+      aria-hidden="true"
+      data-employee-welcome-resend-target="confirmModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="<%= welcome_email_resend_modal_id %>_label">
+              <%= t("admin.employees.welcome_email.confirm_title") %>
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t("shared.cancel") %>"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">
+              <%= t("admin.employees.welcome_email.confirm_body_html", email: tag.strong(employee.email.presence || "-")) %>
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <%= t("shared.cancel") %>
+            </button>
+            <button type="button"
+              class="btn btn-primary d-inline-flex align-items-center gap-2"
+              data-action="employee-welcome-resend#send"
+              data-employee-welcome-resend-target="confirmButton">
+              <%= icon "send" %>
+              <span><%= t("admin.employees.welcome_email.confirm") %></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%= render "admin/shared/async_progress_modal",
+      modal_id: "employee_welcome_email_resend_progress_modal_#{employee.id}",
+      controller_name: "employee-welcome-resend",
+      target_prefix: "run",
+      title: t("admin.employees.welcome_email.progress_title"),
+      description: t("admin.employees.welcome_email.progress_description"),
+      close_label: t("admin.employees.welcome_email.close") %>
+  <% end %>
 
   <% if employee.persisted? && employee.multiple_employment_periods? %>
     <hr>

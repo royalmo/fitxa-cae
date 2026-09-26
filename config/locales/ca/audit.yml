@@ -64,6 +64,9 @@ ca:
       password_changed:
         name: Contrasenya de persona canviada
         description: Canviada la contrasenya de %{recipient_name} (%{origin}).
+      welcome_email_resent:
+        name: Correu de benvinguda reenviat
+        description: Reenviat el correu de benvinguda a %{recipient_name}.
     human_resources_contact:
       submitted:
         name: Contacte a RRHH enviat
