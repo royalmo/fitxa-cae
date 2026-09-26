@@ -171,6 +171,17 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type='radio'][name='status'][value='active'][checked='checked'] + label", text: "Actives"
   end
 
+  test "orders employee list by newest id first" do
+    first_employee = create_employee(first_name: "Zoe", last_name: "Zulu", national_id: valid_dni(41_000_101))
+    second_employee = create_employee(first_name: "Aina", last_name: "Alpha", national_id: valid_dni(41_000_102))
+
+    get admin_employees_path
+
+    assert_response :success
+    rendered_names = css_select("tbody tr.admin-employee-row .admin-employee-name strong").map { |node| node.text.strip }
+    assert_equal [ second_employee.full_name, first_employee.full_name ], rendered_names
+  end
+
   test "paginates employee list" do
     25.times do |index|
       create_employee(

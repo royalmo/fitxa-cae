@@ -99,6 +99,18 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "orders manager list by newest id first" do
+    first_manager = create_manager(first_name: "Zoe", last_name: "Zulu", email: "zoe.zulu@example.test")
+    second_manager = create_manager(first_name: "Aina", last_name: "Alpha", email: "aina.alpha@example.test")
+
+    get admin_managers_path
+
+    assert_response :success
+    rendered_names = css_select("tbody tr.admin-manager-row .admin-manager-name strong").map { |node| node.text.strip }
+    assert_equal Manager.order(id: :desc).limit(20).map(&:full_name), rendered_names
+    assert_operator first_manager.id, :<, second_manager.id
+  end
+
   test "renders manager form controls" do
     employee = create_employee(first_name: "Ona", last_name: "Prat")
 

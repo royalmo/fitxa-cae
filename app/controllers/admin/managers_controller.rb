@@ -5,7 +5,7 @@ class Admin::ManagersController < Admin::BaseController
 
   def index
     @managers = paginate_admin_relation(
-      filtered_managers.order(:last_name, :first_name, :email, :id),
+      filtered_managers.order(id: :desc),
       per_page: MANAGERS_PER_PAGE
     ).to_a
   end

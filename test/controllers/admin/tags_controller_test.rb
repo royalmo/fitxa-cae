@@ -119,6 +119,17 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "orders tag list by newest id first" do
+    first_tag = Tag.create!(name: "Zulu", color: "#16a34a", active: true)
+    second_tag = Tag.create!(name: "Alpha", color: "#2563eb", active: true)
+
+    get admin_tags_path
+
+    assert_response :success
+    rendered_names = css_select("tbody tr.admin-tag-row .admin-tag-label span").map { |node| node.text.strip }
+    assert_equal [ second_tag.name, first_tag.name ], rendered_names
+  end
+
   test "opens new tag form from query parameter" do
     get admin_tags_path, params: { open: "new" }
 

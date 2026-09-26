@@ -54,7 +54,7 @@ class Admin::TagsController < Admin::BaseController
 
   def load_index_tags
     @tags = paginate_admin_relation(
-      filtered_tags.order(:name, :id),
+      filtered_tags.order(id: :desc),
       per_page: TAGS_PER_PAGE
     ).to_a
     @employee_counts_by_tag_id = employee_counts_by_tag_id(@tags)

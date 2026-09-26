@@ -4,7 +4,7 @@ class Admin::EmployeesController < Admin::BaseController
   def index
     @selected_tag = selected_tag
     @employees = paginate_admin_relation(
-      filtered_employees.order(:last_name, :first_name, :id),
+      filtered_employees.order(id: :desc),
       per_page: EMPLOYEES_PER_PAGE
     ).includes(:tags).to_a
     employee_ids = @employees.map(&:id)
