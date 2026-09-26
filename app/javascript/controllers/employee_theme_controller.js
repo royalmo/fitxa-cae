@@ -87,7 +87,7 @@ export default class extends Controller {
     if (preference === "dark") return "dark"
     if (preference === "light") return "light"
 
-    return this.systemThemeQuery&.matches ? "dark" : "light"
+    return this.systemThemeQuery?.matches ? "dark" : "light"
   }
 
   validPreference(preference) {
