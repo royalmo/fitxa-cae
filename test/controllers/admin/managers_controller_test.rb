@@ -271,7 +271,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
           manager: {
             first_name: "Arnau",
             last_name: "Mas",
-            email: "arnau.mas@example.test",
+            email: " ARNAU.MAS@EXAMPLE.TEST ",
             employee_id: employee.id,
             active: "1",
             password: "secret123"
@@ -283,6 +283,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     manager = Manager.order(:created_at).last
     assert_redirected_to admin_managers_path
     assert_equal employee, manager.employee
+    assert_equal "arnau.mas@example.test", manager.email
     assert_not_predicate manager.password_digest, :present?
 
     deliver_enqueued_emails
@@ -296,7 +297,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
       manager: {
         first_name: "Arnau",
         last_name: "Mas",
-        email: "arnau.mas@example.test",
+        email: " ARNAU.UPDATED@EXAMPLE.TEST ",
         employee_id: "",
         active: "0",
         password: "ignored"
@@ -306,6 +307,7 @@ class Admin::ManagersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_managers_path
     manager.reload
     assert_nil manager.employee
+    assert_equal "arnau.updated@example.test", manager.email
     assert_not manager.active?
     assert_not_predicate manager.password_digest, :present?
   end

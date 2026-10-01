@@ -76,7 +76,7 @@ class Employee::AccountsControllerTest < ActionDispatch::IntegrationTest
     log_in_employee(employee)
 
     patch account_contact_path, params: {
-      email: "new@example.test",
+      email: " NEW@EXAMPLE.TEST ",
       phone: "+34 611 222 333",
       theme_preference: "dark",
       current_password: "bad",

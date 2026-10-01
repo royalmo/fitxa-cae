@@ -69,6 +69,16 @@ class EmployeeTest < ActiveSupport::TestCase
     assert_predicate nie_employee, :valid?
   end
 
+  test "normalizes email before validation" do
+    employee = Employee.create!(first_name: "Ada", national_id: valid_dni, email: " ADA.SOLER@EXAMPLE.TEST ")
+
+    assert_equal "ada.soler@example.test", employee.email
+
+    employee.update!(email: " ADA.UPDATED@EXAMPLE.TEST ")
+
+    assert_equal "ada.updated@example.test", employee.email
+  end
+
   test "normalizes name casing before validation" do
     employee = Employee.create!(
       first_name: "  ÀLEX   maria ",

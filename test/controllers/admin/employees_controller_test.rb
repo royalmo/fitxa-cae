@@ -396,7 +396,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
             first_name: "Pau",
             last_name: "Costa",
             national_id: valid_dni(41_000_003),
-            email: "pau@example.test",
+            email: " PAU@EXAMPLE.TEST ",
             phone: "+34 600 111 222",
             active: "0",
             allow_corrections: "1",
@@ -411,6 +411,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_predicate employee, :active?
     assert_predicate employee, :allow_corrections?
     assert_predicate employee.current_employment_period, :open?
+    assert_equal "pau@example.test", employee.email
     assert_equal [ tag ], employee.tags.to_a
     assert_not employee.password_login_enabled?
 
@@ -537,7 +538,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
         last_name: "Mas",
         national_id: employee.national_id,
         active: "0",
-        email: "irene@example.test",
+        email: " IRENE@EXAMPLE.TEST ",
         allow_corrections: "1"
       }
     }
@@ -560,7 +561,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
         first_name: "Irene",
         last_name: "Mas",
         active: "0",
-        email: "irene@example.test"
+        email: " IRENE@EXAMPLE.TEST "
       }
     }
 

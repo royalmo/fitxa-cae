@@ -18,6 +18,7 @@ class Employee < ApplicationRecord
 
   include HumanNameNormalizable
 
+  before_validation :normalize_email_attribute
   before_validation :normalize_national_id_attribute
   after_create :create_initial_employment_period, if: :active?
   after_update :sync_employment_periods_after_active_change, if: :saved_change_to_active?
@@ -51,6 +52,10 @@ class Employee < ApplicationRecord
 
   def self.normalize_national_id(national_id)
     national_id.to_s.strip.upcase.presence
+  end
+
+  def self.normalize_email(email)
+    email.to_s.strip.downcase.presence
   end
 
   def self.find_active_by_national_id(national_id)
@@ -217,6 +222,10 @@ class Employee < ApplicationRecord
   end
 
   private
+
+  def normalize_email_attribute
+    self.email = self.class.normalize_email(email)
+  end
 
   def normalize_national_id_attribute
     self.national_id = self.class.normalize_national_id(national_id)
