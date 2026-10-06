@@ -36,7 +36,7 @@ module ManagerAuthentication
   end
 
   def sign_in_manager(manager, remember: false)
-    return_to = session.delete(:manager_return_to)
+    return_to = consume_manager_return_to_path
 
     reset_session
     write_manager_auth_cookie(manager, remember: remember)
@@ -68,5 +68,14 @@ module ManagerAuthentication
 
   def clear_manager_auth_cookie
     cookies.delete(MANAGER_AUTH_COOKIE)
+  end
+
+  def consume_manager_return_to_path
+    manager_return_to_path.tap { session.delete(:manager_return_to) }
+  end
+
+  def manager_return_to_path
+    stored_path = session[:manager_return_to].presence
+    stored_path if stored_path.to_s.start_with?("/") && !stored_path.to_s.start_with?("//")
   end
 end

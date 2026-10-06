@@ -38,7 +38,7 @@ module EmployeeAuthentication
   end
 
   def sign_in_employee(employee, remember:, installed_pwa:, redirect_path: nil, notice: nil)
-    return_to = session.delete(:employee_return_to)
+    return_to = consume_employee_return_to_path
     target_path = redirect_path.presence || return_to.presence || root_path
 
     reset_session
@@ -135,6 +135,15 @@ module EmployeeAuthentication
 
   def clear_employee_auth_cookie
     cookies.delete(EMPLOYEE_AUTH_COOKIE)
+  end
+
+  def consume_employee_return_to_path
+    employee_return_to_path.tap { session.delete(:employee_return_to) }
+  end
+
+  def employee_return_to_path
+    stored_path = session[:employee_return_to].presence
+    stored_path if stored_path.to_s.start_with?("/") && !stored_path.to_s.start_with?("//")
   end
 
   def pending_employee_login_state

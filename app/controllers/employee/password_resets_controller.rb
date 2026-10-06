@@ -106,7 +106,6 @@ class Employee::PasswordResetsController < ApplicationController
         @employee,
         remember: remember,
         installed_pwa: installed_pwa,
-        redirect_path: root_path,
         notice: t(".success")
       )
     else
@@ -123,7 +122,7 @@ class Employee::PasswordResetsController < ApplicationController
     remember = pending_employee_password_setup_remember?
     installed_pwa = pending_employee_password_setup_installed_pwa?
     clear_pending_employee_password_setup
-    sign_in_employee(@employee, remember: remember, installed_pwa: installed_pwa, redirect_path: root_path)
+    sign_in_employee(@employee, remember: remember, installed_pwa: installed_pwa)
   end
 
   private
@@ -190,7 +189,7 @@ class Employee::PasswordResetsController < ApplicationController
   end
 
   def redirect_signed_in_employee
-    redirect_to root_path if employee_signed_in?
+    redirect_to(consume_employee_return_to_path || root_path) if employee_signed_in?
   end
 
   def redirect_to_password_setup_required

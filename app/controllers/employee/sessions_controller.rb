@@ -163,7 +163,7 @@ class Employee::SessionsController < ApplicationController
   end
 
   def redirect_signed_in_employee
-    redirect_to root_path if employee_signed_in?
+    redirect_to(consume_employee_return_to_path || root_path) if employee_signed_in?
   end
 
   def redirect_to_code_request_rate_limit

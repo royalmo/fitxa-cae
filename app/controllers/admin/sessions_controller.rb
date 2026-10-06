@@ -41,7 +41,7 @@ class Admin::SessionsController < ApplicationController
   end
 
   def redirect_signed_in_manager
-    redirect_to admin_root_path if manager_signed_in?
+    redirect_to(consume_manager_return_to_path || admin_root_path) if manager_signed_in?
   end
 
   def redirect_to_password_login_rate_limit

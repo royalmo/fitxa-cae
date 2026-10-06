@@ -30,9 +30,11 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "signs in an active manager and returns to requested admin page" do
+    employee = create_employee
     manager = create_manager(email: "laia.riera@example.test")
+    requested_path = edit_admin_employee_path(employee)
 
-    get admin_employees_path
+    get requested_path
     assert_redirected_to admin_login_path
 
     post admin_login_path, params: {
@@ -40,7 +42,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
       password: "12345678"
     }
 
-    assert_redirected_to admin_employees_path
+    assert_redirected_to requested_path
     assert_nil flash[:notice]
     follow_redirect!
     assert_response :success

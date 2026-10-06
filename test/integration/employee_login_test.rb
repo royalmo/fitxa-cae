@@ -271,6 +271,11 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
   test "email code login sends and verifies a code" do
     employee = create_employee(email: "ada@example.test", password: "1234")
 
+    get clockings_path
+    assert_redirected_to login_path
+    follow_redirect!
+    assert_response :success
+
     assert_enqueued_jobs 1, only: EmployeeLoginCodeDeliveryJob do
       with_secure_random_number(42) do
         post request_login_code_path, params: {
@@ -308,7 +313,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
 
     post verify_login_code_path, params: { code: "000422" }
 
-    assert_redirected_to root_path
+    assert_redirected_to clockings_path
     assert_nil flash[:notice]
     assert_nil employee.reload.settings["login_code"]
   end
@@ -352,6 +357,11 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
   test "code login for an employee without a password requires password setup" do
     employee = create_employee(email: "ada@example.test")
 
+    get clockings_path
+    assert_redirected_to login_path
+    follow_redirect!
+    assert_response :success
+
     with_secure_random_number(42) do
       post request_login_code_path, params: {
         national_id: employee.national_id,
@@ -380,7 +390,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
       password_confirmation: "5678"
     }
 
-    assert_redirected_to root_path
+    assert_redirected_to clockings_path
     assert_equal I18n.t("employee.password_resets.update.success"), flash[:notice]
     assert employee.reload.authenticate("5678")
 
@@ -391,6 +401,11 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
 
   test "first login password setup can be skipped and is shown again on the next login" do
     employee = create_employee(email: "ada@example.test")
+
+    get account_path
+    assert_redirected_to login_path
+    follow_redirect!
+    assert_response :success
 
     with_secure_random_number(42) do
       post request_login_code_path, params: {
@@ -406,7 +421,7 @@ class EmployeeLoginTest < ActionDispatch::IntegrationTest
 
     post skip_employee_password_setup_path
 
-    assert_redirected_to root_path
+    assert_redirected_to account_path
     assert_nil flash[:notice]
     assert_not employee.reload.password_login_enabled?
 
