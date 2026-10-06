@@ -79,6 +79,25 @@ class EmployeeTest < ActiveSupport::TestCase
     assert_equal "ada.updated@example.test", employee.email
   end
 
+  test "requires a unique national id" do
+    create_employee(national_id: valid_dni(12_345_678))
+    employee = build_employee(national_id: " #{valid_dni(12_345_678).downcase} ")
+
+    assert_not employee.valid?
+    assert_model_error employee, :national_id, :taken
+  end
+
+  test "requires a unique email when present" do
+    create_employee(national_id: valid_dni(12_345_678), email: "ada@example.test")
+    employee = build_employee(national_id: valid_dni(12_345_679), email: " ADA@EXAMPLE.TEST ")
+
+    assert_not employee.valid?
+    assert_model_error employee, :email, :taken
+
+    assert build_employee(national_id: valid_dni(12_345_680), email: nil).valid?
+    assert build_employee(national_id: valid_dni(12_345_681), email: "").valid?
+  end
+
   test "normalizes name casing before validation" do
     employee = Employee.create!(
       first_name: "  ÀLEX   maria ",

@@ -1,6 +1,8 @@
 class Admin::EmployeesController < Admin::BaseController
   EMPLOYEES_PER_PAGE = 20
 
+  rescue_from ActiveRecord::RecordNotUnique, with: :handle_record_not_unique
+
   def index
     @selected_tag = selected_tag
     @employees = paginate_admin_relation(
@@ -31,8 +33,7 @@ class Admin::EmployeesController < Admin::BaseController
       )
       redirect_to admin_employees_path, notice: t("admin.flash.employee_created")
     else
-      load_tags
-      render :new, status: :unprocessable_entity
+      render_employee_form(:new)
     end
   end
 
@@ -51,8 +52,7 @@ class Admin::EmployeesController < Admin::BaseController
       record_employee_update_audit(@employee, previous_tag_ids)
       redirect_to admin_employees_path, notice: t("admin.flash.employee_updated")
     else
-      load_tags
-      render :edit, status: :unprocessable_entity
+      render_employee_form(:edit)
     end
   end
 
@@ -87,6 +87,23 @@ class Admin::EmployeesController < Admin::BaseController
   end
 
   private
+
+  def render_employee_form(template)
+    load_tags
+    render template, status: :unprocessable_entity
+  end
+
+  def handle_record_not_unique(error)
+    @employee ||= params[:id].present? ? Employee.find(params[:id]) : Employee.new(active: true)
+    @employee.assign_attributes(employee_params)
+    @employee.tag_ids = selected_tag_ids
+    @employee.errors.add(record_not_unique_attribute(error), :taken)
+    render_employee_form(@employee.persisted? ? :edit : :new)
+  end
+
+  def record_not_unique_attribute(error)
+    error.message.include?("index_employees_on_lower_email") ? :email : :national_id
+  end
 
   def filtered_employees
     employees = Employee.all

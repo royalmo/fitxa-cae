@@ -527,6 +527,48 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "button[type='submit'][data-submitting-label='Desant...']"
   end
 
+  test "does not create an employee with duplicated national id" do
+    existing = create_employee(first_name: "Ada", national_id: valid_dni(41_000_019))
+
+    assert_no_difference "Employee.count" do
+      assert_no_enqueued_emails do
+        post admin_employees_path, params: {
+          employee: {
+            first_name: "Pau",
+            last_name: "Costa",
+            national_id: " #{existing.national_id.downcase} ",
+            email: "pau.unique@example.test",
+            active: "1"
+          }
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".error-summary li", text: "DNI ja està assignat a una altra persona"
+  end
+
+  test "does not create an employee with duplicated email" do
+    create_employee(first_name: "Ada", national_id: valid_dni(41_000_020), email: "ada@example.test")
+
+    assert_no_difference "Employee.count" do
+      assert_no_enqueued_emails do
+        post admin_employees_path, params: {
+          employee: {
+            first_name: "Pau",
+            last_name: "Costa",
+            national_id: valid_dni(41_000_021),
+            email: " ADA@EXAMPLE.TEST ",
+            active: "1"
+          }
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".error-summary li", text: "Correu ja està assignat a una altra persona"
+  end
+
   test "updates an employee and can clear tags" do
     tag = Tag.create!(name: "office", active: true, color: "#2563eb")
     employee = create_employee(first_name: "Iria", last_name: "Mas", national_id: valid_dni(41_000_004))
@@ -550,6 +592,25 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_not employee.active?
     assert_predicate employee, :allow_corrections?
     assert_empty employee.tags
+  end
+
+  test "does not update an employee to a duplicated email" do
+    create_employee(first_name: "Ada", national_id: valid_dni(41_000_022), email: "ada@example.test")
+    employee = create_employee(first_name: "Pau", national_id: valid_dni(41_000_023), email: "pau@example.test")
+
+    patch admin_employee_path(employee), params: {
+      employee: {
+        first_name: employee.first_name,
+        last_name: employee.last_name,
+        national_id: employee.national_id,
+        email: " ADA@EXAMPLE.TEST ",
+        active: "1"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select ".error-summary li", text: "Correu ja està assignat a una altra persona"
+    assert_equal "pau@example.test", employee.reload.email
   end
 
   test "updates an old employee while keeping national id omitted by disabled field" do

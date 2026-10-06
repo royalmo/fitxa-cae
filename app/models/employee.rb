@@ -45,6 +45,8 @@ class Employee < ApplicationRecord
   }
 
   validates :first_name, :national_id, presence: true
+  validates :national_id, uniqueness: { case_sensitive: false }
+  validates :email, uniqueness: { case_sensitive: false, allow_blank: true }
   validate :national_id_has_valid_spanish_check_letter
   validate :national_id_change_allowed, if: :will_save_change_to_national_id?
   validates :active, inclusion: { in: [ true, false ] }

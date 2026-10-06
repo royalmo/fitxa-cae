@@ -40,8 +40,11 @@ ca:
               taken: ja està assignada a un altre compte de responsable
         employee:
           attributes:
+            email:
+              taken: ja està assignat a una altra persona
             national_id:
               locked_after_creation: no es pot canviar passades 24 hores de la creació
+              taken: ja està assignat a una altra persona
         employment_period:
           attributes:
             ended_at:

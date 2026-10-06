@@ -51,10 +51,12 @@ module ActiveSupport
     end
 
     def build_employee(**attributes)
+      @employee_national_id_sequence = @employee_national_id_sequence.to_i + 1
+
       Employee.new({
         first_name: "Ada",
         last_name: "Soler",
-        national_id: valid_dni
+        national_id: valid_dni(98_000_000 + @employee_national_id_sequence)
       }.merge(attributes))
     end
 
