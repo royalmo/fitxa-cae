@@ -546,10 +546,11 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select ".error-summary li", text: "DNI ja està assignat a una altra persona"
+    assert_select ".error-summary li a[href='#{edit_admin_employee_path(existing)}']", text: "una altra persona"
   end
 
   test "does not create an employee with duplicated email" do
-    create_employee(first_name: "Ada", national_id: valid_dni(41_000_020), email: "ada@example.test")
+    existing = create_employee(first_name: "Ada", national_id: valid_dni(41_000_020), email: "ada@example.test")
 
     assert_no_difference "Employee.count" do
       assert_no_enqueued_emails do
@@ -567,6 +568,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select ".error-summary li", text: "Correu ja està assignat a una altra persona"
+    assert_select ".error-summary li a[href='#{edit_admin_employee_path(existing)}']", text: "una altra persona"
   end
 
   test "updates an employee and can clear tags" do
@@ -610,6 +612,7 @@ class Admin::EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select ".error-summary li", text: "Correu ja està assignat a una altra persona"
+    assert_select ".error-summary li a[href='#{edit_admin_employee_path(Employee.find_by!(email: "ada@example.test"))}']", text: "una altra persona"
     assert_equal "pau@example.test", employee.reload.email
   end
 

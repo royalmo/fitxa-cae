@@ -38,6 +38,19 @@ module Admin::EmployeesHelper
     class_names("btn", action.to_sym == :deactivate ? "btn-danger" : "btn-primary")
   end
 
+  def admin_employee_error_message(employee, error)
+    duplicate_employee = admin_duplicate_employee_for_error(employee, error)
+    return error.full_message unless duplicate_employee
+
+    safe_join([
+      Employee.human_attribute_name(error.attribute),
+      " ",
+      t("admin.employees.form.duplicate_field_prefix"),
+      " ",
+      link_to(t("admin.employees.form.duplicate_field_link_text"), edit_admin_employee_path(duplicate_employee))
+    ])
+  end
+
   def admin_employee_empty_value(css_class: nil)
     tag.span("-", class: class_names("admin-employee-empty-value", css_class, "text-body-secondary"))
   end
@@ -59,6 +72,29 @@ module Admin::EmployeesHelper
         tag.span(l(swipe.swipe_at.to_date, format: :numeric), class: "admin-employee-last-clocking-date"),
         tag.span(l(swipe.swipe_at, format: :hour_minute), class: "admin-employee-last-clocking-time")
       ], " ")
+    end
+  end
+
+  private
+
+  def admin_duplicate_employee_for_error(employee, error)
+    return unless error.type == :taken
+    return unless error.attribute.in?(%i[national_id email])
+
+    admin_duplicate_employee_for_attribute(employee, error.attribute)
+  end
+
+  def admin_duplicate_employee_for_attribute(employee, attribute)
+    duplicate_scope = Employee.all
+    duplicate_scope = duplicate_scope.where.not(id: employee.id) if employee.persisted?
+
+    case attribute
+    when :national_id
+      national_id = Employee.normalize_national_id(employee.national_id)
+      duplicate_scope.find_by(national_id: national_id) if national_id
+    when :email
+      email = Employee.normalize_email(employee.email)
+      duplicate_scope.where("LOWER(email) = ?", email).first if email
     end
   end
 end

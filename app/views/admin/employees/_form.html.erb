@@ -2,8 +2,8 @@
   <div class="alert alert-danger error-summary">
     <strong><%= t("admin.employees.form.error_title") %></strong>
     <ul class="mb-0 mt-2">
-      <% employee.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
+      <% employee.errors.each do |error| %>
+        <li><%= admin_employee_error_message(employee, error) %></li>
       <% end %>
     </ul>
   </div>

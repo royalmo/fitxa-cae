@@ -185,6 +185,8 @@ ca:
         error_title: Revisa la persona
         back_to_list: Tornar a persones
         create: Crear
+        duplicate_field_link_text: una altra persona
+        duplicate_field_prefix: ja està assignat a
         email: Correu
         employment_periods: Períodes d'activació
         current_employment_period: Actualment
